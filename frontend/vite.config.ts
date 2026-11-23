@@ -1,0 +1,25 @@
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
+
+const webPort = Number(process.env.ACCOUNTABLE_WEB_PORT ?? 5173)
+const apiPort = Number(process.env.ACCOUNTABLE_API_PORT ?? 8000)
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  server: {
+    host: '127.0.0.1',
+    port: webPort,
+    strictPort: true,
+    proxy: {
+      // 127.0.0.1 rather than localhost, which can resolve to ::1 where uvicorn isn't listening.
+      '/api': `http://127.0.0.1:${apiPort}`,
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    env: { TZ: 'America/Los_Angeles' },
+    setupFiles: ['./src/test-setup.ts'],
+    css: false,
+  },
+})

@@ -1,0 +1,127 @@
+/* The only file with color values in it. Components use colors by role, such as
+   bg-panel, text-ink-muted or var(--color-stage-won), and each role is mapped to a
+   brand color here. A dark mode is one more set of values for the same roles. */
+
+@import 'tailwindcss';
+
+@theme static {
+  /* Only the roles below exist, so no component can reach for a raw palette color. */
+  --color-*: initial;
+
+  /* Surfaces and text */
+  --color-page: #f0f4f5;
+  --color-panel: #ffffff;
+  --color-ink: #073b4c; /* Midnight */
+  --color-ink-muted: #4f6873; /* Slate */
+  --color-on-fill: #ffffff; /* text on Raspberry fill */
+  --color-divider: #e3eaec;
+  --color-field: #7a9097; /* the outline of inputs */
+  --color-focus: #118ab2; /* Cerulean */
+  --color-link: #0e7191; /* Cerulean text */
+  --color-overlay: rgb(7 59 76 / 0.4); /* Midnight at 40%, behind dialogs */
+
+  /* Actions and alerts */
+  --color-primary: #06d6a0; /* Sea Green, with ink text */
+  --color-primary-text: #037558;
+  --color-primary-tint: #d7f8f0;
+  --color-secondary: #d7e0e2; /* Midnight tint, with ink text */
+  --color-alert: #ef476f; /* Raspberry: dots and marks */
+  --color-alert-text: #cd123f;
+  --color-alert-fill: #d91342; /* behind on-fill text */
+  --color-alert-tint: #fce2e8;
+  --color-caution: #ffc145; /* Marigold: due today */
+  --color-caution-tint: #fff5e1;
+  --color-neutral: #8fa3a9; /* Grey: never for text */
+  --color-neutral-tint: #edf0f1;
+
+  /* Stages */
+  --color-stage-new: #118ab2;
+  --color-stage-new-tint: #d9ecf3;
+  --color-stage-qualified: #ffc145;
+  --color-stage-qualified-tint: #fff5e1;
+  --color-stage-proposal: #f78c6b;
+  --color-stage-proposal-tint: #feede7;
+  --color-stage-negotiation: #073b4c;
+  --color-stage-negotiation-tint: #d7e0e2;
+  --color-stage-won: #06d6a0;
+  --color-stage-won-tint: #d7f8f0;
+  --color-stage-lost: #8fa3a9;
+  --color-stage-lost-tint: #edf0f1;
+
+  /* Contact statuses */
+  --color-status-lead: #118ab2;
+  --color-status-lead-tint: #d9ecf3;
+  --color-status-qualified: #ffc145;
+  --color-status-qualified-tint: #fff5e1;
+  --color-status-customer: #06d6a0;
+  --color-status-customer-tint: #d7f8f0;
+
+  /* Timeline entry icons */
+  --color-kind-call-tint: #d9ecf3;
+  --color-kind-email-tint: #fff5e1;
+  --color-kind-note-tint: #edf0f1;
+  --color-kind-status-tint: #d7f8f0;
+
+  /* Charts */
+  --color-chart-won: #06d6a0;
+  --color-chart-wash: rgb(6 214 160 / 0.12);
+
+  /* Shape */
+  --radius-panel: 16px;
+  --radius-column: 14px;
+  --radius-card: 12px;
+  --radius-control: 10px;
+  --shadow-panel: 0 1px 2px rgb(7 59 76 / 0.06), 0 8px 24px rgb(7 59 76 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(7 59 76 / 0.08), 0 16px 32px rgb(7 59 76 / 0.12);
+
+  /* Fonts, bundled with the app by @fontsource */
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* On body, not html, so Tailwind's rem sizes stay at 16px. */
+  body {
+    font-size: 14px;
+  }
+
+  /* Figures line up in columns. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A 2px Cerulean ring, 2px outside the edge of anything focused from the keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: default;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
