@@ -115,13 +115,14 @@ Each rule has a number so the tests can refer to it.
 
 **Dashboard** (`/`), the landing page. The figures are defined in the next section.
 
-- Four tiles: revenue won this month, deals won this month, open pipeline, and expected revenue. The first two also give last month's figure.
+- **Revenue won this month**, the main figure. It gives last month's figure, and the total and number of deals won in the last 12 months.
+- **Revenue won by month**: a line chart of the last 12 months, beneath the main figure.
+- Three tiles: deals won this month (with last month's count), open pipeline (with its number of deals) and expected revenue (with its share of the open pipeline).
+- **Deals won by month**: a bar chart of the same 12 months.
 - **Open pipeline by stage**: the visual of the pipeline. Each open stage shows its count, value and expected revenue.
-- **Revenue won by month**: a line chart of the last 12 months.
-- **Deals won by month**: a bar chart of the same months.
 - **Sales funnel**: value and count reaching each stage from New to Won, with the share of New's value that reaches each stage, and the total lost underneath.
 - **Follow-ups**: overdue first, then due in the next 7 days. Each shows its type, its description, the contact or deal it's on (as a link), its due date as "3 days overdue", "Due today", "Due tomorrow" or "Due in 4 days", and a Done checkbox. The heading gives the count. The list scrolls inside its panel when it's long.
-- **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app, each linking to its record.
+- **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app, grouped under Today, Yesterday and Earlier, each linking to its record.
 - The tiles and the pipeline visual link to the Pipeline.
 
 **Organizations** (`/organizations`)
@@ -150,13 +151,16 @@ Each rule has a number so the tests can refer to it.
 
 **Pipeline** (`/pipeline`)
 
-- The header shows the board's figures for open deals: count, total value and expected revenue, such as "19 open deals · $1,215,000 · $498,000 expected". It also has an Add deal button, for a new deal in New.
+- The header shows the board's figures for open deals, side by side: the number of open deals, their total value and their expected revenue. It also has an Add deal button, for a new deal in New.
 - There's one column for each of the six stages, in order. Each column heading shows:
   - the stage's name and color dot
   - its count and total value
-  - its expected revenue, in open columns only
+  - in open columns, its expected revenue and a thin bar showing the expected share of the value
+  - in Won and Lost, "Won, all time" or "Lost, all time"
   - an Add deal button that starts the new deal at that stage
-- A card shows the deal's name, organization, main contact, value, probability and close date, and a Late badge if it's late.
+- A card in an open column shows the main contact's initials and name, the deal's name, value, probability and close date, and a Late badge if it's late.
+- Cards in Won and Lost are compact: the deal's name, value and close date.
+- Cards leave out the organization to save space. It's on the deal's page and in the Deals table, and the sample data's deal names start with it.
 - Clicking a card, or pressing Enter on it, opens the deal's page.
 - Dragging a card to another column or to another place follows R3 and R5. Every figure on the board changes as soon as the card is dropped, before the server replies. If the save fails, the card goes back to where it was and a message says so.
 
@@ -213,9 +217,9 @@ The sample data is for a business that sells software and services to other busi
 
 - **Organizations:** about 15, across industries such as software, healthcare, manufacturing, retail, logistics, financial services, education and professional services. One or two have no deals yet.
 - **Contacts:** about 40, at every status: about 16 leads, 10 qualified and 14 customers. Every main contact of a won deal is a customer. Two contacts have no organization.
-- **Deals:** about 35, worth $5,000 to $150,000 in steps of $500:
+- **Deals:** about 45, worth $5,000 to $150,000 in steps of $500:
   - about 5 each in New, Qualified and Proposal, and 4 in Negotiation, with 3 of the open deals late
-  - about 10 won, spread over the past 12 months, so the monthly charts have shape
+  - about 20 won, spread over the past 12 months with at least one in most months, so the monthly charts are full
   - about 6 lost, lost from different stages
 - **Stage history:** each deal has a history that fits its stage, spread over the weeks before its close date.
 - **Status history:** each contact who became a customer has a status change on the date of their first won deal.
@@ -240,6 +244,15 @@ The sample data is for a business that sells software and services to other busi
 - **Keyboard and contrast:** as described under Keyboard and accessibility.
 
 ## Design
+
+### Chosen look
+
+Mockup C, Focus, was chosen on Nov 22, 2026, over A, Clear and B, Midnight. It's in `docs/mockups/c-focus.html`, with its screenshot in `c-focus.png`. The reasons for choosing it:
+
+- **The funnel and stage charts:** the funnel is drawn as a real funnel shape, and open value by stage as columns with the expected part solid.
+- **The pipeline layout:** wider open columns, each under its own white heading panel, contact initials on the cards, and compact Won and Lost columns.
+
+Look and feel and Layout below follow it. The mockup shows the look, not the final sample data: it has about 11 won deals, where the app will have about 20.
 
 ### How it fits together
 
@@ -373,7 +386,7 @@ JSON under `/api`, with snake_case names. A failed field check returns 422 with 
 
 ### Look and feel
 
-**Fonts.** Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for money, counts, percentages and dates in tables, cards, tiles and charts. Instrument Serif appears at most once per screen, as an accent: the tagline under the logo ("Every deal, accounted for") and the date at the top of the dashboard.
+**Fonts.** Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for money, counts, percentages and dates in tables, cards, tiles and charts. Instrument Serif is used only as an accent: for the tagline under the logo ("Every deal, accounted for") and the date above the dashboard's title.
 
 | Use | Font | Size and weight |
 |---|---|---|
@@ -382,9 +395,12 @@ JSON under `/api`, with snake_case names. A failed field check returns 422 with 
 | Body and table cells | Instrument Sans | 14px, 400 |
 | Labels and table headings | Instrument Sans | 13px, 500 |
 | Small print | Instrument Sans | 12px, 400 |
-| Tile figures | JetBrains Mono | 30px, 500 |
-| Figures in tables and cards | JetBrains Mono | 13px, 400 |
-| Accent | Instrument Serif | 20px, 400 |
+| The dashboard's main figure | JetBrains Mono | 46px, 500 |
+| Tile figures | JetBrains Mono | 26px, 500 |
+| Pipeline column totals | JetBrains Mono | 17px, 500 |
+| Card values | JetBrains Mono | 15px, 500 |
+| Figures in tables and other places on cards | JetBrains Mono | 12 to 13px, 400 |
+| Accent | Instrument Serif | 17px for the tagline, 22px for the date |
 
 **Colors.** Each contrast ratio is measured against white, and against the page background where text sits on it.
 
@@ -406,7 +422,7 @@ JSON under `/api`, with snake_case names. A failed field check returns 422 with 
 | Slate | `#4F6873` | Secondary text, from Midnight (5.9:1, 5.3:1) |
 | Grey | `#8FA3A9` | Lost; never for text |
 | Field outline | `#7A9097` | The outline of inputs and selects (3.4:1) |
-| Sea Mist | `#CDD8DB` | Text on Midnight, if the sidebar is Midnight (8.3:1) |
+| Sea Mist | `#CDD8DB` | Text on dark surfaces, kept for a later dark mode (8.3:1 on Midnight) |
 | Divider | `#E3EAEC` | Lines between table rows, chart gridlines |
 | Page | `#F0F4F5` | Page background |
 | Panel | `#FFFFFF` | Panels, cards and dialogs |
@@ -437,8 +453,15 @@ Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Gree
   - A row is lightly tinted on hover.
   - Figures are right-aligned in JetBrains Mono.
   - Edit and Delete are always visible, not only on hover.
-- **Pipeline cards:** white with the panel shadow and 12px padding. The deal name is 14px semibold, and the organization and contact are in Slate.
-  - Value, probability and close date are in JetBrains Mono, with a Late badge if needed.
+- **Due badges** on follow-ups: a Raspberry tint when overdue, a Marigold tint when due today, and grey otherwise.
+- **Pipeline column headings:** white panels, rounded 14px, holding:
+  - the stage's dot, name and count, and the Add deal button
+  - the total value
+  - in open columns, the expected revenue, and a 4px bar in the stage's tint whose filled part, in the stage's color, is the expected share of the value
+- **Pipeline cards:** white with the panel shadow and 12px padding.
+  - The top line has the main contact's initials in a 24px circle in the stage's tint, their name in Slate, and the Late badge on the right if needed.
+  - Then come the deal name in 13.5px semibold, the value with the probability beside it, and the close date with a calendar icon, in Raspberry text when the deal is late.
+  - Won and Lost cards are compact, with 10px padding: the deal name, then the value and close date.
   - A card being dragged gets a deeper shadow, and the place it will land shows as a tinted space.
 - **Dialogs:** white and 520px wide, over Midnight at 40%.
 - **Messages:** white panels at the bottom right. Errors have a Raspberry dot.
@@ -448,8 +471,12 @@ Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Gree
 - **Colors by meaning:** "won" figures are Sea Green, and anything by stage uses the stage colors.
 - **Revenue won by month:** a 2.5px Sea Green line over a flat 12% Sea Green area, with points shown on hover. Month labels run along the bottom and short USD amounts up the side, with horizontal gridlines only.
 - **Deals won by month:** Sea Green bars with rounded tops and the count above each bar.
-- **Sales funnel:** one horizontal bar per stage from New to Won, each in its stage's color, its length set by value. Each bar is labelled with its stage, count, value and share of New's value, and a line underneath gives the total lost.
-- **Open pipeline by stage:** one bar per open stage, its length set by total value. The expected part is filled in the stage's full color and the rest in its tint, labelled with value and expected revenue.
+- **Sales funnel:** a funnel of joined trapezoids, one per stage from New to Won, each in its stage's color. Each one narrows from its own stage's value to the next stage's, with a 2px gap between them, and Won is a plain rectangle.
+  - Labels to the right give each stage's name, count, short value and share of New's value.
+  - A line underneath gives the total lost.
+- **Open pipeline by stage:** one column per open stage, its height set by total value, with rounded tops.
+  - The expected part is solid in the stage's color, from the baseline up, and the rest is in its tint.
+  - The short value sits on top, with the stage's name and its expected revenue underneath.
 - **Tooltips:** white panels with full USD amounts in JetBrains Mono.
 - **Text and alternatives:** every chart has a title and a one-line summary in words, such as "$612,000 won in the last 12 months", plus a table of its figures for screen readers. Several brand colors are below 3:1 against white, so every figure is also given in text, never by color alone.
 
@@ -463,19 +490,21 @@ Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Gree
 
 ### Layout
 
-- **Sidebar:** 232px wide on the left. It holds the wordmark "Accountable" with its tagline, then the five sections, each with an icon. The current section is a Sea Green tint pill with Midnight text. The sidebar is either white or Midnight with Sea Mist text, and the mockups try both.
-- **Main area:** on the page background, with 32px of padding and content up to 1440px wide.
+- **Sidebar:** a floating white panel, 224px wide, 16px in from the top, bottom and left of the window, and rounded with the panel shadow.
+  - It holds the wordmark "Accountable" with its tagline, then the five sections, each with an icon.
+  - Organizations, Contacts and Deals show how many records they have, on the right in JetBrains Mono.
+  - The current section is a Sea Green tint pill with Midnight text.
+- **Main area:** on the page background, with 24 to 28px of padding and content up to 1440px wide.
 - **Page header:** the title on the left, with the main action on the right, such as "Add deal".
-- **Dashboard,** to start with, on a 12-column grid (the three mockups try other arrangements):
-  1. The title "Dashboard", with today's date as the accent.
-  2. Four tiles, three columns each.
-  3. Open pipeline by stage, full width, as one bar split into the four open stages by value, with each stage's count, value and expected revenue underneath.
-  4. Revenue won by month (8 columns) beside Follow-ups (4 columns).
-  5. Deals won by month, Sales funnel and Recent activity, 4 columns each.
+- **Dashboard,** on a 12-column grid:
+  1. Today's date as the accent, above the title "Dashboard".
+  2. A large panel (8 columns) with revenue won this month and, beneath it, revenue won by month, beside the three other tiles stacked (4 columns).
+  3. Deals won by month, Sales funnel and Open pipeline by stage, 4 columns each.
+  4. Follow-ups and Recent activity, 6 columns each.
 - **Pipeline:**
-  - The six columns share the width equally, each at least 200px wide. Below that, the board scrolls sideways.
-  - Each column fills the height of the window and scrolls on its own, with its heading staying in place.
-  - Columns sit on the page background with no panel, so the white cards stand out.
+  - The open columns take 1.2 shares of the width and Won and Lost 0.8 each. At 1440px that makes the open columns about 200px wide and Won and Lost about 135px. If the open columns would be narrower than 170px, the board scrolls sideways.
+  - Each column fills the height of the window and scrolls on its own, with its heading panel staying in place.
+  - The cards sit below their heading on the page background.
 - **Record pages:**
   - The details are on the left (4 columns), with the linked contacts and deals beneath them.
   - The timeline is on the right (8 columns).

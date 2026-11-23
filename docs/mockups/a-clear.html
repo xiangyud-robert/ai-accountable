@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accountable mockup A: Clear</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* A: white sidebar, the spec's dashboard layout, six equal columns that fit a 1440px screen. */
+  .side { width: 232px; flex: none; background: var(--panel); padding: 28px 16px; display: flex; flex-direction: column; gap: 32px; }
+  .brand { padding: 0 10px; }
+  .wordmark { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .logo { width: 30px; height: 30px; border-radius: 9px; background: var(--sea-green); display: grid; place-items: center; font-size: 16px; font-weight: 700; }
+  .tagline { font-family: var(--serif); font-size: 17px; color: var(--slate); margin-top: 6px; }
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav a { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; font-weight: 500; }
+  .nav a .ic { color: var(--slate); }
+  .nav a.active { background: var(--sea-green-tint); font-weight: 600; }
+  .nav a.active .ic { color: var(--sea-green-text); }
+
+  .main { flex: 1; min-width: 0; padding: 32px; }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+  .accent { font-family: var(--serif); font-size: 20px; color: var(--slate); margin-top: 2px; }
+  .head-figures { color: var(--slate); margin-top: 6px; font-size: 14px; }
+  .head-figures b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+  .panel { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow); padding: 22px 24px; min-width: 0; }
+  .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s8 { grid-column: span 8; } .s12 { grid-column: span 12; }
+  .rows2 { grid-row: span 2; }
+  .phead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  h2 { font-size: 16px; font-weight: 600; }
+  .sub { color: var(--slate); font-size: 13px; margin-top: 2px; }
+
+  .tile .label { font-size: 13px; font-weight: 500; color: var(--slate); }
+  .tile .value { font-family: var(--mono); font-size: 30px; font-weight: 500; letter-spacing: -0.03em; margin: 10px 0 6px; }
+  .tile .meta { font-size: 13px; color: var(--slate); }
+  .tile .meta b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+
+  .strip { display: flex; gap: 2px; height: 14px; }
+  .strip div { border-radius: 4px; }
+  .strip-labels { display: flex; gap: 2px; margin-top: 14px; }
+  .strip-labels > div { min-width: 0; padding-right: 12px; }
+  .strip-labels .name { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+  .strip-labels .name span { color: var(--slate); font-weight: 500; }
+  .strip-labels .v { font-family: var(--mono); font-size: 15px; font-weight: 500; margin-top: 4px; }
+  .strip-labels .e { font-size: 12px; color: var(--slate); }
+  .strip-labels .e b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+
+  .fu-group { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--slate); margin: 4px 0 6px; }
+  .fu-group.over { color: var(--raspberry-text); }
+  .fu { display: flex; gap: 12px; padding: 10px 0; align-items: flex-start; }
+  .fu + .fu { border-top: 1px solid var(--divider); }
+  .fu .checkbox { margin-top: 2px; }
+  .fu .body { flex: 1; min-width: 0; }
+  .fu .t { font-weight: 500; }
+  .fu .on { font-size: 13px; color: var(--cerulean-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fu .due { font-size: 12px; font-weight: 500; color: var(--slate); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .fu .due.overdue { color: var(--raspberry-text); }
+  .fu .type { color: var(--slate); display: flex; margin-top: 2px; }
+
+  .funnel-row + .funnel-row { margin-top: 14px; }
+  .funnel-row .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+  .funnel-row .name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .funnel-row .name span { font-weight: 500; color: var(--slate); }
+  .funnel-row .amt { font-family: var(--mono); font-weight: 500; }
+  .funnel-row .bar { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .funnel-row .bar div { height: 10px; border-radius: 0 4px 4px 0; }
+  .funnel-row .bar span { font-family: var(--mono); font-size: 12px; color: var(--slate); }
+  .lost-line { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--divider); font-size: 13px; color: var(--slate); display: flex; align-items: center; gap: 8px; }
+  .lost-line b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+
+  .recent { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
+  .entry { display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid var(--divider); }
+  .entry:nth-child(-n+2) { border-top: 0; }
+  .entry .bubble { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--tint); color: var(--midnight); }
+  .entry .t { font-weight: 500; }
+  .entry .m { font-size: 13px; color: var(--slate); }
+  .entry .m a { color: var(--cerulean-text); }
+
+  /* Pipeline */
+  .board { display: flex; gap: 12px; height: 752px; }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .col-head { padding: 4px 4px 12px; }
+  .col-head .row1 { display: flex; align-items: center; gap: 8px; }
+  .col-head .nm { font-weight: 600; }
+  .col-head .ct { font-family: var(--mono); font-size: 12px; background: var(--panel); border-radius: 999px; padding: 1px 8px; color: var(--slate); }
+  .col-head .icon-btn { margin-left: auto; width: 28px; height: 28px; background: var(--panel); }
+  .col-head .row2 { margin-top: 6px; font-size: 12px; color: var(--slate); }
+  .col-head .row2 b { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--midnight); }
+  .cards { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 4px; }
+  .card { background: var(--panel); border-radius: 12px; box-shadow: var(--shadow); padding: 12px; flex: none; }
+  .card .nm { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+  .card .org { font-size: 12px; color: var(--slate); margin-top: 3px; }
+  .card .row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 6px; }
+  .card .v { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+  .card .p, .card .d { font-family: var(--mono); font-size: 12px; color: var(--slate); }
+  .card .d.overdue { color: var(--raspberry-text); }
+  .card .row + .row { margin-top: 6px; }
+  .card.focus { outline: 2px solid var(--cerulean); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="caption">Mockup A, Clear <span>· Dashboard · white sidebar, the spec's layout</span></div>
+<div class="frame" id="dashboard"></div>
+<div class="caption">Mockup A, Clear <span>· Pipeline · six equal columns of about 180px, which fit 1440px with the full sidebar. A card with keyboard focus in Proposal</span></div>
+<div class="frame fixed" id="pipeline"></div>
+
+<script src="data.js"></script>
+<script>
+  const M = MOCK;
+  const { usd, icon } = M;
+  const stageVars = (s) => `--dot:${s.color};--tint:${s.tint}`;
+
+  function sidebar(active) {
+    return `<aside class="side">
+      <div class="brand">
+        <div class="wordmark"><div class="logo">A</div>Accountable</div>
+        <div class="tagline">Every deal, accounted for</div>
+      </div>
+      <nav class="nav" aria-label="Sections">
+        ${M.NAV.map((n) => `<a ${M.linkTo(n.key)} class="${n.key === active ? 'active' : ''}">${icon(n.key)}${n.label}</a>`).join('')}
+      </nav>
+    </aside>`;
+  }
+
+  const KIND_TINT = { call: 'var(--cerulean-tint)', email: 'var(--marigold-tint)', note: 'var(--grey-tint)', status: 'var(--sea-green-tint)', added: 'var(--cerulean-tint)' };
+  const kindTint = (r) => (r.kind === 'stage' ? M.stage(r.to).tint : KIND_TINT[r.kind]);
+
+  function dashboard() {
+    const k = M.kpi;
+    const open = M.byStage.filter((s) => s.open);
+    const tiles = [
+      ['Revenue won in November', usd(k.revenueWon), `October: <b>${usd(k.revenueWonLast)}</b>`],
+      ['Deals won in November', k.dealsWon, `October: <b>${k.dealsWonLast}</b>`],
+      ['Open pipeline', usd(k.openValue), `<b>${k.openCount}</b> open deals`],
+      ['Expected revenue', usd(k.expected), `<b>${Math.round((k.expected / k.openValue) * 100)}%</b> of the open pipeline`],
+    ];
+    const followGroup = (title, items, cls) => `
+      <div class="fu-group ${cls}">${cls ? '<span class="dot" style="--dot:var(--raspberry)"></span>' : ''}${title} · ${items.length}</div>
+      ${items.map((f) => `<div class="fu">
+        <span class="checkbox" role="checkbox" aria-label="Mark done"></span>
+        <span class="type">${icon(f.type, 16)}</span>
+        <div class="body"><div class="t">${f.text}</div><div class="on">${f.on}</div></div>
+        <div class="due ${f.overdue ? 'overdue' : ''}">${f.label}</div>
+      </div>`).join('')}`;
+
+    return sidebar('dashboard') + `<main class="main">
+      <div class="head">
+        <div><h1>Dashboard</h1><div class="accent">Sunday, November 22</div></div>
+        <button class="btn primary">${icon('plus', 16)}Add deal</button>
+      </div>
+      <div class="grid">
+        ${tiles.map(([l, v, m]) => `<section class="panel tile s3"><div class="label">${l}</div><div class="value">${v}</div><div class="meta">${m}</div></section>`).join('')}
+
+        <section class="panel s12">
+          <div class="phead">
+            <div><h2>Open pipeline by stage</h2><div class="sub"><span class="mono">${k.openCount}</span> open deals worth <span class="mono">${usd(k.openValue)}</span>, with <span class="mono">${usd(k.expected)}</span> expected</div></div>
+            <a class="link" ${M.linkTo('pipeline')}>Open the pipeline ${icon('arrowRight', 14)}</a>
+          </div>
+          <div class="strip">${open.map((s) => `<div style="flex:${s.value};background:${s.color}" title="${s.name}: ${usd(s.value)}"></div>`).join('')}</div>
+          <div class="strip-labels">${open.map((s) => `<div style="flex:${s.value}">
+            <div class="name"><span class="dot" style="${stageVars(s)}"></span>${s.name} <span>· ${s.count} deals</span></div>
+            <div class="v">${usd(s.value)}</div>
+            <div class="e"><b>${usd(s.expected)}</b> expected</div>
+          </div>`).join('')}</div>
+        </section>
+
+        <section class="panel s8">
+          <div class="phead">
+            <div><h2>Revenue won by month</h2><div class="sub"><span class="mono">${usd(k.wonYear)}</span> won in the last 12 months, from ${k.wonYearCount} deals</div></div>
+            <div class="sub">Dec 2025 to Nov 2026 · USD</div>
+          </div>
+          ${M.lineChart({ points: M.months.map((m) => ({ label: m.label, long: m.long, value: m.revenue })), width: 708, height: 262, color: '#06D6A0', wash: 'rgba(6,214,160,0.12)', yMax: 150000, yStep: 50000, label: 'Revenue won by month' })}
+        </section>
+
+        <section class="panel s4 rows2">
+          <div class="phead"><div><h2>Follow-ups</h2><div class="sub">Overdue, then due in the next 7 days</div></div><span class="badge" style="--dot:var(--raspberry);--tint:var(--raspberry-tint)">${M.followUps.length} to do</span></div>
+          ${followGroup('Overdue', M.followUps.filter((f) => f.overdue), 'over')}
+          <div style="height:12px"></div>
+          ${followGroup('Next 7 days', M.followUps.filter((f) => !f.overdue), '')}
+        </section>
+
+        <section class="panel s4">
+          <div class="phead"><div><h2>Deals won by month</h2><div class="sub"><span class="mono">${k.wonYearCount}</span> in the last 12 months</div></div></div>
+          ${M.barChart({ points: M.months.map((m) => ({ label: m.label, long: m.long, value: m.count })), width: 320, height: 262, color: '#06D6A0', yMax: 2, barWidth: 16, label: 'Deals won by month' })}
+        </section>
+
+        <section class="panel s4">
+          <div class="phead"><div><h2>Sales funnel</h2><div class="sub">Value reaching each stage, all deals</div></div></div>
+          ${M.funnel.map((f) => `<div class="funnel-row">
+            <div class="top"><div class="name"><span class="dot" style="${stageVars(f)}"></span>${f.name} <span>· ${f.count}</span></div><div class="amt">${usd(f.value)}</div></div>
+            <div class="bar"><div style="width:${f.share * 0.86}%;background:${f.color}"></div><span>${f.share}%</span></div>
+          </div>`).join('')}
+          <div class="lost-line"><span class="dot" style="--dot:var(--grey)"></span>Lost: <b>${M.byStage[5].count}</b> deals, <b>${usd(M.byStage[5].value)}</b></div>
+        </section>
+
+        <section class="panel s12">
+          <div class="phead"><div><h2>Recent activity</h2><div class="sub">The latest from every contact and deal</div></div></div>
+          <div class="recent">${M.recent.map((r) => `<div class="entry">
+            <div class="bubble" style="--tint:${kindTint(r)}">${icon(r.kind, 16)}</div>
+            <div><div class="t">${r.text}</div><div class="m"><a href="#">${r.on}</a> · ${r.when}</div></div>
+          </div>`).join('')}</div>
+        </section>
+      </div>
+    </main>`;
+  }
+
+  function pipeline() {
+    const k = M.kpi;
+    const card = (d) => `<article class="card ${d.name === 'Harbor Logistics fleet analytics' ? 'focus' : ''}" tabindex="0">
+      <div class="nm">${d.name}</div>
+      <div class="org">${d.contact}</div>
+      <div class="row"><span class="v">${usd(d.value)}</span>${d.open ? `<span class="p">${d.prob}%</span>` : ''}</div>
+      <div class="row"><span class="d ${d.late ? 'overdue' : ''}">${M.dateSmart(d.close)}</span>${d.late ? '<span class="badge late">Late</span>' : ''}</div>
+    </article>`;
+    return sidebar('pipeline') + `<main class="main">
+      <div class="head">
+        <div><h1>Pipeline</h1><div class="head-figures"><b>${k.openCount}</b> open deals · <b>${usd(k.openValue)}</b> · <b>${usd(k.expected)}</b> expected</div></div>
+        <button class="btn primary">${icon('plus', 16)}Add deal</button>
+      </div>
+      <div class="board">${M.byStage.map((s) => `<section class="col">
+        <div class="col-head">
+          <div class="row1"><span class="dot" style="${stageVars(s)}"></span><span class="nm">${s.name}</span><span class="ct">${s.count}</span><button class="icon-btn" aria-label="Add deal in ${s.name}">${icon('plus', 16)}</button></div>
+          <div class="row2"><b>${usd(s.value)}</b>${s.open ? ` · ${usd(s.expected)} expected` : ''}</div>
+        </div>
+        <div class="cards">${s.deals.map(card).join('')}</div>
+      </section>`).join('')}</div>
+    </main>`;
+  }
+
+  document.getElementById('dashboard').innerHTML = dashboard();
+  document.getElementById('pipeline').innerHTML = pipeline();
+</script>
+</body>
+</html>

@@ -29,7 +29,7 @@ From any contact or deal you can log an activity (a note, call or email) and giv
 
 ### Sample data
 
-Accountable comes with realistic sample data for a business that sells software and services to other businesses, so every screen looks alive the first time it starts: about 15 organizations across several industries, about 40 contacts at every status, about 35 deals worth from about $5,000 to $150,000 at every stage (including deals won and lost over the past months, deals expected to close in the months ahead and a few running late), and about 100 activities over the past 12 months, with some follow-ups due soon and some overdue. The dates are set from the day the sample data is loaded, so this holds whenever it's started fresh or reset.
+Accountable comes with realistic sample data for a business that sells software and services to other businesses, so every screen looks alive the first time it starts: about 15 organizations across several industries, about 40 contacts at every status, about 45 deals worth from about $5,000 to $150,000 at every stage (including about 20 won and some lost over the past 12 months, deals expected to close in the months ahead and a few running late), and about 100 activities over the past 12 months, with some follow-ups due soon and some overdue. The dates are set from the day the sample data is loaded, so this holds whenever it's started fresh or reset.
 
 ### Look and feel
 

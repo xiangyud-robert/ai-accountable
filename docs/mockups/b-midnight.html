@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accountable mockup B: Midnight</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* B: a narrow Midnight sidebar, the figures on the left and the to-do list down the right,
+     and tinted pipeline columns wide enough for 200px cards. */
+  .side { width: 88px; flex: none; background: var(--midnight); color: var(--sea-mist); padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .logo { width: 40px; height: 40px; border-radius: 12px; background: var(--sea-green); color: var(--midnight); display: grid; place-items: center; font-size: 20px; font-weight: 700; }
+  .nav { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 0 8px; }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 0 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+  .nav a.active { background: var(--sea-green); color: var(--midnight); font-weight: 600; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 32px 32px; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .title { display: flex; align-items: baseline; gap: 16px; }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .accent { font-family: var(--serif); font-size: 20px; color: var(--slate); }
+  .actions { display: flex; gap: 10px; }
+  .search { width: 260px; height: 36px; border-radius: 10px; border: 1px solid var(--field); background: #fff; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--slate); }
+
+  .layout { display: flex; gap: 20px; align-items: flex-start; }
+  .left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .right { width: 400px; flex: none; display: flex; flex-direction: column; gap: 20px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .panel { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow); padding: 22px 24px; min-width: 0; }
+  .phead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  h2 { font-size: 16px; font-weight: 600; }
+  .sub { color: var(--slate); font-size: 13px; margin-top: 2px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .stat .label { font-size: 13px; font-weight: 500; color: var(--slate); display: flex; align-items: center; gap: 8px; }
+  .stat .value { font-family: var(--mono); font-size: 28px; font-weight: 500; letter-spacing: -0.03em; margin: 8px 0 4px; }
+  .stat .meta { font-size: 13px; color: var(--slate); }
+  .stat .meta b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+  .stat .meter { height: 6px; border-radius: 4px; background: var(--sea-green-tint); margin-top: 10px; overflow: hidden; }
+  .stat .meter div { height: 100%; background: var(--sea-green); border-radius: 0 4px 4px 0; }
+
+  .ps-row { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: center; }
+  .ps-row + .ps-row { margin-top: 16px; }
+  .ps-row .nm { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .ps-row .ct { font-size: 12px; color: var(--slate); margin-left: 16px; }
+  .ps-track { height: 12px; display: flex; }
+  .ps-track .exp { border-radius: 4px 0 0 4px; }
+  .ps-track .rest { border-radius: 0 4px 4px 0; }
+  .ps-fig { display: flex; gap: 12px; font-size: 12px; color: var(--slate); margin-top: 5px; }
+  .ps-fig b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--slate); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 8px; border-radius: 2px; display: inline-block; }
+
+  .funnel { display: grid; grid-template-columns: 170px 1fr 190px; row-gap: 2px; align-items: center; }
+  .funnel .l { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+  .funnel .l span { color: var(--slate); font-weight: 500; }
+  .funnel .c { display: flex; justify-content: center; }
+  .funnel .c div { height: 40px; border-radius: 4px; }
+  .funnel .r { text-align: right; font-size: 13px; }
+  .funnel .r b { font-family: var(--mono); font-weight: 500; }
+  .funnel .r span { font-family: var(--mono); color: var(--slate); font-size: 12px; margin-left: 8px; }
+  .lost-line { margin-top: 14px; font-size: 13px; color: var(--slate); display: flex; align-items: center; gap: 8px; justify-content: center; }
+  .lost-line b { font-family: var(--mono); font-weight: 500; color: var(--midnight); }
+
+  .fu-group { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; margin: 6px 0 4px; padding: 6px 10px; border-radius: 8px; background: var(--grey-tint); }
+  .fu-group.over { background: var(--raspberry-tint); }
+  .fu-group span { font-family: var(--mono); }
+  .fu { display: flex; gap: 12px; padding: 10px 2px; align-items: flex-start; }
+  .fu .checkbox { margin-top: 2px; }
+  .fu .body { flex: 1; min-width: 0; }
+  .fu .t { font-weight: 500; }
+  .fu .on { font-size: 12px; color: var(--slate); display: flex; align-items: center; gap: 5px; margin-top: 2px; white-space: nowrap; overflow: hidden; }
+  .fu .on a { color: var(--cerulean-text); overflow: hidden; text-overflow: ellipsis; }
+  .fu .due { font-size: 12px; font-weight: 600; color: var(--slate); white-space: nowrap; }
+  .fu .due.overdue { color: var(--raspberry-text); }
+
+  .entry { display: grid; grid-template-columns: 14px 1fr; gap: 12px; position: relative; padding-bottom: 14px; }
+  .entry:not(:last-child)::after { content: ''; position: absolute; left: 6px; top: 18px; bottom: 0; width: 2px; background: var(--divider); }
+  .entry .mark { width: 14px; height: 14px; border-radius: 50%; margin-top: 3px; background: var(--dot); box-shadow: 0 0 0 3px #fff; }
+  .entry .t { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry .m { font-size: 12px; color: var(--slate); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry > div { min-width: 0; }
+  .entry .m a { color: var(--cerulean-text); }
+
+  /* Pipeline */
+  .figs { display: flex; gap: 28px; align-items: center; }
+  .fig .label { font-size: 12px; color: var(--slate); font-weight: 500; }
+  .fig .v { font-family: var(--mono); font-size: 18px; font-weight: 500; }
+  .board { display: flex; gap: 10px; height: 760px; position: relative; }
+  .col { flex: 1; min-width: 0; border-radius: 16px; background: var(--wash); padding: 12px 10px; display: flex; flex-direction: column; }
+  .col-head { padding: 2px 4px 12px; }
+  .col-head .row1 { display: flex; align-items: center; gap: 8px; }
+  .col-head .nm { font-weight: 600; }
+  .col-head .ct { font-family: var(--mono); font-size: 12px; color: var(--slate); }
+  .col-head .icon-btn { margin-left: auto; width: 28px; height: 28px; background: rgba(255, 255, 255, 0.8); color: var(--midnight); }
+  .col-head .row2 { margin-top: 4px; font-size: 12px; color: var(--slate); }
+  .col-head .row2 b { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--midnight); margin-right: 4px; }
+  .cards { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: var(--panel); border-radius: 12px; box-shadow: var(--shadow); padding: 11px 12px 12px; flex: none; }
+  .card .nm { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+  .card .who { font-size: 12px; color: var(--slate); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .card .v { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+  .card .d { font-family: var(--mono); font-size: 12px; color: var(--slate); display: flex; align-items: center; gap: 6px; }
+  .card .d.overdue { color: var(--raspberry-text); }
+  .card .prob { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .card .prob .track { flex: 1; height: 4px; border-radius: 4px; background: var(--divider); overflow: hidden; }
+  .card .prob .track div { height: 100%; border-radius: 0 4px 4px 0; }
+  .card .prob span { font-family: var(--mono); font-size: 11px; color: var(--slate); width: 28px; text-align: right; }
+  .placeholder { height: 108px; border-radius: 12px; background: rgba(7, 59, 76, 0.08); flex: none; }
+  .card.lifted { position: absolute; width: 196px; left: 560px; top: 250px; transform: rotate(2deg); box-shadow: var(--shadow-lift); z-index: 2; }
+</style>
+</head>
+<body>
+<div class="caption">Mockup B, Midnight <span>· Dashboard · a narrow Midnight sidebar, figures on the left, follow-ups and recent activity down the right</span></div>
+<div class="frame" id="dashboard"></div>
+<div class="caption">Mockup B, Midnight <span>· Pipeline · tinted columns of about 205px, made possible by the narrow sidebar. A card being dragged from Proposal to Negotiation</span></div>
+<div class="frame fixed" id="pipeline"></div>
+
+<script src="data.js"></script>
+<script>
+  const M = MOCK;
+  const { usd, icon } = M;
+  const mix = (hex, pct) => '#' + [1, 3, 5].map((i) => Math.round(255 - (255 - parseInt(hex.slice(i, i + 2), 16)) * pct).toString(16).padStart(2, '0')).join('');
+
+  function sidebar(active) {
+    return `<aside class="side">
+      <div class="logo" title="Accountable">A</div>
+      <nav class="nav" aria-label="Sections">
+        ${M.NAV.map((n) => `<a ${M.linkTo(n.key)} class="${n.key === active ? 'active' : ''}">${icon(n.key, 20)}${n.label}</a>`).join('')}
+      </nav>
+    </aside>`;
+  }
+
+  const KIND_DOT = { call: 'var(--cerulean)', email: 'var(--marigold)', note: 'var(--grey)', status: 'var(--sea-green)', added: 'var(--cerulean)' };
+  const KIND_LABEL = { call: 'Call', email: 'Email', note: 'Note' };
+
+  function dashboard() {
+    const k = M.kpi;
+    const open = M.byStage.filter((s) => s.open);
+    const maxOpen = Math.max(...open.map((s) => s.value));
+    const maxFunnel = M.funnel[0].value;
+    const expShare = Math.round((k.expected / k.openValue) * 100);
+
+    return sidebar('dashboard') + `<main class="main">
+      <div class="head">
+        <div class="title"><h1>Dashboard</h1><span class="accent">Sunday, November 22</span></div>
+        <div class="actions">
+          <button class="btn primary">${icon('plus', 16)}Add deal</button>
+        </div>
+      </div>
+      <div class="layout">
+        <div class="left">
+          <section class="panel">
+            <div class="stats">
+              <div class="stat"><div class="label">Revenue won in November</div><div class="value">${usd(k.revenueWon)}</div><div class="meta">October: <b>${usd(k.revenueWonLast)}</b></div></div>
+              <div class="stat"><div class="label">Deals won in November</div><div class="value">${k.dealsWon}</div><div class="meta">October: <b>${k.dealsWonLast}</b></div></div>
+              <div class="stat"><div class="label">Open pipeline</div><div class="value">${usd(k.openValue)}</div><div class="meta"><b>${k.openCount}</b> open deals</div></div>
+              <div class="stat"><div class="label">Expected revenue</div><div class="value">${usd(k.expected)}</div><div class="meta"><b>${expShare}%</b> of the open pipeline</div><div class="meter" role="img" aria-label="${expShare}% of the open pipeline"><div style="width:${expShare}%"></div></div></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="phead">
+              <div><h2>Revenue won by month</h2><div class="sub"><span class="mono">${usd(k.wonYear)}</span> won in the last 12 months · USD</div></div>
+              <div class="sub">Dec 2025 to Nov 2026</div>
+            </div>
+            ${M.lineChart({ points: M.months.map((m) => ({ label: m.label, long: m.long, value: m.revenue })), width: 836, height: 300, color: '#06D6A0', wash: 'rgba(6,214,160,0.12)', yMax: 150000, yStep: 50000, label: 'Revenue won by month' })}
+          </section>
+
+          <div class="pair">
+            <section class="panel">
+              <div class="phead"><div><h2>Deals won by month</h2><div class="sub"><span class="mono">${k.wonYearCount}</span> in the last 12 months</div></div></div>
+              ${M.barChart({ points: M.months.map((m) => ({ label: m.label, long: m.long, value: m.count })), width: 382, height: 262, color: '#06D6A0', yMax: 2, barWidth: 18, label: 'Deals won by month' })}
+            </section>
+            <section class="panel">
+              <div class="phead"><div><h2>Open pipeline by stage</h2><div class="sub"><span class="mono">${usd(k.openValue)}</span> open, <span class="mono">${usd(k.expected)}</span> expected</div></div></div>
+              ${open.map((s) => `<div class="ps-row">
+                <div><div class="nm"><span class="dot" style="--dot:${s.color}"></span>${s.name}</div><div class="ct">${s.count} deals</div></div>
+                <div>
+                  <div class="ps-track" style="width:${(s.value / maxOpen) * 100}%">
+                    <div class="exp" style="flex:${s.expected};background:${s.color}"></div><div class="rest" style="flex:${s.value - s.expected};background:${s.tint}"></div>
+                  </div>
+                  <div class="ps-fig"><span><b>${usd(s.value)}</b></span><span><b>${usd(s.expected)}</b> expected</span></div>
+                </div>
+              </div>`).join('')}
+              <div class="legend" style="margin-top:16px"><span><i style="background:var(--midnight)"></i>Expected</span><span><i style="background:var(--midnight-tint)"></i>Rest of the value</span></div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="phead"><div><h2>Sales funnel</h2><div class="sub">How much value reaches each stage, across all ${M.deals.length} deals</div></div></div>
+            <div class="funnel">
+              ${M.funnel.map((f) => `
+                <div class="l"><span class="dot" style="--dot:${f.color}"></span>${f.name} <span>· ${f.count} deals</span></div>
+                <div class="c"><div style="width:${(f.value / maxFunnel) * 100}%;background:${f.color}" title="${f.name}: ${usd(f.value)}"></div></div>
+                <div class="r"><b>${usd(f.value)}</b><span>${f.share}%</span></div>`).join('')}
+            </div>
+            <div class="lost-line"><span class="dot" style="--dot:var(--grey)"></span>Lost: <b>${M.byStage[5].count}</b> deals worth <b>${usd(M.byStage[5].value)}</b></div>
+          </section>
+        </div>
+
+        <div class="right">
+          <section class="panel">
+            <div class="phead"><div><h2>Follow-ups</h2><div class="sub">Overdue first, then the next 7 days</div></div></div>
+            <div class="fu-group over"><span class="overdue" style="font-family:var(--sans)">Overdue</span><span class="overdue">${M.followUps.filter((f) => f.overdue).length}</span></div>
+            ${M.followUps.filter((f) => f.overdue).map(fu).join('')}
+            <div class="fu-group" style="margin-top:10px"><span style="font-family:var(--sans)">Next 7 days</span><span>${M.followUps.filter((f) => !f.overdue).length}</span></div>
+            ${M.followUps.filter((f) => !f.overdue).map(fu).join('')}
+          </section>
+          <section class="panel">
+            <div class="phead"><div><h2>Recent activity</h2></div><a class="link" ${M.linkTo('deals')}>Deals ${icon('arrowRight', 14)}</a></div>
+            ${M.recent.map((r) => `<div class="entry">
+              <span class="mark" style="--dot:${r.kind === 'stage' ? M.stage(r.to).color : KIND_DOT[r.kind]}"></span>
+              <div><div class="t">${KIND_LABEL[r.kind] ? `${KIND_LABEL[r.kind]}: ` : ''}${r.text}</div><div class="m"><a href="#">${r.on}</a> · ${r.when}</div></div>
+            </div>`).join('')}
+          </section>
+        </div>
+      </div>
+    </main>`;
+  }
+
+  function fu(f) {
+    return `<div class="fu">
+      <span class="checkbox" role="checkbox" aria-label="Mark done"></span>
+      <div class="body"><div class="t">${f.text}</div><div class="on">${icon(f.type, 13)}<a href="#">${f.on}</a></div></div>
+      <div class="due ${f.overdue ? 'overdue' : ''}">${f.label}</div>
+    </div>`;
+  }
+
+  function pipeline() {
+    const k = M.kpi;
+    const dragged = 'Atlas Freight customs API integration';
+    const card = (d, extra = '') => `<article class="card ${extra}" tabindex="0">
+      <div class="nm">${d.name}</div>
+      <div class="who">${d.org} · ${d.contact}</div>
+      <div class="row"><span class="v">${usd(d.value)}</span>${d.late ? `<span class="badge late">Late · ${M.dateSmart(d.close)}</span>` : `<span class="d">${M.dateSmart(d.close)}</span>`}</div>
+      ${d.open ? `<div class="prob"><div class="track"><div style="width:${d.prob}%;background:${M.stage(d.stage).color}"></div></div><span>${d.prob}%</span></div>` : ''}
+    </article>`;
+    const cards = (s) => {
+      const list = s.deals.filter((d) => d.name !== dragged).map((d) => card(d));
+      if (s.key === 'negotiation') list.splice(1, 0, '<div class="placeholder" aria-hidden="true"></div>');
+      return list.join('');
+    };
+    return sidebar('pipeline') + `<main class="main">
+      <div class="head">
+        <div class="title"><h1>Pipeline</h1></div>
+        <div class="figs">
+          <div class="fig"><div class="label">Open deals</div><div class="v">${k.openCount}</div></div>
+          <div class="fig"><div class="label">Open value</div><div class="v">${usd(k.openValue)}</div></div>
+          <div class="fig"><div class="label">Expected revenue</div><div class="v">${usd(k.expected)}</div></div>
+          <button class="btn primary">${icon('plus', 16)}Add deal</button>
+        </div>
+      </div>
+      <div class="board">
+        ${M.byStage.map((s) => `<section class="col" style="--wash:${mix(s.color, 0.09)}">
+          <div class="col-head">
+            <div class="row1"><span class="dot" style="--dot:${s.color}"></span><span class="nm">${s.name}</span><span class="ct">${s.count}</span><button class="icon-btn" aria-label="Add deal in ${s.name}">${icon('plus', 16)}</button></div>
+            <div class="row2"><b>${usd(s.value)}</b>${s.open ? `${usd(s.expected)} expected` : ''}</div>
+          </div>
+          <div class="cards">${cards(s)}</div>
+        </section>`).join('')}
+        ${card(M.deals.find((d) => d.name === dragged), 'lifted')}
+      </div>
+    </main>`;
+  }
+
+  document.getElementById('dashboard').innerHTML = dashboard();
+  document.getElementById('pipeline').innerHTML = pipeline();
+</script>
+</body>
+</html>

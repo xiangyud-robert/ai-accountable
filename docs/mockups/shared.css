@@ -1,0 +1,59 @@
+/* Brand tokens and page scaffolding shared by the three mockups.
+   The app bundles these fonts (spec, concern 1). The mockups load them from Google Fonts. */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --sea-green: #06D6A0; --sea-green-text: #037558; --sea-green-tint: #D7F8F0;
+  --marigold: #FFC145; --marigold-text: #8C5E00; --marigold-tint: #FFF5E1;
+  --coral: #F78C6B; --coral-text: #C1350A; --coral-tint: #FEEDE7;
+  --cerulean: #118AB2; --cerulean-text: #0E7191; --cerulean-fill: #0F789B; --cerulean-tint: #D9ECF3;
+  --raspberry: #EF476F; --raspberry-text: #CD123F; --raspberry-fill: #D91342; --raspberry-tint: #FCE2E8;
+  --midnight: #073B4C; --midnight-tint: #D7E0E2;
+  --slate: #4F6873; --grey: #8FA3A9; --grey-tint: #EDF0F1; --field: #7A9097;
+  --sea-mist: #CDD8DB; --divider: #E3EAEC; --page: #F0F4F5; --panel: #FFFFFF;
+  --shadow: 0 1px 2px rgba(7, 59, 76, 0.06), 0 8px 24px rgba(7, 59, 76, 0.06);
+  --shadow-lift: 0 2px 4px rgba(7, 59, 76, 0.08), 0 16px 32px rgba(7, 59, 76, 0.12);
+  --sans: 'Instrument Sans', system-ui, sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans); font-size: 14px; line-height: 1.45; color: var(--midnight);
+  background: #D3DDE0; padding: 28px 40px 40px; -webkit-font-smoothing: antialiased;
+}
+html { scroll-behavior: smooth; }
+a { color: inherit; text-decoration: none; }
+a[aria-disabled] { cursor: default; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+/* Each mockup shows two 1440px screens, one above the other, with a caption above each. */
+.caption { width: 1440px; margin: 0 auto 10px; font-size: 13px; font-weight: 600; color: var(--midnight); }
+.caption span { color: var(--slate); font-weight: 500; }
+.frame { scroll-margin-top: 36px; width: 1440px; margin: 0 auto 36px; background: var(--page); display: flex; border-radius: 14px; overflow: hidden; }
+.frame.fixed { height: 900px; }
+
+.mono { font-family: var(--mono); }
+.tick { font-family: var(--mono); font-size: 11px; fill: var(--slate); }
+.val { font-family: var(--mono); font-size: 12px; font-weight: 500; fill: var(--midnight); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; color: var(--midnight); white-space: nowrap; background: var(--tint, var(--grey-tint));
+}
+.badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--grey)); }
+.badge.late { --tint: var(--raspberry-tint); --dot: var(--raspberry); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--dot); flex: none; }
+
+.btn {
+  height: 36px; padding: 0 14px; border-radius: 10px; font-weight: 600; font-size: 14px;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.btn.primary { background: var(--sea-green); color: var(--midnight); }
+.btn.secondary { background: var(--midnight-tint); color: var(--midnight); }
+.icon-btn { width: 32px; height: 32px; border-radius: 10px; display: inline-grid; place-items: center; color: var(--slate); }
+.checkbox { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--field); background: #fff; flex: none; }
+.link { color: var(--cerulean-text); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+.overdue { color: var(--raspberry-text); }
