@@ -232,7 +232,7 @@ The sample data is for a business that sells software and services to other busi
 - **`npm run dev`** starts Accountable. On the first run it checks Node.js and uv, installs the npm and Python packages, and creates the database with the sample data. Then it starts the backend and frontend and prints "Accountable is running at http://localhost:5173. Open it in Google Chrome." Ctrl+C stops both.
 - **`npm run seed`** replaces all the data with fresh sample data, dated from today, and prints what it created. If the app is running, refresh the browser to see the new data.
 - **`npm test`** runs every test against a database of its own.
-- **The data** lives in `data/accountable.db`, which git ignores. Deleting that file also resets to the sample data on the next start.
+- **The data** lives in `data/accountable.db`, which git ignores, unless `DATABASE_URL` names another database. Deleting that file also resets to the sample data on the next start.
 
 ### Quality
 
@@ -257,9 +257,9 @@ Look and feel and Layout below follow it. The mockup shows the look, not the fin
 ### How it fits together
 
 - **`frontend/`:** a React, Vite and TypeScript app. Its dev server forwards `/api` to the backend, so the browser talks to one address.
-- **`backend/`:** a FastAPI app, organized by kind of record, with the business rules (R1 to R11) in one service layer. Dragging a card, saving the form and adding a deal all go through the same code. Each user action runs in a single database transaction, so a move to Won changes the deal, its stage history, its main contact and their status history together or not at all.
-- **The database:** one SQLite file, defined with SQLAlchemy Core tables. The tables are created when the app starts if they don't exist yet, and the sample data is loaded if the database is new. Migrations can wait for the move to Supabase.
-- **SQLite details:** every connection turns on foreign keys (`PRAGMA foreign_keys = ON`), or SQLite silently ignores the delete rules. The database uses WAL mode, so the seed command can run while the app is open.
+- **`backend/`:** a FastAPI app, organized by kind of record, with the business rules (R1 to R11) in one service layer. Dragging a card, saving the form and adding a deal all go through the same code. Each request runs in a single database transaction, so a move to Won changes the deal, its stage history, its main contact and their status history together or not at all.
+- **The database:** named by `DATABASE_URL`, which defaults to a SQLite file on this computer. The tables are defined with SQLAlchemy Core and created and changed by Alembic migrations, which are in git and run when the app starts. The sample data is loaded if the database was new. Moving to Postgres on Supabase later means changing `DATABASE_URL`.
+- **SQLite details:** when the database is SQLite, every connection turns on foreign keys (`PRAGMA foreign_keys = ON`), or SQLite silently ignores the delete rules. It also uses WAL mode, so the seed command can run while the app is open.
 - **Who decides:** the backend decides what's late, overdue and due soon, and works out every dashboard figure. The pipeline recalculates its own totals as soon as a card moves, using R1 and R2, and then refreshes from the server.
 
 ### Libraries
@@ -271,7 +271,7 @@ Popular, well-supported libraries, as `docs/TECH_STACK.md` asks:
 | Pages and addresses | React Router |
 | Loading and caching data, instant card moves | TanStack Query |
 | Sorting and searching tables | TanStack Table |
-| Pipeline drag and drop, with keyboard support | dnd-kit (`@dnd-kit/core`, `@dnd-kit/sortable`) |
+| Pipeline drag and drop with the mouse | dnd-kit (`@dnd-kit/core`, `@dnd-kit/sortable`) |
 | Charts | Recharts |
 | Dialogs, menus, selects, checkboxes, tooltips | Radix UI primitives |
 | Pickers you can search | cmdk |
@@ -283,11 +283,12 @@ Popular, well-supported libraries, as `docs/TECH_STACK.md` asks:
 | Fonts, served from the app | `@fontsource/instrument-sans`, `@fontsource/instrument-serif`, `@fontsource/jetbrains-mono` |
 | API | FastAPI, Pydantic, Uvicorn |
 | Database | SQLAlchemy Core |
+| Database changes | Alembic |
 | Tests | Vitest with React Testing Library, pytest with FastAPI's test client, Playwright Test using Chrome |
 
 ### Data model
 
-Dates are stored as `YYYY-MM-DD`, and times as ISO 8601 in local time. Money is stored in whole US dollars. Every table has `id` (an integer primary key), and the four kinds of record also have `created_at` and `updated_at`, set by the server.
+Columns use SQLAlchemy's own types (`Date`, `DateTime`, `Boolean`, `Integer`, `String`, `Text`), so the same tables work on Postgres later. The API sends dates as `YYYY-MM-DD` and times as ISO 8601, in local time. Money is stored in whole US dollars. Every table has `id` (an integer primary key), and the four kinds of record also have `created_at` and `updated_at`, set by the server.
 
 **organizations**
 
@@ -431,6 +432,14 @@ Badge backgrounds are a 16% tint of each color on white, with Midnight text (9 t
 
 Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Green.
 
+Components use colors by role, never by the brand's names or by value. The roles are:
+
+- page, panel, ink, ink muted, divider, field outline, focus and link
+- primary, alert and their tints
+- each stage and status, with its tint
+
+Only the theme file maps each role to a color in the tables above, and the charts use the same roles. A dark mode is then one more set of values in that file.
+
 **Surfaces and shape.**
 
 - **Panels:** white, rounded (16px), with no outline and a soft shadow: `0 1px 2px rgba(7, 59, 76, 0.06), 0 8px 24px rgba(7, 59, 76, 0.06)`.
@@ -517,7 +526,7 @@ Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Gree
 - **Tables:** these are real HTML tables. Each sortable heading is a button and announces its sort order. On each row, the name link and the Edit and Delete buttons can be reached with Tab.
 - **Forms:** every field has a visible label. Errors are linked to their field, and saving with errors moves focus to the first one.
 - **Dialogs** keep focus inside them, close with Escape, and return focus to the button that opened them.
-- **Pipeline,** with dnd-kit's keyboard support:
+- **Pipeline,** with keyboard moves of our own that use the same move function as dragging (see Risks in `docs/plan.md`):
   - Tab reaches each card.
   - Space picks a card up, Up and Down move it within the column, and Left and Right move it to the next column, keeping its position where possible.
   - Space drops it, and Escape puts it back where it was.
@@ -528,6 +537,6 @@ Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Gree
 
 ### Testing hooks
 
-- `ACCOUNTABLE_DB` sets the database file, so the tests use their own.
-- `ACCOUNTABLE_TODAY` fixes the date the backend treats as today, so the tests for late deals, follow-ups and months always give the same results. The end-to-end tests set Chrome's clock to the same date, since the pipeline works out late cards in the browser too.
+- `DATABASE_URL` sets the database, so the tests use their own.
+- `ACCOUNTABLE_TODAY` fixes the date the backend treats as today, with noon as the time now, so the tests for late deals, follow-ups and months always give the same results. The end-to-end tests set Chrome's clock to 11:00 on the same date, since the pipeline works out late cards in the browser too, and a time Chrome fills in as now is then never later than the backend's now.
 - The sample data generator takes today's date as an input, for the same reason.
