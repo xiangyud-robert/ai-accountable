@@ -20,7 +20,8 @@ export default defineConfig({
   // The tests share one database, so they run one at a time.
   workers: 1,
   fullyParallel: false,
-  forbidOnly: !!process.env.CI,
+  // A test left with .only would make the run skip every other test, so it fails instead.
+  forbidOnly: true,
   retries: 0,
   timeout: 30_000,
   expect: { timeout: 5_000 },

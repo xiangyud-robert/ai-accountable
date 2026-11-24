@@ -17,10 +17,10 @@ function StageTick({ x, y, payload, bars }: { x?: number; y?: number; payload?: 
   const bar = bars.find((b) => b.name === payload?.value)
   return (
     <g transform={`translate(${x},${y})`}>
-      <text y={12} textAnchor="middle" fontSize={12} fontWeight={600} fill="var(--color-ink)">
+      <text y={10} textAnchor="middle" fontSize={12} fontWeight={600} fill="var(--color-ink)">
         {payload?.value}
       </text>
-      <text y={27} textAnchor="middle" {...TICK}>
+      <text y={26} textAnchor="middle" {...TICK}>
         {bar ? `${shortMoney(bar.expected)} exp.` : ''}
       </text>
     </g>
@@ -43,7 +43,7 @@ export function PipelineByStage({ dashboard, stages }: { dashboard: Dashboard; s
     >
       <p className="sr-only">{summaries(dashboard).pipeline}</p>
       <Link to="/pipeline" aria-hidden tabIndex={-1} className="block">
-        <BarChart data={bars} responsive style={{ width: '100%', height: 246 }} margin={{ top: 22, right: 0, bottom: 0, left: 0 }} barSize={26} accessibilityLayer={false}>
+        <BarChart data={bars} responsive style={{ width: '100%', height: 250 }} margin={{ top: 22, right: 0, bottom: 0, left: 0 }} barSize={26} accessibilityLayer={false}>
           <XAxis dataKey="name" tickLine={false} axisLine={{ stroke: 'var(--color-divider)' }} interval={0} height={40} tick={<StageTick bars={bars} />} />
           <YAxis hide domain={[0, 'dataMax']} />
           <Tooltip

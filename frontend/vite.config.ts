@@ -21,5 +21,7 @@ export default defineConfig({
     env: { TZ: 'America/Los_Angeles' },
     setupFiles: ['./src/test-setup.ts'],
     css: false,
+    // A test left with .only would make the run skip every other test, so it fails instead.
+    allowOnly: false,
   },
 })

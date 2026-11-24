@@ -1,6 +1,10 @@
 import { type Page } from '@playwright/test'
 import { expect, reseed, test } from './fixtures'
 
+// Recording a trace stores every file the page loads, which nearly doubles a reload's
+// time. These tests time the app, so they don't record one.
+test.use({ trace: 'off' })
+
 // The intent's speed constraint, with 500 more of each kind of record.
 test.describe(() => {
   test.beforeEach(() => reseed(['--large']))

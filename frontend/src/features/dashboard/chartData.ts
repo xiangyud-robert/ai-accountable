@@ -73,13 +73,8 @@ export function summaries(dashboard: Dashboard) {
   const funnelWon = dashboard.funnel.at(-1)
   return {
     revenue: `${money(year.value)} won in the last 12 months`,
-    dealsWon: `${year.count} in the last 12 months`,
     funnel: funnelFirst && funnelWon ? `${money(funnelWon.value)} of ${money(funnelFirst.value)} reached Won` : '',
     pipeline: `${money(open.value)} open, ${money(open.expected)} expected`,
-    followUps: (() => {
-      const overdue = dashboard.follow_ups.filter((f) => f.overdue).length
-      return `${overdue} overdue, ${dashboard.follow_ups.length - overdue} due in the next 7 days`
-    })(),
     lost: `${plural(dashboard.lost.count, 'deal')}, ${money(dashboard.lost.value)}`,
   }
 }

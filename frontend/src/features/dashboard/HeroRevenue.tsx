@@ -35,9 +35,9 @@ export function HeroRevenue({ dashboard }: { dashboard: Dashboard }) {
       <p className="sr-only">{summaries(dashboard).revenue}</p>
       {/* The chart fills the panel, which is as tall as the three tiles beside it. */}
       <div aria-hidden className="min-h-[236px] flex-1">
-        <AreaChart data={points} responsive style={{ width: '100%', height: '100%' }} margin={{ top: 22, right: 44, bottom: 0, left: 0 }} accessibilityLayer={false}>
+        <AreaChart data={points} responsive style={{ width: '100%', height: '100%' }} margin={{ top: 22, right: 64, bottom: 0, left: 0 }} accessibilityLayer={false}>
           <CartesianGrid vertical={false} stroke="var(--color-divider)" />
-          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={TICK} interval={0} />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={TICK} tickMargin={8} interval={0} />
           <YAxis ticks={ticks} domain={[0, ticks.at(-1)!]} tickFormatter={(v) => shortMoney(Number(v))} tickLine={false} axisLine={false} tick={TICK} width={56} />
           <Tooltip
             cursor={{ stroke: 'var(--color-divider)' }}
@@ -60,8 +60,8 @@ export function HeroRevenue({ dashboard }: { dashboard: Dashboard }) {
               content={({ x, y, value, index }) =>
                 (index === last || (Number(value) === peak && peak > 0)) && typeof x === 'number' && typeof y === 'number' ? (
                   <g>
-                    <circle cx={x} cy={y} r={3.5} fill="var(--color-chart-won)" />
-                    <text x={x + (index === last ? 8 : 0)} y={y - (index === last ? 0 : 9)} textAnchor={index === last ? 'start' : 'middle'} dominantBaseline={index === last ? 'middle' : 'auto'} {...FIGURE}>
+                    <circle cx={x} cy={y} r={5} fill="var(--color-chart-won)" stroke="var(--color-panel)" strokeWidth={2} />
+                    <text x={x + (index === last ? 12 : 0)} y={y - (index === last ? 0 : 12)} textAnchor={index === last ? 'start' : 'middle'} dominantBaseline={index === last ? 'middle' : 'auto'} {...FIGURE}>
                       {shortMoney(Number(value))}
                     </text>
                   </g>

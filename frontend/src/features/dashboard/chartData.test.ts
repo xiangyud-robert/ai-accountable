@@ -77,10 +77,8 @@ describe('chart data', () => {
   test('the summaries in words', () => {
     expect(summaries(DASHBOARD)).toEqual({
       revenue: '$316,000 won in the last 12 months',
-      dealsWon: '12 in the last 12 months',
       funnel: '$544,000 of $1,600,000 reached Won',
       pipeline: '$804,500 open, $384,775 expected',
-      followUps: '1 overdue, 1 due in the next 7 days',
       lost: '5 deals, $268,000',
     })
   })

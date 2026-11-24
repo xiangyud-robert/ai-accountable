@@ -8,7 +8,6 @@ import type { Dashboard, FollowUp } from '../../lib/types'
 import { DoneCheckbox } from '../activities/ActivityDialog'
 import { useChangeActivity } from '../activities/queries'
 import { KindIcon, TYPE_ICONS } from '../activities/Timeline'
-import { summaries } from './chartData'
 
 /** R9: overdue first, oldest first, then the rest due in the next 7 days, soonest first. */
 export function FollowUps({ dashboard }: { dashboard: Dashboard }) {
@@ -19,12 +18,25 @@ export function FollowUps({ dashboard }: { dashboard: Dashboard }) {
       { onError: () => notify.failed(UNREACHABLE_MESSAGE) },
     )
 
+  const overdue = dashboard.follow_ups.filter((f) => f.overdue).length
+
   return (
-    <Panel title="Follow-ups" subtitle={summaries(dashboard).followUps} className="col-span-6">
+    <Panel
+      title="Follow-ups"
+      subtitle={
+        <>
+          <span className="font-mono">{overdue}</span> overdue, <span className="font-mono">{dashboard.follow_ups.length - overdue}</span>{' '}
+          due in the next 7 days
+        </>
+      }
+      className="col-span-6"
+    >
       {dashboard.follow_ups.length === 0 ? (
         <EmptyState message="Nothing to follow up in the next 7 days." />
       ) : (
-        <ul aria-label="Follow-ups" className="-mr-2 max-h-[470px] overflow-y-auto pr-2">
+        // Tall enough for the 11 in the sample data, as in the mockup. With more, half of the
+        // 12th shows, so it's clear the list scrolls.
+        <ul aria-label="Follow-ups" className="-mr-2 max-h-[652px] overflow-y-auto pr-2">
           {dashboard.follow_ups.map((followUp) => (
             <li key={followUp.id} className="grid grid-cols-[18px_30px_1fr_auto] items-center gap-3 border-t border-divider py-[9px] first:border-t-0">
               <DoneCheckbox

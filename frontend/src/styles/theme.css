@@ -78,6 +78,12 @@
   --font-sans: 'Instrument Sans', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* The small text sizes keep the body's 1.45 line height, as the mockup does, rather
+     than each size's own Tailwind default. */
+  --text-xs--line-height: 1.45;
+  --text-sm--line-height: 1.45;
+  --text-base--line-height: 1.45;
 }
 
 @layer base {

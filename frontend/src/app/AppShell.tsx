@@ -56,7 +56,7 @@ export function AppShell() {
                       <Icon aria-hidden size={18} className={isActive ? 'text-primary-text' : 'text-ink-muted'} />
                       {label}
                       {count !== undefined && (
-                        <span className="ml-auto font-mono text-xs font-normal text-ink-muted">{count}</span>
+                        <span className="ml-auto font-mono text-xs text-ink-muted">{count}</span>
                       )}
                     </>
                   )}
