@@ -77,10 +77,11 @@ export function dueLabel(days: number): string {
   return `Due in ${days} days`
 }
 
-/** "Follow up Nov 25", "Overdue since Nov 18" or "Done", for an activity in a timeline. */
-export function followUpLabel(iso: string, done: boolean, now: Date = new Date()): string {
+/** "Follow up Nov 25", "Overdue since Nov 18" or "Done", for an activity in a timeline.
+ *  Whether it's overdue is the backend's call, as the server sends it. */
+export function followUpLabel(iso: string, done: boolean, overdue: boolean, now: Date = new Date()): string {
   if (done) return 'Done'
-  if (iso < todayISO(now)) return `Overdue since ${shortDate(iso, now)}`
+  if (overdue) return `Overdue since ${shortDate(iso, now)}`
   return `Follow up ${shortDate(iso, now)}`
 }
 

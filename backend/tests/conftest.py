@@ -55,7 +55,8 @@ def conn(engine):
 
 @pytest.fixture
 def client(database_url):
-    with TestClient(create_app()) as client:
+    # The app answers only to this computer's names (main.ALLOWED_HOSTS).
+    with TestClient(create_app(), base_url="http://localhost") as client:
         yield client
 
 

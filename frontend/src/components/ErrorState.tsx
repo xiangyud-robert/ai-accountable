@@ -24,11 +24,12 @@ export function ErrorState({ error, kind, listPath, listName }: ErrorStateProps)
       </Panel>
     )
   }
+  // A record page has no header of its own while it can't load, so the message is its main heading.
   return (
     <Panel>
-      <p role="alert" className="text-ink">
-        {UNREACHABLE_MESSAGE}
-      </p>
+      <div role="alert">
+        {kind ? <h1 className="text-xl font-semibold">{UNREACHABLE_MESSAGE}</h1> : <p className="text-ink">{UNREACHABLE_MESSAGE}</p>}
+      </div>
     </Panel>
   )
 }

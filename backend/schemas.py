@@ -46,6 +46,11 @@ MESSAGES = {
 
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 SCHEME = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
+WEB_SCHEME = re.compile(r"^https?://", re.IGNORECASE)
+WEBSITE_LENGTH = 300
+
+# The largest id an Integer column holds, on SQLite and on Postgres. A bigger one can't be a record's.
+MAX_ID = 2**31 - 1
 
 
 def _blank_to_none(value):
@@ -61,9 +66,17 @@ def _check_email(value: str | None) -> str | None:
     return value
 
 
-def _add_scheme(value: str | None) -> str | None:
-    if value is not None and not SCHEME.match(value):
+def _check_website(value: str | None) -> str | None:
+    """Adds https:// if no scheme is given. Only web addresses are kept, since the website
+    becomes a link. The length is checked with the scheme added, as it's saved."""
+    if value is None:
+        return None
+    if not SCHEME.match(value):
         value = f"https://{value}"
+    elif not WEB_SCHEME.match(value):
+        raise PydanticCustomError("accountable", MESSAGES["website"])
+    if len(value) > WEBSITE_LENGTH:
+        raise PydanticCustomError("accountable", f"Keep this to {WEBSITE_LENGTH:,} characters or fewer.")
     return value
 
 
@@ -92,11 +105,11 @@ Notes = _optional(5000)
 Industry = _optional(80)
 Phone = _optional(40)
 JobTitle = _optional(120)
-Website = Annotated[_optional(300), AfterValidator(_add_scheme)]
+Website = Annotated[str | None, BeforeValidator(_blank_to_none), AfterValidator(_check_website)]
 Email = Annotated[_optional(254), AfterValidator(_check_email)]
 Money = Annotated[int, Field(ge=0, le=100_000_000)]
 Percent = Annotated[int, Field(ge=0, le=100)]
-OptionalId = Annotated[int | None, BeforeValidator(_blank_to_none)]
+OptionalId = Annotated[Annotated[int, Field(le=MAX_ID)] | None, BeforeValidator(_blank_to_none)]
 OptionalDate = Annotated[date | None, BeforeValidator(_blank_to_none)]
 LocalTime = Annotated[datetime, AfterValidator(_local_time)]
 
@@ -259,6 +272,7 @@ class TimelineEntry(BaseModel):
     type: ActivityType | None = None
     follow_up_date: date | None = None
     follow_up_done: bool | None = None
+    follow_up_overdue: bool | None = None
     from_value: str | None = None
     to_value: str | None = None
     contact_id: int | None = None

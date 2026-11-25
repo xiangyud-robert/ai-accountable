@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { DealRow, StageKey } from '../../lib/types'
 import { STAGES } from '../../test-utils'
-import { boardColumns, boardTotals, columnOf, moveDeal } from './board'
+import { boardColumns, boardTotals, columnOf, moveDeal, putBack } from './board'
 
 const TODAY = '2026-06-15'
 
@@ -111,6 +111,25 @@ describe('moveDeal', () => {
     const copy = structuredClone(deals)
     moveDeal(deals, STAGES, byName(deals, 'A').id, 'won', 0, TODAY)
     expect(deals).toEqual(copy)
+  })
+})
+
+describe('putBack', () => {
+  test('a move that failed is undone, and a later one stays', () => {
+    nextId = 1
+    const before = [...board().slice(0, 3), deal('qualified', 0, { name: 'X', probability: 40, expected: 4_000 }), deal('qualified', 1, { name: 'Y' })]
+    const x = byName(before, 'X').id
+    const b = byName(before, 'B').id
+    // X fails to move to Won. B moves to Proposal before X's save has failed.
+    const first = moveDeal(before, STAGES, x, 'won', 0, TODAY)
+    const second = moveDeal(first, STAGES, b, 'proposal', 0, TODAY)
+    const back = putBack(second, before, STAGES, x, TODAY)
+    expect(names(back, 'qualified')).toEqual([['X', 0], ['Y', 1]])
+    expect(names(back, 'won')).toEqual([])
+    expect(names(back, 'proposal')).toEqual([['B', 0]])
+    expect(names(back, 'new')).toEqual([['A', 0], ['C', 1]])
+    // Its own probability, set by hand, comes back too.
+    expect([byName(back, 'X').probability, byName(back, 'X').expected, byName(back, 'X').close_date]).toEqual([40, 4_000, '2026-07-01'])
   })
 })
 

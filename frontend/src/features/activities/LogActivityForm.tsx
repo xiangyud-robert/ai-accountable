@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Button } from '../../components/Button'
@@ -24,23 +24,27 @@ const blank = (): Values => ({ type: 'note', description: '', occurred_at: local
 export function LogActivityForm({ on }: { on: { contact_id: number } | { deal_id: number } }) {
   const id = useId()
   const log = useLogActivity()
+  // "When" starts as the time the form appeared. Left as it is, it's the time of saving.
+  const start = useRef(blank())
   const { register, handleSubmit, setError, control, formState, reset } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: blank(),
+    defaultValues: start.current,
   })
   const error = (field: keyof Values) => formState.errors[field]?.message
 
   const onSubmit = handleSubmit(async (values) => {
+    const when = values.occurred_at === start.current.occurred_at ? localMinute() : values.occurred_at
     try {
       await log.mutateAsync({
         ...on,
         type: values.type,
         description: values.description.trim(),
-        occurred_at: toApiTime(values.occurred_at),
+        occurred_at: toApiTime(when),
         follow_up_date: values.follow_up_date || null,
       })
       notify.done('Activity logged')
-      reset(blank())
+      start.current = blank()
+      reset(start.current)
     } catch (e) {
       showSaveError(e, setError, [...ORDER])
     }

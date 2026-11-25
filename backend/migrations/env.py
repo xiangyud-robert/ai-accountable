@@ -25,13 +25,14 @@ def run_migrations(connection) -> None:
 
 
 def run_migrations_online() -> None:
-    # db.migrate() passes in its own connection. The command line makes one from settings.
+    # db.migrate() passes in its own connection. The command line makes one from settings,
+    # with foreign keys off while it migrates, the same as db.migrate().
     connection = config.attributes.get("connection")
     if connection is not None:
         run_migrations(connection)
         return
     engine = db.make_engine()
-    with engine.connect() as connection:
+    with engine.connect() as connection, db.foreign_keys_off(connection):
         run_migrations(connection)
     engine.dispose()
 

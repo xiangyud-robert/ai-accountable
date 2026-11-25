@@ -42,6 +42,23 @@ export function useKeyboardMove({ deals, stages, today, onDrop, onOpen }: Option
     }
   })
 
+  // Once the user moves on, with the mouse or by focusing something else, focus is left
+  // alone, so a card dragged later doesn't lose focus to the one moved by keyboard.
+  useEffect(() => {
+    const forget = (event: Event) => {
+      const id = focusId.current
+      if (id === null || latest.current.moving) return
+      const onCard = event.target instanceof Element && event.target.closest(`[data-deal-id="${id}"]`)
+      if (event.type === 'pointerdown' || !onCard) focusId.current = null
+    }
+    document.addEventListener('pointerdown', forget, true)
+    document.addEventListener('focusin', forget, true)
+    return () => {
+      document.removeEventListener('pointerdown', forget, true)
+      document.removeEventListener('focusin', forget, true)
+    }
+  }, [])
+
   // The key handler stays the same function from render to render, so the cards it's
   // passed to can skip redrawing. It reads the latest state from here.
   const latest = useRef({ moving, deals, shown, stages, ordered, today, onDrop, onOpen })

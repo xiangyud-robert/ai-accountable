@@ -25,7 +25,7 @@ These are the gaps and conflicts found while writing the spec, each with the cho
 
    Raspberry stays free for late deals and overdue follow-ups. The option not chosen was the brand's order for the four open stages (Sea Green, Marigold, Coral, Cerulean), with Won in Midnight and Lost in grey.
 6. **Each stage's usual probability** isn't in the intent. The spec uses New 10%, Qualified 25%, Proposal 50%, Negotiation 75%, Won 100% and Lost 0%. Won and Lost are fixed at 100% and 0%, because expected revenue only counts open deals; the probability can only be set by hand on an open deal.
-7. **What "how much value reaches each stage" means.** The funnel counts each deal in every stage up to the furthest one it has reached, using its stage history, so it narrows from New to Won. A deal dragged straight from New to Proposal counts in Qualified too. A lost deal counts up to the stage it was lost from, and a line under the funnel gives the total lost. The funnel covers every deal, with no date range, the same as the pipeline board.
+7. **What "how much value reaches each stage" means.** The funnel counts each deal in every stage up to the furthest one it has reached, using its stage history, so it narrows from New to Won. A deal dragged straight from New to Proposal counts in Qualified too. A lost deal counts up to the furthest open stage it reached before it was lost, and a line under the funnel gives the total lost. A won deal counts in every stage, and a deal moved back out of Won counts as open again, up to the furthest open stage it has reached. The funnel covers every deal, with no date range, the same as the pipeline board.
 8. **Moving a deal back out of Won or Lost.** The intent doesn't say what happens. The spec keeps the close date as it is, so the deal shows as late if that date has passed, which prompts a new expected date. It takes its new stage's usual probability, and its main contact stays a customer, as the intent says.
 9. **Won and Lost column figures.** The intent says each column shows its own total value and expected revenue. For Won the expected revenue would equal the total, and for Lost it would always be $0, so those two columns show only their total value. The board's figures cover open deals only, as the intent says.
 10. **Timelines follow a deal's current main contact.** A contact's timeline is worked out from the deals where they're the main contact now. If a deal's main contact changes, its activities and stage changes move to the new person's timeline. A deal with no main contact appears on nobody's.
@@ -119,7 +119,7 @@ Each rule has a number so the tests can refer to it.
 - **Revenue won by month**: a line chart of the last 12 months, beneath the main figure.
 - Three tiles: deals won this month (with last month's count), open pipeline (with its number of deals) and expected revenue (with its share of the open pipeline).
 - **Deals won by month**: a bar chart of the same 12 months.
-- **Open pipeline by stage**: the visual of the pipeline. Each open stage shows its count, value and expected revenue.
+- **Open pipeline by stage**: the visual of the pipeline. Each open stage shows its value and expected revenue, with its count on hover and in the table for screen readers (see Charts).
 - **Sales funnel**: value and count reaching each stage from New to Won, with the share of New's value that reaches each stage, and the total lost underneath.
 - **Follow-ups**: overdue first, then due in the next 7 days. Each shows its type, its description, the contact or deal it's on (as a link), its due date as "3 days overdue", "Due today", "Due tomorrow" or "Due in 4 days", and a Done checkbox. The heading gives the count. The list scrolls inside its panel when it's long.
 - **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app, grouped under Today, Yesterday and Earlier, each linking to its record.
@@ -240,7 +240,7 @@ The sample data is for a business that sells software and services to other busi
 - **Screen:** designed for 1440 by 900, and works from 1280 by 720 upwards.
 - **Speed:** with 500 of each kind of record, every screen shows its data within a second on a typical laptop, the search keeps up with typing, and a dragged card follows the pointer smoothly.
 - **Console:** no errors or warnings in Chrome's console during normal use.
-- **Local only:** the servers listen on this computer (127.0.0.1) only, not on the network.
+- **Local only:** the servers listen on this computer (127.0.0.1) only, not on the network. The backend answers only requests addressed to `localhost` or `127.0.0.1`, so a web page can't reach it by pointing its own name at this computer, and the frontend's dev server allows no other origin.
 - **Keyboard and contrast:** as described under Keyboard and accessibility.
 
 ## Design
@@ -295,8 +295,8 @@ Columns use SQLAlchemy's own types (`Date`, `DateTime`, `Boolean`, `Integer`, `S
 | Column | Type | Rules |
 |---|---|---|
 | name | text | required, up to 120 characters |
-| website | text | optional; `https://` is added if no scheme is given |
-| industry | text | optional |
+| website | text | optional, up to 300 characters; `https://` is added if no scheme is given, and only `http` and `https` addresses are kept, since it becomes a link |
+| industry | text | optional, up to 80 characters |
 | notes | text | optional, up to 5,000 characters |
 
 **contacts**
@@ -304,9 +304,9 @@ Columns use SQLAlchemy's own types (`Date`, `DateTime`, `Boolean`, `Integer`, `S
 | Column | Type | Rules |
 |---|---|---|
 | name | text | required, up to 120 characters |
-| email | text | optional, must look like an email address |
-| phone | text | optional |
-| job_title | text | optional |
+| email | text | optional, up to 254 characters, must look like an email address |
+| phone | text | optional, up to 40 characters |
+| job_title | text | optional, up to 120 characters |
 | organization_id | integer, nullable | links to organizations; set to empty when the organization is deleted |
 | status | text | `lead`, `qualified` or `customer`; `lead` by default |
 
@@ -357,7 +357,7 @@ Indexes cover every link column, `deals (stage, position)` and `activities (foll
 
 ### API
 
-JSON under `/api`, with snake_case names. A failed field check returns 422 with a message for each field, which the form shows under that field. A missing record returns 404.
+JSON under `/api`, with snake_case names. A failed field check returns 422 with a message for each field, which the form shows under that field. A missing record returns 404, and so does an id in the address that can't be a record's, such as `abc`.
 
 | Method and path | What it does |
 |---|---|

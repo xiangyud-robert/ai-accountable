@@ -113,8 +113,16 @@ function DealDialog({ open, onOpenChange, deal, defaults, onSaved, stages }: Dea
 
   const onSubmit = handleSubmit(async (values) => {
     const body = toBody(values)
-    // Only what changed is sent, so the server applies R3 to what the form didn't touch.
-    const sent = deal ? changedOnly(body, toBody(initial)) : body
+    const before = toBody(initial)
+    // Only what changed is sent. With a new stage, the probability and close date on screen
+    // are sent too, even if they match the deal's own, since the server would otherwise fill
+    // them in by R3, and the deal would be saved with something other than what was shown.
+    const sent = deal
+      ? {
+          ...changedOnly(body, before),
+          ...(body.stage !== before.stage && { probability: body.probability, close_date: body.close_date }),
+        }
+      : body
     try {
       const saved = await save.mutateAsync({ id: deal?.id, values: sent })
       notify.done('Deal saved')

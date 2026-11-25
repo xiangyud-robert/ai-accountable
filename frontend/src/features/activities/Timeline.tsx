@@ -72,6 +72,8 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
   const isActivity = entry.kind === 'activity'
   // On a contact's timeline, entries from one of their deals name the deal (R10).
   const fromDeal = on === 'contact' && entry.record === 'deal' && entry.deal_id !== null
+  const followUpDone = !!entry.follow_up_done
+  const overdue = !followUpDone && !!entry.follow_up_overdue
 
   const markDone = (done: boolean) =>
     change.mutate(
@@ -99,13 +101,13 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
                 <DropdownMenu.Content align="end" sideOffset={4} className="z-50 min-w-32 rounded-card bg-panel p-1 shadow-lift">
                   <DropdownMenu.Item
                     onSelect={() => setEditing(true)}
-                    className="flex h-8 cursor-pointer items-center rounded-control px-2.5 text-sm outline-none data-[highlighted]:bg-page"
+                    className="flex h-8 cursor-pointer items-center rounded-control px-2.5 text-sm data-[highlighted]:bg-page"
                   >
                     Edit
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
                     onSelect={() => setDeleting(true)}
-                    className="flex h-8 cursor-pointer items-center rounded-control px-2.5 text-sm text-alert-text outline-none data-[highlighted]:bg-page"
+                    className="flex h-8 cursor-pointer items-center rounded-control px-2.5 text-sm text-alert-text data-[highlighted]:bg-page"
                   >
                     Delete
                   </DropdownMenu.Item>
@@ -125,21 +127,14 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
         {isActivity && entry.follow_up_date && (
           <div className="mt-1.5 flex items-center gap-2 text-xs">
             <DoneCheckbox
-              checked={!!entry.follow_up_done}
+              checked={followUpDone}
               onCheckedChange={markDone}
               label="Done"
               describedBy={`${id}-follow-up`}
               disabled={change.isPending}
             />
-            <span
-              id={`${id}-follow-up`}
-              className={
-                !entry.follow_up_done && followUpLabel(entry.follow_up_date, false).startsWith('Overdue')
-                  ? 'font-medium text-alert-text'
-                  : 'text-ink-muted'
-              }
-            >
-              {followUpLabel(entry.follow_up_date, !!entry.follow_up_done)}
+            <span id={`${id}-follow-up`} className={overdue ? 'font-medium text-alert-text' : 'text-ink-muted'}>
+              {followUpLabel(entry.follow_up_date, followUpDone, overdue)}
             </span>
           </div>
         )}

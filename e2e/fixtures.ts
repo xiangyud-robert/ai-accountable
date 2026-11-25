@@ -12,14 +12,22 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
  *  The browser runs in America/Los_Angeles (see the config), which is UTC-7 in June. */
 export const BROWSER_NOW = new Date(`${TODAY}T11:00:00-07:00`)
 
-/** Replaces the test database's data with fresh sample data, as `npm run seed` does. */
-export function reseed(extra: string[] = []) {
-  const result = spawnSync('uv', ['run', 'python', '-m', 'backend.seed', '--today', TODAY, ...extra], {
+/** Runs a command in the repo against the tests' own database, and waits for it. npm and uv
+ *  are .cmd files on Windows, so they need a shell there, and a shell takes one command line
+ *  (passing the arguments separately is deprecated, DEP0190). No argument has a space. */
+export function runCommand(command: string, args: string[]) {
+  const windows = process.platform === 'win32'
+  return spawnSync(windows ? [command, ...args].join(' ') : command, windows ? [] : args, {
     cwd: root,
     env: { ...process.env, ...testEnv },
     encoding: 'utf8',
-    shell: process.platform === 'win32',
+    shell: windows,
   })
+}
+
+/** Replaces the test database's data with fresh sample data, as `npm run seed` does. */
+export function reseed(extra: string[] = []) {
+  const result = runCommand('uv', ['run', 'python', '-m', 'backend.seed', '--today', TODAY, ...extra])
   if (result.status !== 0) throw new Error(`Reseeding failed:\n${result.stdout}\n${result.stderr}`)
 }
 
@@ -66,15 +74,16 @@ export async function expectNoAxeProblems(page: Page, include?: string) {
 }
 
 /** Drags with the mouse in small steps, the way a person does, so dnd-kit sees a drag.
- *  It drops on the top quarter of `to`, its middle, or just inside its bottom edge. */
-export async function drag(page: Page, from: Locator, to: Locator, at: 'top' | 'middle' | 'bottom' = 'middle') {
+ *  It drops on the top quarter of `to`, its middle, just inside its bottom edge, or in the
+ *  8px gap just above it, between it and the card before. */
+export async function drag(page: Page, from: Locator, to: Locator, at: 'top' | 'middle' | 'bottom' | 'gap above' = 'middle') {
   const start = await from.boundingBox()
   const end = await to.boundingBox()
   if (!start || !end) throw new Error('Nothing to drag, or nowhere to drop it')
   const x0 = start.x + start.width / 2
   const y0 = start.y + start.height / 2
   const x1 = end.x + end.width / 2
-  const y1 = at === 'top' ? end.y + end.height / 4 : at === 'bottom' ? end.y + end.height - 6 : end.y + end.height / 2
+  const y1 = { top: end.y + end.height / 4, middle: end.y + end.height / 2, bottom: end.y + end.height - 6, 'gap above': end.y - 4 }[at]
   await page.mouse.move(x0, y0)
   await page.mouse.down()
   await page.mouse.move(x0 + 8, y0 + 8, { steps: 4 })

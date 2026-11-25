@@ -18,7 +18,7 @@ ACTIVITY = {
     "follow_up_done", "created_at", "updated_at",
 }
 TIMELINE_ENTRY = {
-    "key", "kind", "id", "at", "text", "record", "type", "follow_up_date", "follow_up_done",
+    "key", "kind", "id", "at", "text", "record", "type", "follow_up_date", "follow_up_done", "follow_up_overdue",
     "from_value", "to_value", "contact_id", "contact_name", "deal_id", "deal_name",
 }
 DASHBOARD = {
@@ -152,6 +152,41 @@ def test_404_names_the_kind_of_record(client):
 
 
 @pytest.mark.parametrize(
+    ("path", "detail"),
+    [
+        ("/api/deals/9223372036854775808", "This deal no longer exists"),
+        ("/api/contacts/2147483648", "This contact no longer exists"),
+        ("/api/organizations/1e+21", "This organization no longer exists"),
+    ],
+)
+def test_an_id_that_cant_be_a_record_s_is_a_404(client, path, detail):
+    response = client.get(path)
+    assert response.status_code == 404
+    assert response.json() == {"detail": detail}
+    assert client.patch("/api/activities/99999999999999999999", json={}).status_code == 404
+
+
+def test_a_linked_id_too_big_to_store_is_a_422(client):
+    response = client.post("/api/contacts", json={"name": "A", "organization_id": 10**20})
+    assert response.status_code == 422
+    assert response.json() == {"errors": {"organization_id": "Choose an organization from the list."}}
+    response = client.post("/api/activities", json={"type": "note", "deal_id": 2**31, "description": "Call"})
+    assert response.status_code == 422
+
+
+def test_only_requests_addressed_to_this_computer_are_answered(client):
+    # A page that points its own name at 127.0.0.1 (DNS rebinding) sends its own name.
+    assert client.get("/api/contacts", headers={"Host": "evil.example:8000"}).status_code == 400
+    assert client.get("/api/contacts", headers={"Host": "localhost:5173"}).status_code == 200
+    assert client.get("/api/contacts", headers={"Host": "127.0.0.1:8000"}).status_code == 200
+
+
+@pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
+def test_there_are_no_api_docs(client, path):
+    assert client.get(path).status_code == 404
+
+
+@pytest.mark.parametrize(
     ("path", "body", "errors"),
     [
         ("/api/organizations", {"name": ""}, {"name": "Enter a name."}),
@@ -191,6 +226,21 @@ def test_a_required_field_cant_be_patched_to_null(client, records):
 def test_https_is_added_to_a_website_with_no_scheme(client):
     assert client.post("/api/organizations", json={"name": "A", "website": "harbor.example"}).json()["website"] == "https://harbor.example"
     assert client.post("/api/organizations", json={"name": "B", "website": "http://b.example"}).json()["website"] == "http://b.example"
+
+
+@pytest.mark.parametrize("website", ["javascript://%0aalert(1)", "file:///etc/passwd", "data://text/html,hi", "ftp://files.example"])
+def test_a_website_must_be_a_web_address(client, website):
+    response = client.post("/api/organizations", json={"name": "A", "website": website})
+    assert response.status_code == 422
+    assert response.json() == {"errors": {"website": "Enter a website address, such as example.com."}}
+
+
+def test_a_website_s_length_counts_the_https_added_to_it(client):
+    fits = "a" * 292
+    assert client.post("/api/organizations", json={"name": "A", "website": fits}).json()["website"] == f"https://{fits}"
+    response = client.post("/api/organizations", json={"name": "B", "website": fits + "a"})
+    assert response.status_code == 422
+    assert response.json() == {"errors": {"website": "Keep this to 300 characters or fewer."}}
 
 
 def test_patch_with_some_fields_changes_only_those(client, records):

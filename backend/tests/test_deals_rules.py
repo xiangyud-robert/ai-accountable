@@ -127,10 +127,13 @@ def test_r3_moving_out_of_won_keeps_the_close_date_and_the_customer(make, conn):
     """Concern 8."""
     contact = make.contact(status="qualified")
     deal = make.deal(contact_id=contact["id"], stage="negotiation", close_date=date(2026, 8, 1))
-    deals.move(conn, deal["id"], "won", 0)
+    # Won on a day other than today, so a close date reset to today would show.
+    deals.change(conn, deal["id"], {"stage": "won", "close_date": date(2026, 5, 2)})
     back = deals.move(conn, deal["id"], "negotiation", 0)
-    assert (back["close_date"], back["probability"]) == (TODAY, 75)
+    assert (back["close_date"], back["probability"]) == (date(2026, 5, 2), 75)
     assert contacts.get_row(conn, contact["id"])["status"] == "customer"
+    again = deals.change(conn, deal["id"], {"stage": "proposal"})
+    assert again["close_date"] == date(2026, 5, 2)
 
 
 def test_r3_stage_changes_are_timed_now(make, conn):

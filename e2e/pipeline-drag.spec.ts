@@ -10,6 +10,12 @@ const card = (page: Page, name: string) => page.locator('[data-deal-id]').filter
 const cardsIn = (page: Page, stage: string) => column(page, stage).locator('[data-deal-id]')
 const headerFigure = (page: Page, label: string) => page.getByRole('definition').filter({ has: page.locator(`xpath=preceding-sibling::dt[.="${label}"]`) })
 
+/** Waits for a column's cards to finish sliding into place after a drop, so their boxes
+ *  are where they'll stay, as someone would before grabbing the next one. */
+async function settled(page: Page, stage: string) {
+  for (const each of await cardsIn(page, stage).all()) await expect(each).toHaveCSS('transform', 'none')
+}
+
 async function namesIn(page: Page, stage: string) {
   await page.locator('[data-deal-id]').first().waitFor()
   return cardsIn(page, stage).evaluateAll((cards) => cards.map((c) => c.querySelector('p.font-semibold')!.textContent))
@@ -45,6 +51,7 @@ test('criterion 4: drag a card to another column; the figures change before the 
   const saved = page.waitForResponse('**/api/deals/*/move')
   release()
   expect((await saved).status()).toBe(200)
+  await expect(page.getByText('Deal moved')).toBeVisible()
 
   await page.goto('/deals')
   const row = page.getByRole('row', { name: new RegExp(moving.name) })
@@ -60,6 +67,53 @@ test('drag a card within its column, reload, and it stays where it was dropped',
   await page.waitForLoadState('networkidle')
   await page.reload()
   expect(await namesIn(page, 'Qualified')).toEqual([before[2], before[0], before[1], before[3], before[4]])
+})
+
+test('drop a card in the gap between two cards, moving up or down, and it lands between them', async ({ page }) => {
+  await page.goto('/pipeline')
+  const before = await namesIn(page, 'Qualified')
+  // Up: the fourth card (the fifth runs off the bottom of the window) into the gap between the first and second.
+  await drag(page, card(page, before[3]), cardsIn(page, 'Qualified').nth(1), 'gap above')
+  await expect(cardsIn(page, 'Qualified').nth(1)).toContainText(before[3])
+  await page.waitForLoadState('networkidle')
+  const up = [before[0], before[3], before[1], before[2], before[4]]
+  expect(await namesIn(page, 'Qualified')).toEqual(up)
+
+  // Down: the first card into the gap between the third and fourth.
+  await settled(page, 'Qualified')
+  await drag(page, card(page, up[0]), cardsIn(page, 'Qualified').nth(3), 'gap above')
+  await expect(cardsIn(page, 'Qualified').nth(2)).toContainText(up[0])
+  await page.waitForLoadState('networkidle')
+  await page.reload()
+  expect(await namesIn(page, 'Qualified')).toEqual([up[1], up[2], up[0], up[3], up[4]])
+})
+
+test('a second move while the board is refetching keeps the board, and both moves stay', async ({ page }) => {
+  await page.goto('/pipeline')
+  const before = await namesIn(page, 'Qualified')
+  // Every refetch of the deals is held back, so the second move lands while one is on its way.
+  let release!: () => void
+  const held = new Promise<void>((resolve) => (release = resolve))
+  await page.route('**/api/deals', async (route) => {
+    if (route.request().method() === 'GET') await held
+    await route.continue()
+  })
+
+  const refetching = page.waitForRequest((r) => r.method() === 'GET' && r.url().endsWith('/api/deals'))
+  await drag(page, card(page, before[2]), cardsIn(page, 'Qualified').first(), 'top')
+  await refetching
+  await settled(page, 'Qualified')
+  const second = page.waitForResponse('**/api/deals/*/move')
+  await drag(page, card(page, before[3]), cardsIn(page, 'Qualified').first(), 'top')
+  expect((await second).status()).toBe(200)
+
+  await expect(page.getByText("Can't reach Accountable's server")).toHaveCount(0)
+  await expect(cardsIn(page, 'Qualified').first()).toContainText(before[3])
+  release()
+  await page.waitForLoadState('networkidle')
+  await page.unroute('**/api/deals')
+  await page.reload()
+  expect(await namesIn(page, 'Qualified')).toEqual([before[3], before[2], before[0], before[1], before[4]])
 })
 
 test('drop a card below the last one, and into an empty column', async ({ page }) => {

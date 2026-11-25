@@ -48,18 +48,28 @@ def alembic_config(connection: sa.Connection | None = None) -> Config:
     return config
 
 
-def migrate(engine: sa.Engine) -> bool:
-    """Upgrades to the latest migration. Returns True if the database was new."""
-    with engine.connect() as conn:
-        sqlite = conn.dialect.name == "sqlite"
-        if sqlite:
-            # Batch migrations rebuild a table by copying it and dropping the old one.
-            # With foreign keys on, that drop would cascade, so they're off while migrating.
-            conn.exec_driver_sql("PRAGMA foreign_keys = OFF")
-        was_new = MigrationContext.configure(conn).get_current_revision() is None
-        command.upgrade(alembic_config(conn), "head")
+@contextmanager
+def foreign_keys_off(conn: sa.Connection) -> Iterator[None]:
+    """For migrating, from the app or the command line. Batch migrations rebuild a table by
+    copying it and dropping the old one. With SQLite's foreign keys on, that drop would
+    cascade, so they're off until the migration is committed, and on again after."""
+    sqlite = conn.dialect.name == "sqlite"
+    if sqlite:
+        conn.exec_driver_sql("PRAGMA foreign_keys = OFF")
+    try:
+        yield
         conn.commit()
+    finally:
         if sqlite:
+            # The connection goes back to the pool, so it mustn't keep them off.
+            conn.rollback()
             conn.exec_driver_sql("PRAGMA foreign_keys = ON")
             conn.commit()
+
+
+def migrate(engine: sa.Engine) -> bool:
+    """Upgrades to the latest migration. Returns True if the database was new."""
+    with engine.connect() as conn, foreign_keys_off(conn):
+        was_new = MigrationContext.configure(conn).get_current_revision() is None
+        command.upgrade(alembic_config(conn), "head")
     return was_new

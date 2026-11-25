@@ -7,6 +7,7 @@ import {
   useSensor,
   useSensors,
   type CollisionDetection,
+  type DroppableContainer,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -32,6 +33,7 @@ type Place = { id: number; stage: StageKey; index: number }
 // The column under the pointer first, then only its cards, so a move checks a few dozen
 // rectangles rather than every card on the board. A card wins over its column, so a drop
 // lands next to the card under the pointer, and below the last card the column takes it.
+// Between two cards, one of them takes it, so the card lands between them (R5).
 const collisions: CollisionDetection = (args) => {
   const columns = args.droppableContainers.filter((c) => isColumn(c.id))
   const [column] = pointerWithin({ ...args, droppableContainers: columns })
@@ -39,7 +41,31 @@ const collisions: CollisionDetection = (args) => {
   const stage = String(column.id).slice('column-'.length)
   const cards = args.droppableContainers.filter((c) => c.data.current?.sortable?.containerId === stage)
   const [card] = pointerWithin({ ...args, droppableContainers: cards })
-  return card ? [card] : [column]
+  if (card) return [card]
+  const beside = cardBesideGap(args, cards)
+  return beside ? [{ id: beside.id, data: { droppableContainer: beside } }] : [column]
+}
+
+/**
+ * For a pointer in the gap between two cards, the one on the dragged card's side: the card
+ * above when it's moving down, and the card below when it's moving up or coming from another
+ * column. Either way it lands between them. Above the first card it's the first, and below
+ * the last there's none, so the column takes it.
+ */
+function cardBesideGap(args: Parameters<CollisionDetection>[0], cards: DroppableContainer[]): DroppableContainer | null {
+  const y = args.pointerCoordinates?.y
+  if (y === undefined) return null
+  const placed = cards
+    .flatMap((card) => {
+      const rect = args.droppableRects.get(card.id)
+      return rect ? [{ card, rect }] : []
+    })
+    .sort((a, b) => a.rect.top - b.rect.top)
+  const below = placed.find(({ rect }) => rect.top >= y)
+  if (!below) return null
+  const above = placed.findLast(({ rect }) => rect.bottom <= y)
+  const dragged = placed.find(({ card }) => card.id === args.active.id)
+  return above && dragged && dragged.rect.top <= above.rect.top ? above.card : below.card
 }
 
 const isColumn = (id: string | number): id is string => typeof id === 'string' && id.startsWith('column-')

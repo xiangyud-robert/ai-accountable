@@ -89,6 +89,15 @@ describe('DataTable', () => {
     expect(heading).toHaveAttribute('aria-sort', 'ascending')
   })
 
+  test('empty values sort last, ascending and descending', async () => {
+    renderTable([...ROWS, { id: 5, name: 'Nowhere deal', city: '', stage: 'new', value: 1000 }])
+    const city = screen.getByRole('button', { name: 'City' })
+    await userEvent.click(city)
+    expect(names()).toEqual(['acme renewal', 'Harbor Logistics fleet', 'Brightline POS', 'Cobalt Bank pilot', 'Nowhere deal'])
+    await userEvent.click(city)
+    expect(names()).toEqual(['Cobalt Bank pilot', 'Brightline POS', 'Harbor Logistics fleet', 'acme renewal', 'Nowhere deal'])
+  })
+
   test('the stage column sorts in pipeline order, not alphabetically', async () => {
     renderTable()
     await userEvent.click(screen.getByRole('button', { name: 'Stage' }))

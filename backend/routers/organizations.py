@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
 from backend.db import transaction
-from backend.routers import Engine
+from backend.routers import Engine, RecordId
 from backend.schemas import OrganizationDetail, OrganizationIn, OrganizationPatch, OrganizationRow
 from backend.services import organizations
 
@@ -21,18 +21,18 @@ def add_organization(body: OrganizationIn, engine: Engine) -> OrganizationRow:
 
 
 @router.get("/{organization_id}")
-def get_organization(organization_id: int, engine: Engine) -> OrganizationDetail:
+def get_organization(organization_id: RecordId, engine: Engine) -> OrganizationDetail:
     with transaction(engine) as conn:
         return organizations.get(conn, organization_id)
 
 
 @router.patch("/{organization_id}")
-def change_organization(organization_id: int, body: OrganizationPatch, engine: Engine) -> OrganizationRow:
+def change_organization(organization_id: RecordId, body: OrganizationPatch, engine: Engine) -> OrganizationRow:
     with transaction(engine) as conn:
         return organizations.change(conn, organization_id, body.model_dump(exclude_unset=True))
 
 
 @router.delete("/{organization_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_organization(organization_id: int, engine: Engine) -> None:
+def delete_organization(organization_id: RecordId, engine: Engine) -> None:
     with transaction(engine) as conn:
         organizations.delete(conn, organization_id)

@@ -68,9 +68,9 @@ describe('due labels', () => {
   })
 
   test('follow-up labels in a timeline', () => {
-    expect(followUpLabel('2026-11-25', false, NOW)).toBe('Follow up Nov 25')
-    expect(followUpLabel('2026-11-22', false, NOW)).toBe('Follow up Nov 22')
-    expect(followUpLabel('2026-11-18', false, NOW)).toBe('Overdue since Nov 18')
-    expect(followUpLabel('2026-11-18', true, NOW)).toBe('Done')
+    expect(followUpLabel('2026-11-25', false, false, NOW)).toBe('Follow up Nov 25')
+    expect(followUpLabel('2026-11-22', false, false, NOW)).toBe('Follow up Nov 22')
+    expect(followUpLabel('2026-11-18', false, true, NOW)).toBe('Overdue since Nov 18')
+    expect(followUpLabel('2026-11-18', true, false, NOW)).toBe('Done')
   })
 })

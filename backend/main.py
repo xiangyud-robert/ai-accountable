@@ -5,11 +5,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend import clock, db, seed
 from backend.errors import Invalid, NotFound
 from backend.routers import activities, contacts, dashboard, deals, organizations, stages
 from backend.schemas import MESSAGES
+
+# The names this computer answers to, with any port. The frontend's dev server passes on
+# the address the browser used, such as localhost:5173.
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 @asynccontextmanager
@@ -34,7 +39,13 @@ def _message(field: str, error: dict) -> str:
     return MESSAGES.get(field, "Check this field.")
 
 
-async def _validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
+async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # An id in the address that can't be a record's, such as "abc" or one too big to store,
+    # is a missing record.
+    for error in exc.errors():
+        if error["loc"][0] == "path":
+            kind = str(error["loc"][-1]).removesuffix("_id")
+            return await _not_found(request, NotFound(kind))
     errors: dict[str, str] = {}
     for error in exc.errors():
         field = str(error["loc"][-1]) if len(error["loc"]) > 1 else "body"
@@ -51,7 +62,11 @@ async def _not_found(_request: Request, exc: NotFound) -> JSONResponse:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Accountable", lifespan=lifespan)
+    # The API is everything there is: no /docs, /redoc or /openapi.json.
+    app = FastAPI(title="Accountable", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+    # Only requests addressed to this computer, so a web page that points its own name at
+    # 127.0.0.1 (DNS rebinding) can't use the API.
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
     app.add_exception_handler(RequestValidationError, _validation_error)
     app.add_exception_handler(Invalid, _invalid)
     app.add_exception_handler(NotFound, _not_found)

@@ -55,7 +55,7 @@ export function ContactPage() {
             <Button icon={<Pencil aria-hidden size={16} />} onClick={() => setDialog('edit')}>
               Edit
             </Button>
-            <Button icon={<Trash2 aria-hidden size={16} />} onClick={() => setDialog('delete')}>
+            <Button variant="danger" icon={<Trash2 aria-hidden size={16} />} onClick={() => setDialog('delete')}>
               Delete
             </Button>
           </>

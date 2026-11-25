@@ -7,7 +7,7 @@ that caused it, then break ties by id.
 
 import sqlalchemy as sa
 
-from backend import stages
+from backend import clock, stages
 from backend.tables import activities, contacts, deals, stage_changes, status_changes
 
 KIND_RANK = {"status_change": 2, "stage_change": 1, "activity": 0}
@@ -65,6 +65,10 @@ def _activity_entry(row: sa.Row) -> dict:
         "type": row.type,
         "follow_up_date": row.follow_up_date,
         "follow_up_done": row.follow_up_done,
+        # R9: the backend decides what's overdue, as it does for the dashboard.
+        "follow_up_overdue": row.follow_up_date is not None
+        and not row.follow_up_done
+        and row.follow_up_date < clock.today(),
         "contact_id": row.linked_contact_id,
         "contact_name": row.contact_name,
         "deal_id": row.deal_id,

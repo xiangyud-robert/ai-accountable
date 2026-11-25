@@ -80,6 +80,9 @@ for (const [name, child] of Object.entries(children)) {
 }
 process.on('SIGINT', () => stopAll(0))
 process.on('SIGTERM', () => stopAll(0))
+// Closing the terminal sends SIGHUP. The children lead their own process groups on Mac and
+// Linux, so they don't get it, and would keep the ports if they weren't stopped here.
+process.on('SIGHUP', () => stopAll(0))
 
 const ready = await Promise.all([
   waitFor(`http://127.0.0.1:${API_PORT}/api/stages`, children.backend),

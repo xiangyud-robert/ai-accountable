@@ -8,6 +8,7 @@ const base = {
   type: null,
   follow_up_date: null,
   follow_up_done: null,
+  follow_up_overdue: null,
   from_value: null,
   to_value: null,
   contact_id: 3,
@@ -19,9 +20,9 @@ const base = {
 const ENTRIES: TimelineEntry[] = [
   { ...base, key: 'status-1', kind: 'status_change', id: 1, at: '2026-11-22T14:30:00', text: 'Became a customer when Northwind analytics rollout was won', record: 'contact', from_value: 'qualified', to_value: 'customer', deal_id: 9, deal_name: 'Northwind analytics rollout' },
   { ...base, key: 'stage-4', kind: 'stage_change', id: 4, at: '2026-11-22T14:30:00', text: 'Moved from Negotiation to Won', record: 'deal', from_value: 'negotiation', to_value: 'won', deal_id: 9, deal_name: 'Northwind analytics rollout' },
-  { ...base, key: 'activity-8', kind: 'activity', id: 8, at: '2026-11-21T09:05:00', text: 'Called about the renewal', record: 'deal', type: 'call', follow_up_date: '2026-11-25', follow_up_done: false, deal_id: 9, deal_name: 'Northwind analytics rollout' },
-  { ...base, key: 'activity-7', kind: 'activity', id: 7, at: '2026-11-12T14:30:00', text: 'Sent the pricing', record: 'contact', type: 'email', follow_up_date: '2026-11-18', follow_up_done: false },
-  { ...base, key: 'activity-6', kind: 'activity', id: 6, at: '2026-11-10T10:00:00', text: 'Met at the conference', record: 'contact', type: 'note', follow_up_date: '2026-11-11', follow_up_done: true },
+  { ...base, key: 'activity-8', kind: 'activity', id: 8, at: '2026-11-21T09:05:00', text: 'Called about the renewal', record: 'deal', type: 'call', follow_up_date: '2026-11-25', follow_up_done: false, follow_up_overdue: false, deal_id: 9, deal_name: 'Northwind analytics rollout' },
+  { ...base, key: 'activity-7', kind: 'activity', id: 7, at: '2026-11-12T14:30:00', text: 'Sent the pricing', record: 'contact', type: 'email', follow_up_date: '2026-11-18', follow_up_done: false, follow_up_overdue: true },
+  { ...base, key: 'activity-6', kind: 'activity', id: 6, at: '2026-11-10T10:00:00', text: 'Met at the conference', record: 'contact', type: 'note', follow_up_date: '2026-11-11', follow_up_done: true, follow_up_overdue: false },
   { ...base, key: 'stage-2', kind: 'stage_change', id: 2, at: '2026-10-01T10:00:00', text: 'Added at Proposal', record: 'deal', to_value: 'proposal', deal_id: 9, deal_name: 'Northwind analytics rollout' },
 ]
 

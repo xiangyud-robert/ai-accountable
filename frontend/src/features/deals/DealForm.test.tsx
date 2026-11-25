@@ -119,6 +119,19 @@ describe('DealForm', () => {
     expect(calls[0].body).toEqual({ stage: 'won', probability: 100, close_date: todayISO() })
   })
 
+  test('a new stage sends the probability and close date shown, even when they match the deal’s own', async () => {
+    const calls = mockFetch(() => ({ body: DEAL }))
+    renderForm({ deal: DEAL })
+    await chooseStage('Negotiation')
+    const probability = screen.getByLabelText('Probability (%)')
+    expect(probability).toHaveValue('75')
+    await userEvent.clear(probability)
+    await userEvent.type(probability, '65')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0].body).toEqual({ stage: 'negotiation', probability: 65, close_date: '2026-12-11' })
+  })
+
   test('a new deal sends every field', async () => {
     const calls = mockFetch(() => ({ status: 201, body: DEAL }))
     renderForm()

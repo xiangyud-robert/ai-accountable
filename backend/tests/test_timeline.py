@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from backend.services import deals, timeline
-from backend.tests.conftest import NOW
+from backend.tests.conftest import NOW, TODAY
 
 
 def texts(entries):
@@ -35,6 +35,19 @@ def test_r10_a_contact_timeline_adds_their_deals_and_status_changes(make, conn):
         ("Deal call", "deal", "Northwind analytics rollout"),
         ("Own note", "contact", None),
     ]
+
+
+def test_r9_the_timeline_says_which_follow_ups_are_overdue(make, conn):
+    deal = make.deal()
+    for description, due, done in [
+        ("Yesterday's", TODAY - timedelta(days=1), False),
+        ("Today's", TODAY, False),
+        ("Done late", TODAY - timedelta(days=3), True),
+    ]:
+        make.activity(deal_id=deal["id"], description=description, follow_up_date=due, follow_up_done=done)
+    make.activity(deal_id=deal["id"], description="No follow-up")
+    overdue = {e["text"]: e["follow_up_overdue"] for e in timeline.for_deal(conn, deal["id"]) if e["kind"] == "activity"}
+    assert overdue == {"Yesterday's": True, "Today's": False, "Done late": False, "No follow-up": False}
 
 
 def test_concern_10_changing_the_main_contact_moves_the_entries(make, conn):

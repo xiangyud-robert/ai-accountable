@@ -11,9 +11,14 @@ export const isWindows = process.platform === 'win32'
 
 const MIN_NODE = 24
 
-// npm and uv are .cmd files on Windows, so they need a shell there.
+// npm and uv are .cmd files on Windows, so they need a shell there. A shell takes one command
+// line, since passing the arguments separately is deprecated (DEP0190). None has a space.
+function commandLine(command, args) {
+  return isWindows ? [[command, ...args].join(' '), []] : [command, args]
+}
+
 export function start(command, args, options = {}) {
-  return spawn(command, args, {
+  return spawn(...commandLine(command, args), {
     cwd: root,
     stdio: 'inherit',
     shell: isWindows,
@@ -60,7 +65,7 @@ function checkNode() {
 }
 
 function checkUv() {
-  const result = spawnSync('uv', ['--version'], { cwd: root, shell: isWindows, stdio: 'ignore' })
+  const result = spawnSync(...commandLine('uv', ['--version']), { cwd: root, shell: isWindows, stdio: 'ignore' })
   if (result.error || result.status !== 0) {
     fail(
       'Accountable needs uv, and it was not found.\n' +

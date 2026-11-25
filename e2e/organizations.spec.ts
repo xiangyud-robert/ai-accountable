@@ -114,7 +114,11 @@ test('an organization’s page shows its contacts and deals, and adds them with 
 test('deleting from an organization’s page goes back to the list', async ({ page }) => {
   await page.goto('/organizations')
   await page.getByRole('link', { name: 'Juniper Software' }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  // A Delete button is Raspberry fill with white text.
+  const remove = page.getByRole('button', { name: 'Delete', exact: true })
+  await expect(remove).toHaveCSS('background-color', 'rgb(217, 19, 66)')
+  await expect(remove).toHaveCSS('color', 'rgb(255, 255, 255)')
+  await remove.click()
   const question = page.getByRole('alertdialog', { name: 'Delete Juniper Software?' })
   await expect(question).toContainText('Its 2 contacts will be kept, with no organization.')
   await question.getByRole('button', { name: 'Delete organization' }).click()

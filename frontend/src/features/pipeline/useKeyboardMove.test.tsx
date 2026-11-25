@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { DealRow, StageKey } from '../../lib/types'
 import { STAGES, mockFetch, renderWithApp } from '../../test-utils'
@@ -109,6 +109,22 @@ describe('useKeyboardMove', () => {
     press('ArrowLeft')
     await waitFor(() => expect(column('New')).toContain(3))
     await waitFor(() => expect(document.activeElement).toBe(card(3)))
+  })
+
+  test('once the mouse is used, focus is no longer pulled back to the card moved by keyboard', async () => {
+    const { calls, client } = renderBoard()
+    card(3).focus()
+    press(' ')
+    press('ArrowRight')
+    press(' ')
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
+    await waitFor(() => expect(calls.filter((c) => c.method === 'GET').length).toBeGreaterThan(0))
+    // A mouse drag that remounts the card it moves (Yankee, to Proposal) leaves focus on the page.
+    fireEvent.pointerDown(document.body)
+    card(3).blur()
+    act(() => client.setQueryData(['deals'], DEALS.map((d) => (d.id === 5 ? { ...d, stage: 'proposal' as const, position: 0 } : d))))
+    await waitFor(() => expect(column('Proposal')).toEqual([5]))
+    expect(document.activeElement).toBe(document.body)
   })
 
   test('the arrows do nothing until a card is picked up, and stop at the edges', async () => {

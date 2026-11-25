@@ -62,7 +62,7 @@ def test_r14_data_is_still_there_after_a_second_app_on_the_same_file(client, dat
     from backend.main import create_app
 
     client.post("/api/organizations", json={"name": "Still here"})
-    with TestClient(create_app()) as restarted:
+    with TestClient(create_app(), base_url="http://localhost") as restarted:
         names = [o["name"] for o in restarted.get("/api/organizations").json()]
     assert "Still here" in names
 
@@ -74,7 +74,7 @@ def test_a_new_database_is_migrated_and_gets_the_sample_data(tmp_path, monkeypat
     from backend.tests.conftest import sqlite_url
 
     monkeypatch.setenv("DATABASE_URL", sqlite_url(tmp_path / "brand-new" / "accountable.db"))
-    with TestClient(create_app()) as client:
+    with TestClient(create_app(), base_url="http://localhost") as client:
         assert len(client.get("/api/organizations").json()) == 15
         assert len(client.get("/api/deals").json()) == 45
 

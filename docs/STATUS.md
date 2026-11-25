@@ -30,13 +30,55 @@ The data lives in `data/accountable.db`, which git ignores. Deleting that file a
   1. The one command: `npm run dev` sets everything up on the first run, and `npm test` runs all three suites and reports each.
   2. The backend: SQLAlchemy Core tables, the Alembic migration `0001_initial` (run on startup), the rules R1 to R11 in `backend/services/`, and every endpoint in the spec's API table.
   3. The sample data in `backend/seed.py`, loaded when the database is new, and `npm run seed`, which works while the app is running.
-  4. The app shell, the theme (`frontend/src/styles/theme.css`, the only file with color values, which a test checks), the bundled fonts and the shared components.
+  4. The app shell, the theme (`frontend/src/styles/theme.css`, the only file in `src/` with color values, which a test checks), the bundled fonts and the shared components.
   5. Organizations, Contacts and Deals: lists, forms, delete questions, record pages and timelines.
   6. The pipeline: dragging with dnd-kit and moving with the keyboard, both through `board.ts`, with every figure changing as soon as a card drops.
   7. The dashboard, with every figure checked against one worked out from the deals and their histories.
   8. End-to-end tests of the whole app: keyboard only, axe on every page and dialog, reset, and speed with 500 of each record. The dashboard and pipeline were compared with mockup C at 1440 by 900, and checked at 1280 by 720.
 - Compared again with mockup C in Chrome at 1440 by 900, measuring every panel, card and text style on the Dashboard and Pipeline. Fixed what differed: all 11 sample follow-ups now show before the list scrolls (it showed 8 and a half), text keeps the mockup's 1.45 line height at every size, the counts in panel subtitles and the sidebar use the mockup's font and weight, and the charts got the mockup's baseline, label sizes, point markers and spacing. The panels and cards now match the mockup's positions and sizes to the pixel, except the second row of dashboard panels, which is 5px shorter because the mockup's inline SVG charts leave a gap under them.
 - Next: the Test stage, with someone using it end to end in Chrome (success criterion 9).
+
+## Review findings (Nov 24, 2026)
+
+The `mvp` branch was reviewed against `docs/REVIEW.md`, with passes for bugs, security and the spec and plan. Everything found is fixed. Each line says what was wrong and what changed. The tests added for 1 to 4, 7 to 9, 18 and 19 were each run against the code from before the fix, and fail there. After the fixes `npm test` passes: 78 Vitest tests, 169 pytest tests and 74 end-to-end tests in Chrome.
+
+Important:
+
+1. A card dropped in the gap between two cards went to the bottom of its column, against R5. Now the card beside the gap, on the dragged card's side, takes the drop, so it lands between the two (`Board.tsx`). `pipeline-drag.spec.ts` drops into a gap moving up and moving down.
+2. A second card move while the board was refetching replaced the board with "Can't reach Accountable's server". `cancelQueries` used `revert: false`, and TanStack Query counts a refetch cancelled that way as a failed one. It now uses the default, which puts back the data the refetch started from (`deals/queries.ts`). `pipeline-drag.spec.ts` holds every refetch back and moves a second card.
+3. The deal form could save a different probability or close date than it showed, when one was typed back to the deal's own value after a stage change. With a new stage it now always sends both (`DealForm.tsx`, `DealForm.test.tsx`).
+4. Select options, the activity menu's items and the picker's current option had no focus ring, only a 1.1:1 tint. They now show the 2px Cerulean ring (`fields.tsx`, `Timeline.tsx`), which `keyboard.spec.ts` checks.
+5. Closing the terminal instead of pressing Ctrl+C left the backend and frontend running on Mac and Linux, so the next `npm run dev` stopped with "Port 8000 is already in use". `dev.mjs` now stops both on SIGHUP too. Checked by hand, with no automated test: after a SIGHUP both ports are free.
+
+Bugs:
+
+6. A failed move put back the whole board as it was before it, undoing any later move on screen. Now only its own card goes back (`putBack` in `board.ts`).
+7. Empty values sorted first when a table was sorted descending. They're last both ways (`DataTable.tsx`).
+8. The activity form's "When", left as it was, was the time the form appeared. It's now the time the activity is logged (`LogActivityForm.tsx`).
+9. After a keyboard move, a later mouse drag pulled focus back to the card moved by keyboard. Using the mouse, or focusing something else, now stops that (`useKeyboardMove.ts`).
+10. IDs too big for the database gave a 500. In the address they give a 404, like `abc`, and as a link a 422.
+11. A website's 300-character limit was checked before `https://` was added. It's checked after.
+12. `uv run alembic upgrade head` didn't turn SQLite's foreign keys off while migrating. It now does, with `db.migrate()`, through `db.foreign_keys_off()`.
+13. On Windows, every run printed Node's DEP0190 warning. Commands now go to the shell as one line. This hasn't been tried on Windows yet.
+
+Security:
+
+14. The backend accepted any Host header, so a DNS-rebinding page could reach the API. It now answers only `localhost` and `127.0.0.1` (`TrustedHostMiddleware`).
+15. Vite's defaults let a page on another localhost port use the API through the proxy and download `data/accountable.db` through `/@fs/`. It now allows no other origin (`server.cors: false`) and doesn't serve `*.db` files.
+16. A website with any scheme, such as `javascript://`, was saved as it was. Only `http` and `https` are kept.
+
+Spec and plan:
+
+17. The concern 8 test couldn't tell a kept close date from one reset to today. It now wins the deal on another day.
+18. The Delete buttons on record pages were secondary. They're Raspberry.
+19. A dialog opened from an activity's menu sent focus to the main area. It goes back to the menu's button.
+20. A record page that couldn't reach the server had no main heading. The message is now its heading.
+21. A pipeline move showed no message. A saved one shows "Deal moved".
+22. A timeline's "Overdue since" was worked out on the browser's clock. The backend now sends `follow_up_overdue` with each entry.
+23. The migration tests ignored server defaults and CHECK constraints. They compare both now.
+24. FastAPI's `/docs`, `/redoc` and `/openapi.json` are gone. `spec.md` now gives the length limits on website, industry, email, phone and job title, which the code already had.
+25. The notes named two files beyond the plan's list, and there were more. They're all listed below now. The favicon can't use the theme, so a test checks that its two colors are the theme's ink and primary.
+26. The spec contradicted itself in two places. `spec.md` now says that Open pipeline by stage shows each stage's count on hover and in the table for screen readers, as its Charts section and mockup C do. It also says the funnel counts a lost deal up to the furthest open stage it reached, and a deal moved back out of Won as open, as the code does.
 
 ## Success criteria and their tests
 
@@ -56,7 +98,16 @@ The data lives in `data/accountable.db`, which git ignores. Deleting that file a
 
 - The backend tests use `httpx2` rather than the plan's `httpx`, because Starlette 1.10's test client deprecates `httpx`.
 - `package.json` denies `fsevents` its install script (it ships a prebuilt binary), which keeps npm 11's first install quiet.
-- Two small files beyond the plan's list: `backend/errors.py` (the `NotFound` and `Invalid` errors the services raise) and `frontend/src/components/returnFocus.ts` (dialogs open from state, so it sends focus back to whatever opened them, or to the main area if that's gone).
+- Files beyond the plan's list:
+  - `backend/errors.py`: the `NotFound` and `Invalid` errors the services raise.
+  - `backend/migrations/script.py.mako`: Alembic's template for new migrations.
+  - `frontend/src/components/returnFocus.ts`: dialogs open from state, so it sends focus back to whatever opened them (the menu's button for a menu item), or to the main area if that's gone.
+  - `frontend/src/components/Toaster.tsx` and `Details.tsx`: the messages, and the label and value pairs on record pages.
+  - `frontend/src/lib/forms.ts`: sending only changed fields, and showing a 422's messages under their fields.
+  - `frontend/src/features/activities/fields.tsx`, `contacts/ContactList.tsx`, `deals/DealList.tsx` and `dashboard/ChartTooltip.tsx`: pieces shared within or between those features.
+  - `frontend/src/test-setup.ts` and `test-utils.tsx`: for the unit tests.
+  - `frontend/src/components/ErrorState.test.tsx` and `features/activities/LogActivityForm.test.tsx`: tests added in the review.
+  - `frontend/public/favicon.svg`: it can't use the theme's variables, so `theme.test.ts` checks that its two colors are the theme's.
 - `db.migrate()` turns SQLite's foreign keys off while migrating, because a batch migration rebuilds a table by dropping the old one, and with them on that drop would cascade to activities and history.
 - The migration's boolean default is `sa.false()` rather than the generated `sa.text('0')`, which Postgres would refuse.
 - Timeline entries at the same moment put a status change above the stage change that caused it, then a stage change above an activity, then break ties by id.

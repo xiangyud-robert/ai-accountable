@@ -59,10 +59,11 @@ type DataTableProps<T extends RowData> = {
   emptyAction?: ReactNode
 }
 
+// Empty values sort last in both directions. The table turns the comparison around for
+// descending, so they're handed to it as undefined, which sortUndefined: 'last' keeps last.
+const sortValue = (value: Value) => (value === null || value === '' ? undefined : value)
+
 function compareValues(a: Value, b: Value): number {
-  if (a === b) return 0
-  if (a === null || a === '') return 1
-  if (b === null || b === '') return -1
   if (typeof a === 'number' && typeof b === 'number') return a - b
   return String(a).localeCompare(String(b), 'en', { sensitivity: 'base', numeric: true })
 }
@@ -97,7 +98,8 @@ export function DataTable<T extends RowData>({
       columns.map((column) => ({
         id: column.id,
         header: column.header,
-        accessorFn: (row: T) => column.value(row),
+        accessorFn: (row: T) => sortValue(column.value(row)),
+        sortUndefined: 'last' as const,
         sortFn: (a, b) =>
           column.compare ? column.compare(a.original, b.original) : compareValues(column.value(a.original), column.value(b.original)),
       })),

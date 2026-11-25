@@ -11,6 +11,13 @@ export default defineConfig({
     host: '127.0.0.1',
     port: webPort,
     strictPort: true,
+    // The app is served from one address, so it needs no CORS. With Vite's default, a page on
+    // any other localhost port could use the API through the proxy.
+    cors: false,
+    fs: {
+      // Vite's own list, which this replaces, plus the databases in data/ and e2e/.data/.
+      deny: ['.env', '.env.*', '*.{crt,pem,key,p12,pfx,cer,der}', '.npmrc', '.yarnrc.yml', '**/.git/**', '*.db', '*.db-*'],
+    },
     proxy: {
       // 127.0.0.1 rather than localhost, which can resolve to ::1 where uvicorn isn't listening.
       '/api': `http://127.0.0.1:${apiPort}`,

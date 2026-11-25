@@ -1,10 +1,4 @@
-import { spawnSync } from 'node:child_process'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { testEnv } from './playwright.config'
-import { expect, test } from './fixtures'
-
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+import { expect, runCommand, test } from './fixtures'
 
 test('criterion 2: npm run seed brings back the sample data', async ({ page }) => {
   await page.goto('/organizations')
@@ -17,12 +11,7 @@ test('criterion 2: npm run seed brings back the sample data', async ({ page }) =
   await expect(page.getByText('15 organizations')).toBeVisible()
 
   // The documented command, against the tests' own database.
-  const result = spawnSync('npm', ['run', 'seed'], {
-    cwd: root,
-    env: { ...process.env, ...testEnv },
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  })
+  const result = runCommand('npm', ['run', 'seed'])
   expect(result.status, result.stderr).toBe(0)
   expect(result.stdout).toContain('15 organizations, 40 contacts, 45 deals and 100 activities')
 

@@ -72,6 +72,8 @@ export type TimelineEntry = {
   type: ActivityType | null
   follow_up_date: string | null
   follow_up_done: boolean | null
+  /** Whether the follow-up is overdue, which the backend decides (R9). */
+  follow_up_overdue: boolean | null
   from_value: string | null
   to_value: string | null
   contact_id: number | null

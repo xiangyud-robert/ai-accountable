@@ -73,6 +73,18 @@ export function moveDeal(
     .sort((a, b) => order.get(a.stage)! - order.get(b.stage)! || byPosition(a, b))
 }
 
+/**
+ * The deals with one put back as it was in `before`, at its old place, when its move
+ * couldn't be saved. Any card moved since stays where it is.
+ */
+export function putBack(deals: DealRow[], before: DealRow[], stages: Stage[], id: number, today: string): DealRow[] {
+  const old = before.find((d) => d.id === id)
+  if (!old) return deals
+  const index = columnOf(before, old.stage).findIndex((d) => d.id === id)
+  // moveDeal gives the new stage's usual probability, so the deal's own figures come back after.
+  return moveDeal(deals, stages, id, old.stage, index, today).map((d) => (d.id === id ? { ...old, position: d.position } : d))
+}
+
 /** Each stage's column with its figures. Expected revenue counts open deals only (R2). */
 export function boardColumns(deals: DealRow[], stages: Stage[]): BoardColumn[] {
   return [...stages]

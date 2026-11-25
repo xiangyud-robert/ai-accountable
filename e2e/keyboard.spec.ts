@@ -10,6 +10,14 @@ async function tabTo(page: Page, target: Locator, { max = 120, back = false } = 
   throw new Error('Tab never reached it')
 }
 
+/** The spec's focus ring: 2px of Cerulean, 2px outside the edge. axe doesn't check it. */
+async function expectFocusRing(target: Locator) {
+  await expect(target).toHaveCSS('outline-style', 'solid')
+  await expect(target).toHaveCSS('outline-width', '2px')
+  await expect(target).toHaveCSS('outline-color', 'rgb(17, 138, 178)')
+  await expect(target).toHaveCSS('outline-offset', '2px')
+}
+
 test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an activity, by keyboard only', async ({ page }) => {
   await page.goto('/')
   await page.keyboard.press('Tab')
@@ -70,6 +78,7 @@ test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an 
   await expect(page.getByRole('option', { name: 'Note' })).toBeFocused()
   await page.keyboard.press('ArrowDown')
   await expect(page.getByRole('option', { name: 'Call' })).toBeFocused()
+  await expectFocusRing(page.getByRole('option', { name: 'Call' }))
   await page.keyboard.press('Enter')
   await expect(form.getByLabel('Type')).toHaveText('Call')
   await tabTo(page, form.getByLabel('Description'))
@@ -101,8 +110,37 @@ test('a picker can be searched and chosen from by keyboard', async ({ page }) =>
   await tabTo(page, contact)
   await page.keyboard.press('Enter')
   await page.keyboard.type('okafor')
+  // Focus stays in the search box, and the option Enter would choose shows the ring.
+  await expectFocusRing(page.getByRole('option', { name: /^Daniel Okafor/ }))
   await page.keyboard.press('Enter')
   await expect(contact).toHaveText(/Daniel Okafor/)
   await expect(dialog.getByRole('combobox', { name: /^Organization/ })).toHaveText(/Cobalt Bank/)
   await expect(contact).toBeFocused()
+})
+
+test('an activity’s menu by keyboard: its items show the focus ring, and focus goes back to its button', async ({ page }) => {
+  await page.goto('/deals/16')
+  const actions = page.getByRole('button', { name: /^Actions for this/ }).first()
+  await tabTo(page, actions)
+  await page.keyboard.press('Enter')
+  const edit = page.getByRole('menuitem', { name: 'Edit' })
+  await expect(edit).toBeFocused()
+  await expectFocusRing(edit)
+  await page.keyboard.press('Enter')
+  const dialog = page.getByRole('dialog', { name: /^Edit / })
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(actions).toBeFocused()
+
+  // The same for its delete question, cancelled.
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('menuitem', { name: 'Delete' })).toBeFocused()
+  await page.keyboard.press('Enter')
+  const question = page.getByRole('alertdialog')
+  await expect(question.getByRole('button', { name: 'Cancel' })).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(question).toBeHidden()
+  await expect(actions).toBeFocused()
 })

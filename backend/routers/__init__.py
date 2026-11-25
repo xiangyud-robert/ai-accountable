@@ -4,7 +4,9 @@ call inside `with transaction(engine) as conn:`, so the commit happens before it
 from typing import Annotated
 
 import sqlalchemy as sa
-from fastapi import Depends, Request
+from fastapi import Depends, Path, Request
+
+from backend.schemas import MAX_ID
 
 
 def _engine(request: Request) -> sa.Engine:
@@ -12,3 +14,6 @@ def _engine(request: Request) -> sa.Engine:
 
 
 Engine = Annotated[sa.Engine, Depends(_engine)]
+
+# A record's id in the address. One that can't be a record's id is a missing record (main.py).
+RecordId = Annotated[int, Path(le=MAX_ID)]
