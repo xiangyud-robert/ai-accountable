@@ -83,6 +83,7 @@ Spec and plan:
 ## Harness (Nov 24, 2026)
 
 - The docs are reorganized for future changes. `docs/spec.md` now describes the whole product as it stands, starting with the problem it solves, and doesn't rely on the intent. The MVP's intent and plan moved to `docs/changes/mvp/`. Each later change gets its own folder there, named after its branch. `AGENTS.md` says to read the spec first and only the current branch's folder. `docs/REVIEW.md` now flags code that the spec doesn't describe.
+- Coding standards: `docs/STANDARDS.md` says how code is written here. `AGENTS.md` points to it, and `docs/REVIEW.md` has a pass that checks each change against it.
 
 ## Success criteria and their tests
 
