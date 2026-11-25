@@ -24,9 +24,9 @@ The data lives in `data/accountable.db`, which git ignores. Deleting that file a
 
 ## Done so far
 
-- Plan: `docs/intent.md` agreed, after an interview on scope, users, constraints and success criteria.
+- Plan: `docs/changes/mvp/intent.md` agreed, after an interview on scope, users, constraints and success criteria.
 - Design: `docs/spec.md` agreed, with mockup C, Focus, chosen from the three in `docs/mockups/`.
-- Build: `docs/plan.md` written, then built in its eight phases. `npm test` passes, and also from a fresh copy of the repo with nothing installed: 68 Vitest tests, 153 pytest tests and 71 end-to-end tests in Chrome.
+- Build: `docs/changes/mvp/plan.md` written, then built in its eight phases. `npm test` passes, and also from a fresh copy of the repo with nothing installed: 68 Vitest tests, 153 pytest tests and 71 end-to-end tests in Chrome.
   1. The one command: `npm run dev` sets everything up on the first run, and `npm test` runs all three suites and reports each.
   2. The backend: SQLAlchemy Core tables, the Alembic migration `0001_initial` (run on startup), the rules R1 to R11 in `backend/services/`, and every endpoint in the spec's API table.
   3. The sample data in `backend/seed.py`, loaded when the database is new, and `npm run seed`, which works while the app is running.
@@ -80,7 +80,13 @@ Spec and plan:
 25. The notes named two files beyond the plan's list, and there were more. They're all listed below now. The favicon can't use the theme, so a test checks that its two colors are the theme's ink and primary.
 26. The spec contradicted itself in two places. `spec.md` now says that Open pipeline by stage shows each stage's count on hover and in the table for screen readers, as its Charts section and mockup C do. It also says the funnel counts a lost deal up to the furthest open stage it reached, and a deal moved back out of Won as open, as the code does.
 
+## Harness (Nov 24, 2026)
+
+- The docs are reorganized for future changes. `docs/spec.md` now describes the whole product as it stands, starting with the problem it solves, and doesn't rely on the intent. The MVP's intent and plan moved to `docs/changes/mvp/`. Each later change gets its own folder there, named after its branch. `AGENTS.md` says to read the spec first and only the current branch's folder. `docs/REVIEW.md` now flags code that the spec doesn't describe.
+
 ## Success criteria and their tests
+
+The MVP's success criteria, from `docs/changes/mvp/intent.md`.
 
 | Criterion | Covered by | Not covered by a test |
 |---|---|---|

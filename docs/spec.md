@@ -1,13 +1,41 @@
-# Spec: the Accountable MVP
+# Spec: Accountable
 
-This spec turns `docs/intent.md` into requirements and a design that can be built and tested. The intent says what we're building and why. This file says how it behaves and how it looks. The look follows the brand skill (`.claude/skills/brand/SKILL.md`), and the stack follows `docs/TECH_STACK.md`.
+This file describes Accountable as it stands today: what it's for, how it behaves and how it looks. It covers the whole product, and every change updates it, so it always describes the product as it is. The look follows the brand skill (`.claude/skills/brand/SKILL.md`), and the stack follows `docs/TECH_STACK.md`.
+
+## The problem
+
+A small business keeps track of its customers and sales in spreadsheets, inboxes and people's heads. Nobody can see at a glance which companies we deal with, who our contacts are, what's in the sales pipeline, what happened last with a customer or what needs doing next.
+
+## The product
+
+Accountable is a business management system: a sales CRM that will grow into a full Business OS, including ERP. Today it's a complete sales CRM for one person, running on their own computer. Think of it as a private Salesforce that does the everyday CRM essentials really well. It should feel sharp, modern and professional, and be a pleasure to use.
+
+- **Who uses it:** one salesperson, on their own computer, every day. They sell software and services to small and mid-sized companies, with deals from about $5,000 to $150,000 that take weeks to months to close. No other systems are involved.
+- **Five sections:** the Dashboard, Organizations, Contacts, Deals and the Pipeline (see Screens).
+- **Four kinds of record:** organizations, contacts, deals and activities (see Data model). Activities can have follow-ups, and each deal's stages and each contact's statuses keep a history.
+- **Sample data** fills every screen the first time it starts, and one command resets to it.
+- **Every change is kept,** through a refresh and a restart.
+
+**Not in Accountable yet:**
+
+- sign-in, user accounts, several people sharing the same data, and a record of who did what
+- use from anywhere but the computer it runs on
+- a dark mode or a layout for phones
+- AI features
+- email, calendar or phone integrations
+- currencies other than US dollars
+- reports beyond the dashboard
+- tags or custom fields
+- changing the pipeline stages
+- importing or exporting data
+- staying quick with thousands of records, and browsers other than Chrome
 
 ## Concerns
 
-These are the gaps and conflicts found while writing the spec, each with the choice made. All 12 choices were agreed as written on Nov 22, 2026.
+Choices about behavior that the rules below don't make obvious, each with its reason. The code and tests refer to them by number, such as "concern 7".
 
-1. **Google Fonts and working offline.** The brand's fonts come from Google Fonts, but the app has to work with no internet connection. The spec bundles the same three fonts into the app with the `@fontsource` npm packages, so nothing is loaded from Google.
-2. **The first run needs the internet once.** Setting everything up on the first run means downloading the npm packages, the Python packages and, if it's missing, Python 3.12 itself (uv does this). After that, no connection is needed. The spec reads "needs no internet connection to use" as "after the first run".
+1. **Fonts that work offline.** The brand's fonts come from Google Fonts, but Accountable has to work with no internet connection. The same three fonts are bundled into the app with the `@fontsource` npm packages, so nothing is loaded from Google.
+2. **The first run needs the internet once.** Setting everything up on the first run means downloading the npm packages, the Python packages and, if it's missing, Python 3.12 itself (uv does this). After that, no connection is needed.
 3. **One command before anything is installed.** `npm run dev` normally needs `npm install` first. Here `npm run dev` runs a small Node script with no dependencies of its own. It checks the Node.js version and that uv is installed, and says what to do if either is missing. Then it installs what's missing, creates the database with sample data if there isn't one, starts both servers and prints the address to open in Chrome.
 4. **The brand's colors and WCAG AA.** Small text needs a contrast of 4.5:1. Measured against white:
    - White text on Cerulean is 3.96:1 and on Raspberry 3.62:1, though the brand pairs them.
@@ -15,7 +43,7 @@ These are the gaps and conflicts found while writing the spec, each with the cho
    - Midnight text on Sea Green, Marigold and Coral passes, at 5.1 to 7.5:1.
 
    Full-strength brand colors are kept for fills, dots, chart marks, and Sea Green buttons with Midnight text. Text and any fill behind white text use the darker shades listed under Colors. Badges use a pale tint of the color with Midnight text.
-5. **Six stages, five colors.** The brand gives five colors for things side by side, in order. In that order Won would be Raspberry, the alert color. The spec colors the stages by meaning instead:
+5. **Six stages, five colors.** The brand gives five colors for things side by side, in order. In that order Won would be Raspberry, the alert color, so the stages are colored by meaning instead:
    - New: Cerulean
    - Qualified: Marigold
    - Proposal: Coral
@@ -23,25 +51,21 @@ These are the gaps and conflicts found while writing the spec, each with the cho
    - Won: Sea Green
    - Lost: grey
 
-   Raspberry stays free for late deals and overdue follow-ups. The option not chosen was the brand's order for the four open stages (Sea Green, Marigold, Coral, Cerulean), with Won in Midnight and Lost in grey.
-6. **Each stage's usual probability** isn't in the intent. The spec uses New 10%, Qualified 25%, Proposal 50%, Negotiation 75%, Won 100% and Lost 0%. Won and Lost are fixed at 100% and 0%, because expected revenue only counts open deals; the probability can only be set by hand on an open deal.
-7. **What "how much value reaches each stage" means.** The funnel counts each deal in every stage up to the furthest one it has reached, using its stage history, so it narrows from New to Won. A deal dragged straight from New to Proposal counts in Qualified too. A lost deal counts up to the furthest open stage it reached before it was lost, and a line under the funnel gives the total lost. A won deal counts in every stage, and a deal moved back out of Won counts as open again, up to the furthest open stage it has reached. The funnel covers every deal, with no date range, the same as the pipeline board.
-8. **Moving a deal back out of Won or Lost.** The intent doesn't say what happens. The spec keeps the close date as it is, so the deal shows as late if that date has passed, which prompts a new expected date. It takes its new stage's usual probability, and its main contact stays a customer, as the intent says.
-9. **Won and Lost column figures.** The intent says each column shows its own total value and expected revenue. For Won the expected revenue would equal the total, and for Lost it would always be $0, so those two columns show only their total value. The board's figures cover open deals only, as the intent says.
+   Raspberry stays free for late deals and overdue follow-ups.
+6. **Each stage's usual probability:** New 10%, Qualified 25%, Proposal 50%, Negotiation 75%, Won 100% and Lost 0%. Won and Lost are fixed at 100% and 0%, because expected revenue only counts open deals; the probability can only be set by hand on an open deal.
+7. **What the funnel counts.** The funnel shows how much value reaches each stage. It counts each deal in every stage up to the furthest one it has reached, using its stage history, so it narrows from New to Won. A deal dragged straight from New to Proposal counts in Qualified too. A lost deal counts up to the furthest open stage it reached before it was lost, and a line under the funnel gives the total lost. A won deal counts in every stage, and a deal moved back out of Won counts as open again, up to the furthest open stage it has reached. The funnel covers every deal, with no date range, the same as the pipeline board.
+8. **Moving a deal back out of Won or Lost** keeps its close date as it is, so the deal shows as late if that date has passed, which prompts a new expected date. It takes its new stage's usual probability, and its main contact stays a customer, since a contact's status never goes back by itself (R7).
+9. **Won and Lost column figures.** Each open column on the pipeline shows its total value and expected revenue. For Won the expected revenue would equal the total, and for Lost it would always be $0, so those two columns show only their total value. The board's figures cover open deals only.
 10. **Timelines follow a deal's current main contact.** A contact's timeline is worked out from the deals where they're the main contact now. If a deal's main contact changes, its activities and stage changes move to the new person's timeline. A deal with no main contact appears on nobody's.
-11. **Money "always shown with its currency".** Everything is in US dollars, so amounts read `$12,500`, and table headings, chart axes and form fields that hold money say USD, such as "Value (USD)". In tight spaces, such as chart axes and dashboard tiles, amounts may be shortened to `$1.2M`, with the full amount shown on hover.
+11. **Money is always shown with its currency.** Everything is in US dollars, so amounts read `$12,500`, and table headings, chart axes and form fields that hold money say USD, such as "Value (USD)". In tight spaces, such as chart axes and dashboard tiles, amounts may be shortened to `$1.2M`, with the full amount shown on hover.
 12. **Smaller choices:**
-    - Every change of a contact's status appears in their timeline, whether made by hand or by a won deal. The intent only asks for the automatic one.
+    - Every change of a contact's status appears in their timeline, whether made by hand or by a won deal.
     - Adding a deal straight to Won or Lost counts as moving it there. Its close date defaults to today and, for Won, its main contact becomes a customer.
     - An activity's "when it happened" can't be later than now. Things still to do go in its follow-up date.
     - "Today" is the date on the computer running Accountable. "Due in the next 7 days" means today or any of the 7 days after it.
     - Organizations don't have a timeline, because activities belong to a contact or a deal. An organization's page shows its contacts and deals.
 
 ## Requirements
-
-### Scope
-
-Everything in `docs/intent.md` is in scope: five sections, four kinds of record, activities with follow-ups, stage-change entries, sample data, the reset command and keeping every change. The intent's "Not in the MVP" list stands as written.
 
 ### Stages
 
@@ -86,7 +110,7 @@ Each rule has a number so the tests can refer to it.
   - the activities and stage changes of every deal where they're the main contact, each labelled with the deal's name
   - their status changes
 
-  Timelines are newest first, by when each thing happened. Stage and status entries can't be edited or deleted.
+  Timelines are newest first, by when each thing happened. At the same moment, a status change comes above the stage change that caused it, and a stage change above an activity. Stage and status entries can't be edited or deleted.
 
 **Deleting**
 
@@ -101,7 +125,7 @@ Each rule has a number so the tests can refer to it.
 
 - **R13.** Every table has:
   - a search box that filters the rows as you type, matching any part of the text in any column, ignoring case
-  - sorting by clicking a column's heading, once for ascending and again for descending, one column at a time, with an arrow showing the direction
+  - sorting by clicking a column's heading, once for ascending and again for descending, one column at a time, with an arrow showing the direction, and empty values last both ways
   - an Add button that opens the form for a new record
   - Edit and Delete buttons on each row
   - the record's name as a link to its page
@@ -109,11 +133,11 @@ Each rule has a number so the tests can refer to it.
 
 **Keeping changes**
 
-- **R14.** Every change is saved to the database as soon as it's made. Nothing is kept only in the browser.
+- **R14.** Every change is saved to the database as soon as it's made, so it's still there after a refresh and every time the app starts. Nothing is kept only in the browser.
 
 ### Screens
 
-**Dashboard** (`/`), the landing page. The figures are defined in the next section.
+**Dashboard** (`/`), the landing page: how sales are going at a glance. It should be visually stunning, with a line chart, a bar chart and a visual of the pipeline. The figures are defined in the next section.
 
 - **Revenue won this month**, the main figure. It gives last month's figure, and the total and number of deals won in the last 12 months.
 - **Revenue won by month**: a line chart of the last 12 months, beneath the main figure.
@@ -135,6 +159,7 @@ Each rule has a number so the tests can refer to it.
 **Contacts** (`/contacts`)
 
 - Table columns: Name, Organization, Job title, Email, Phone, Status. Sorted by name to begin with.
+- A lead is a contact with the lead status, so there's no separate list of leads.
 - A status filter shows All, Leads, Qualified and Customers, each with its count. It works together with the search, and is kept in the address (`/contacts?status=lead`) so it survives a refresh.
 - A contact's page (`/contacts/:id`) shows their name, status, job title, organization (as a link), email (as a mail link) and phone, with Edit and Delete.
 - A **Deals** panel lists the deals where they're the main contact, with an Add deal button that fills in the contact and organization.
@@ -152,7 +177,7 @@ Each rule has a number so the tests can refer to it.
 **Pipeline** (`/pipeline`)
 
 - The header shows the board's figures for open deals, side by side: the number of open deals, their total value and their expected revenue. It also has an Add deal button, for a new deal in New.
-- There's one column for each of the six stages, in order. Each column heading shows:
+- There's one column for each of the six stages, in order, and every deal is on the board. Each column heading shows:
   - the stage's name and color dot
   - its count and total value
   - in open columns, its expected revenue and a thin bar showing the expected share of the value
@@ -162,7 +187,7 @@ Each rule has a number so the tests can refer to it.
 - Cards in Won and Lost are compact: the deal's name, value and close date.
 - Cards leave out the organization to save space. It's on the deal's page and in the Deals table, and the sample data's deal names start with it.
 - Clicking a card, or pressing Enter on it, opens the deal's page.
-- Dragging a card to another column or to another place follows R3 and R5. Every figure on the board changes as soon as the card is dropped, before the server replies. If the save fails, the card goes back to where it was and a message says so.
+- Dragging a card to another column or to another place follows R3 and R5. A card can be dropped anywhere in a column. Every figure on the board changes as soon as the card is dropped, before the server replies. If the save fails, the card goes back to where it was and a message says so. Any other card moved since stays where it was dropped.
 
 **Forms** open in a dialog. Every field has a visible label, and optional fields say "Optional".
 
@@ -174,7 +199,7 @@ Each rule has a number so the tests can refer to it.
   - Probability can't be edited for Won and Lost.
   - A new deal starts at New, or at its column's stage, with the stage's usual probability and a close date 30 days from today (today for Won and Lost).
 - **Activity:**
-  - Logged from the form at the top of a contact's or deal's timeline: Type (Note, Call or Email), Description, When (date and time, now by default) and Follow-up date (optional).
+  - Logged from the form at the top of a contact's or deal's timeline: Type (Note, Call or Email), Description, When (date and time, now by default; left as it is, it's the time the activity is saved) and Follow-up date (optional).
   - After saving, the new entry appears at the top of the timeline and the form clears.
   - Editing an activity uses the same fields, plus Done when it has a follow-up.
 
@@ -192,7 +217,7 @@ The delete questions read, for example:
 
 A sentence about linked records is left out when its count is zero.
 
-**Messages.** A short message confirms each save and delete, such as "Deal saved". If the server can't be reached, the page says "Can't reach Accountable's server. Check that it's running, then refresh." A record that no longer exists shows "This deal no longer exists", with a link back to the list. An unknown address shows "Page not found", with a link to the dashboard.
+**Messages.** A short message confirms each save, delete and pipeline move, such as "Deal saved" or "Deal moved". If the server can't be reached, the page says "Can't reach Accountable's server. Check that it's running, then refresh." A record that no longer exists shows "This deal no longer exists", with a link back to the list. An unknown address shows "Page not found", with a link to the dashboard.
 
 ### Dashboard figures
 
@@ -228,10 +253,12 @@ The sample data is for a business that sells software and services to other busi
 
 ### Running it
 
-- **Before you start:** Node.js 24 or later (26 recommended), uv and Google Chrome. `docs/STATUS.md` says how to install them on Mac, Linux and Windows.
-- **`npm run dev`** starts Accountable. On the first run it checks Node.js and uv, installs the npm and Python packages, and creates the database with the sample data. Then it starts the backend and frontend and prints "Accountable is running at http://localhost:5173. Open it in Google Chrome." Ctrl+C stops both.
-- **`npm run seed`** replaces all the data with fresh sample data, dated from today, and prints what it created. If the app is running, refresh the browser to see the new data.
-- **`npm test`** runs every test against a database of its own.
+Accountable runs locally, with commands that work the same on Mac, Linux and Windows. After the first run it needs no internet connection.
+
+- **Before you start:** Node.js 24 or later (26 recommended), uv and Google Chrome. Nothing else needs installing beforehand. `docs/STATUS.md` says how to install them on Mac, Linux and Windows.
+- **`npm run dev`** starts Accountable. On the first run it checks Node.js and uv, installs the npm and Python packages, and creates the database with the sample data. Then it starts the backend and frontend and prints "Accountable is running at http://localhost:5173. Open it in Google Chrome." Ctrl+C, or closing the terminal, stops both.
+- **`npm run seed`** replaces all the data with fresh sample data, dated from today, and prints what it created. If the app is running, refresh the browser to see the new data. `npm run seed -- --large` adds 500 of each kind of record, for checking speed.
+- **`npm test`** runs every test against a database and ports of its own (8100 and 5273), so it works while the app is open. A test left with `.only` fails the run.
 - **The data** lives in `data/accountable.db`, which git ignores, unless `DATABASE_URL` names another database. Deleting that file also resets to the sample data on the next start.
 
 ### Quality
@@ -240,19 +267,19 @@ The sample data is for a business that sells software and services to other busi
 - **Screen:** designed for 1440 by 900, and works from 1280 by 720 upwards.
 - **Speed:** with 500 of each kind of record, every screen shows its data within a second on a typical laptop, the search keeps up with typing, and a dragged card follows the pointer smoothly.
 - **Console:** no errors or warnings in Chrome's console during normal use.
-- **Local only:** the servers listen on this computer (127.0.0.1) only, not on the network. The backend answers only requests addressed to `localhost` or `127.0.0.1`, so a web page can't reach it by pointing its own name at this computer, and the frontend's dev server allows no other origin.
+- **Local only:** the servers listen on this computer (127.0.0.1) only, not on the network. The backend answers only requests addressed to `localhost` or `127.0.0.1`, so a web page can't reach it by pointing its own name at this computer, and the frontend's dev server allows no other origin and doesn't serve the database files.
 - **Keyboard and contrast:** as described under Keyboard and accessibility.
 
 ## Design
 
-### Chosen look
+### The look
 
-Mockup C, Focus, was chosen on Nov 22, 2026, over A, Clear and B, Midnight. It's in `docs/mockups/c-focus.html`, with its screenshot in `c-focus.png`. The reasons for choosing it:
+The look is mockup C, Focus, in `docs/mockups/c-focus.html`, with its screenshot in `c-focus.png`. The other two mockups in that folder, A and B, aren't used. What marks mockup C out:
 
 - **The funnel and stage charts:** the funnel is drawn as a real funnel shape, and open value by stage as columns with the expected part solid.
 - **The pipeline layout:** wider open columns, each under its own white heading panel, contact initials on the cards, and compact Won and Lost columns.
 
-Look and feel and Layout below follow it. The mockup shows the look, not the final sample data: it has about 11 won deals, where the app will have about 20.
+Look and feel and Layout below follow it. The mockup shows the look, not the sample data: it has about 11 won deals, where the app has about 20.
 
 ### How it fits together
 
@@ -295,7 +322,7 @@ Columns use SQLAlchemy's own types (`Date`, `DateTime`, `Boolean`, `Integer`, `S
 | Column | Type | Rules |
 |---|---|---|
 | name | text | required, up to 120 characters |
-| website | text | optional, up to 300 characters; `https://` is added if no scheme is given, and only `http` and `https` addresses are kept, since it becomes a link |
+| website | text | optional, up to 300 characters, counting any `https://` added; `https://` is added if no scheme is given, and only `http` and `https` addresses are kept, since it becomes a link |
 | industry | text | optional, up to 80 characters |
 | notes | text | optional, up to 5,000 characters |
 
@@ -357,7 +384,7 @@ Indexes cover every link column, `deals (stage, position)` and `activities (foll
 
 ### API
 
-JSON under `/api`, with snake_case names. A failed field check returns 422 with a message for each field, which the form shows under that field. A missing record returns 404, and so does an id in the address that can't be a record's, such as `abc`.
+JSON under `/api`, with snake_case names. A failed field check returns 422 with a message for each field, which the form shows under that field. A missing record returns 404, and so does an id in the address that can't be a record's, such as `abc`. A link in the body to an id that can't be a record's returns 422. The API is only what's in this table, with no `/docs`, `/redoc` or `/openapi.json`.
 
 | Method and path | What it does |
 |---|---|
@@ -386,6 +413,8 @@ JSON under `/api`, with snake_case names. A failed field check returns 422 with 
 `PATCH` sends only the fields that changed. If the stage changes and the probability or close date isn't sent, R3 fills them in. If they are sent, they're used as given. The form sends them when they were edited or filled in on screen, so the result matches what the user saw before saving.
 
 ### Look and feel
+
+The look follows Accountable's brand guidelines, which take priority over any general design guidance. It's light mode only, designed for a laptop or desktop screen.
 
 **Fonts.** Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for money, counts, percentages and dates in tables, cards, tiles and charts. Instrument Serif is used only as an accent: for the tagline under the logo ("Every deal, accounted for") and the date above the dashboard's title.
 
@@ -438,7 +467,7 @@ Components use colors by role, never by the brand's names or by value. The roles
 - primary, alert and their tints
 - each stage and status, with its tint
 
-Only the theme file maps each role to a color in the tables above, and the charts use the same roles. A dark mode is then one more set of values in that file.
+Only the theme file maps each role to a color in the tables above, and the charts use the same roles. A dark mode is then one more set of values in that file. The favicon can't read the theme, so its two colors are the theme's ink and primary values, which a test checks.
 
 **Surfaces and shape.**
 
@@ -521,12 +550,14 @@ Only the theme file maps each role to a color in the tables above, and the chart
 
 ### Keyboard and accessibility
 
+Everything can be done with the keyboard as well as the mouse, including moving a card on the pipeline. Text meets WCAG AA contrast, and every form field has a label.
+
 - **Tab order:** everything can be reached with Tab, in reading order. Everything that can be focused shows a 2px Cerulean focus ring, 2px outside its edge.
-- **Structure:** a "Skip to content" link comes first. Each page has one main heading and labelled navigation and main areas.
+- **Structure:** a "Skip to content" link comes first. Each page has one main heading, which is the message when the page can't load, and labelled navigation and main areas.
 - **Tables:** these are real HTML tables. Each sortable heading is a button and announces its sort order. On each row, the name link and the Edit and Delete buttons can be reached with Tab.
 - **Forms:** every field has a visible label. Errors are linked to their field, and saving with errors moves focus to the first one.
-- **Dialogs** keep focus inside them, close with Escape, and return focus to the button that opened them.
-- **Pipeline,** with keyboard moves of our own that use the same move function as dragging (see Risks in `docs/plan.md`):
+- **Dialogs** keep focus inside them, close with Escape, and return focus to the button that opened them, or to the menu's button for an item in a menu.
+- **Pipeline,** with keyboard moves of our own rather than the drag library's, which moves by screen position. They use the same move function as dragging, so both follow the same rules:
   - Tab reaches each card.
   - Space picks a card up, Up and Down move it within the column, and Left and Right move it to the next column, keeping its position where possible.
   - Space drops it, and Escape puts it back where it was.
@@ -540,3 +571,4 @@ Only the theme file maps each role to a color in the tables above, and the chart
 - `DATABASE_URL` sets the database, so the tests use their own.
 - `ACCOUNTABLE_TODAY` fixes the date the backend treats as today, with noon as the time now, so the tests for late deals, follow-ups and months always give the same results. The end-to-end tests set Chrome's clock to 11:00 on the same date, since the pipeline works out late cards in the browser too, and a time Chrome fills in as now is then never later than the backend's now.
 - The sample data generator takes today's date as an input, for the same reason.
+- `ACCOUNTABLE_API_PORT` and `ACCOUNTABLE_WEB_PORT` set the ports the frontend's dev server uses, so the tests can run their own copy of the app while it's open.
