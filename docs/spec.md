@@ -15,12 +15,14 @@ Accountable is a business management system: a sales CRM that will grow into a f
 - **Four kinds of record:** organizations, contacts, deals and activities (see Data model). Activities can have follow-ups, and each deal's stages and each contact's statuses keep a history.
 - **Sample data** fills every screen the first time it starts, and one command resets to it.
 - **Every change is kept,** through a refresh and a restart.
+- **Light and dark mode,** with a switch at the bottom of the sidebar. Light is the default, and the choice is remembered.
 
 **Not in Accountable yet:**
 
 - sign-in, user accounts, several people sharing the same data, and a record of who did what
 - use from anywhere but the computer it runs on
-- a dark mode or a layout for phones
+- a layout for phones
+- following the computer's own light or dark setting
 - AI features
 - email, calendar or phone integrations
 - currencies other than US dollars
@@ -42,12 +44,12 @@ Choices about behavior that the rules below don't make obvious, each with its re
    - Sea Green, Marigold and Coral as text are 1.62 to 2.35:1, as the brand itself warns.
    - Midnight text on Sea Green, Marigold and Coral passes, at 5.1 to 7.5:1.
 
-   Full-strength brand colors are kept for fills, dots, chart marks, and Sea Green buttons with Midnight text. Text and any fill behind white text use the darker shades listed under Colors. Badges use a pale tint of the color with Midnight text.
+   Full-strength brand colors are kept for fills, dots, chart marks, and Sea Green buttons with Midnight text. Text and any fill behind white text use the darker shades listed under Colors. Badges use a pale tint of the color with Midnight text. Concern 13 covers dark mode.
 5. **Six stages, five colors.** The brand gives five colors for things side by side, in order. In that order Won would be Raspberry, the alert color, so the stages are colored by meaning instead:
    - New: Cerulean
    - Qualified: Marigold
    - Proposal: Coral
-   - Negotiation: Midnight
+   - Negotiation: Midnight, or Sea Mist in dark mode (concern 13)
    - Won: Sea Green
    - Lost: grey
 
@@ -64,6 +66,17 @@ Choices about behavior that the rules below don't make obvious, each with its re
     - An activity's "when it happened" can't be later than now. Things still to do go in its follow-up date.
     - "Today" is the date on the computer running Accountable. "Due in the next 7 days" means today or any of the 7 days after it.
     - Organizations don't have a timeline, because activities belong to a contact or a deal. An organization's page shows its contacts and deals.
+13. **Dark mode colors.** The brand gives dark mode a `#04232E` page with black panels and cards, Sea Mist as ink, and Sea Green and Marigold lightened for text. Against black, every full-strength brand color passes 3:1 except Midnight, at 1.7:1. So in dark mode:
+    - Negotiation is Sea Mist, the brand's ink on dark, just as Midnight is its ink on light. Its tint is Midnight.
+    - Menus, lists, tooltips and messages, which open on top of black panels, are Midnight. Black on black would show no edge, and shadows barely show on a dark page. Panels, cards, the sidebar and dialogs stay black.
+    - Dialogs sit over Midnight at 70%, which dims what's behind them toward Midnight, so the black dialog stands out from the black panels under it.
+    - Primary buttons and ticked checkboxes keep Midnight text on Sea Green, since Sea Mist on Sea Green would be about 1.3:1.
+    - The logo mark keeps its Midnight circle and Sea Green dot, matching the favicon, which can't change with the mode.
+14. **The light or dark choice is kept in the browser.** It's a setting for this screen, not a record, so it's saved in the browser's local storage, the one exception to R14. That way the page is in the right mode before anything draws, and a dark page never flashes light while the app loads.
+    - If nothing is saved, or the saved value isn't light or dark, the app is in light mode.
+    - If the browser won't save it, the switch still works until the page is reloaded.
+    - Another open tab changes when it's next loaded.
+    - Switching is instant, with no fade and no message.
 
 ## Requirements
 
@@ -76,7 +89,7 @@ The six stages are fixed.
 | New | 1 | Open | 10% | Cerulean |
 | Qualified | 2 | Open | 25% | Marigold |
 | Proposal | 3 | Open | 50% | Coral |
-| Negotiation | 4 | Open | 75% | Midnight |
+| Negotiation | 4 | Open | 75% | Midnight, or Sea Mist in dark mode |
 | Won | 5 | Closed | 100% | Sea Green |
 | Lost | 6 | Closed | 0% | Grey |
 
@@ -133,7 +146,7 @@ Each rule has a number so the tests can refer to it.
 
 **Keeping changes**
 
-- **R14.** Every change is saved to the database as soon as it's made, so it's still there after a refresh and every time the app starts. Nothing is kept only in the browser.
+- **R14.** Every change to a record is saved to the database as soon as it's made, so it's still there after a refresh and every time the app starts. No record or change to one is kept only in the browser. The one thing the browser keeps is the light or dark choice (concern 14).
 
 ### Screens
 
@@ -279,7 +292,7 @@ The look is mockup C, Focus, in `docs/mockups/c-focus.html`, with its screenshot
 - **The funnel and stage charts:** the funnel is drawn as a real funnel shape, and open value by stage as columns with the expected part solid.
 - **The pipeline layout:** wider open columns, each under its own white heading panel, contact initials on the cards, and compact Won and Lost columns.
 
-Look and feel and Layout below follow it. The mockup shows the look, not the sample data: it has about 11 won deals, where the app has about 20.
+Look and feel and Layout below follow it. The mockup shows the look, not the sample data: it has about 11 won deals, where the app has about 20. It's in light mode only. Dark mode keeps the same layout and uses the dark colors under Look and feel.
 
 ### How it fits together
 
@@ -288,6 +301,7 @@ Look and feel and Layout below follow it. The mockup shows the look, not the sam
 - **The database:** named by `DATABASE_URL`, which defaults to a SQLite file on this computer. The tables are defined with SQLAlchemy Core and created and changed by Alembic migrations, which are in git and run when the app starts. The sample data is loaded if the database was new. Moving to Postgres on Supabase later means changing `DATABASE_URL`.
 - **SQLite details:** when the database is SQLite, every connection turns on foreign keys (`PRAGMA foreign_keys = ON`), or SQLite silently ignores the delete rules. It also uses WAL mode, so the seed command can run while the app is open.
 - **Who decides:** the backend decides what's late, overdue and due soon, and works out every dashboard figure. The pipeline recalculates its own totals as soon as a card moves, using R1 and R2, and then refreshes from the server.
+- **Light or dark:** the theme file holds a light and a dark value for each color role. A few lines at the top of `index.html` read the saved choice and mark the page as dark before anything draws (concern 14). The page also tells Chrome which mode it's in, so Chrome's own parts, such as scrollbars and the date and time pickers, follow it.
 
 ### Libraries
 
@@ -300,7 +314,7 @@ Popular, well-supported libraries, as `docs/TECH_STACK.md` asks:
 | Sorting and searching tables | TanStack Table |
 | Pipeline drag and drop with the mouse | dnd-kit (`@dnd-kit/core`, `@dnd-kit/sortable`) |
 | Charts | Recharts |
-| Dialogs, menus, selects, checkboxes, tooltips | Radix UI primitives |
+| Dialogs, menus, selects, checkboxes, tooltips, the Dark mode switch | Radix UI primitives |
 | Pickers you can search | cmdk |
 | Forms and field checks | React Hook Form with Zod |
 | Styling, with the brand as theme tokens | Tailwind CSS |
@@ -414,7 +428,7 @@ JSON under `/api`, with snake_case names. A failed field check returns 422 with 
 
 ### Look and feel
 
-The look follows Accountable's brand guidelines, which take priority over any general design guidance. It's light mode only, designed for a laptop or desktop screen.
+The look follows Accountable's brand guidelines, which take priority over any general design guidance. It has a light mode, the default, and a dark mode, both designed for a laptop or desktop screen. Colors below are named by their light-mode value, and dark mode uses the dark value of the same role: "white" means the panel color, which is black in dark mode, "Midnight text" means ink, which is Sea Mist, and "Slate" means ink muted. Where a color stays the same in both modes, it says so.
 
 **Fonts.** Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for money, counts, percentages and dates in tables, cards, tiles and charts. Instrument Serif is used only as an accent: for the tagline under the logo ("Every deal, accounted for") and the date above the dashboard's title.
 
@@ -432,7 +446,7 @@ The look follows Accountable's brand guidelines, which take priority over any ge
 | Figures in tables and other places on cards | JetBrains Mono | 12 to 13px, 400 |
 | Accent | Instrument Serif | 17px for the tagline, 22px for the date |
 
-**Colors.** Each contrast ratio is measured against white, and against the page background where text sits on it.
+**Colors in light mode.** Each contrast ratio is measured against white, and against the page background where text sits on it.
 
 | Name | Value | Use |
 |---|---|---|
@@ -452,26 +466,52 @@ The look follows Accountable's brand guidelines, which take priority over any ge
 | Slate | `#4F6873` | Secondary text, from Midnight (5.9:1, 5.3:1) |
 | Grey | `#8FA3A9` | Lost; never for text |
 | Field outline | `#7A9097` | The outline of inputs and selects (3.4:1) |
-| Sea Mist | `#CDD8DB` | Text on dark surfaces, kept for a later dark mode (8.3:1 on Midnight) |
+| Sea Mist | `#CDD8DB` | Not used in light mode. Main text and Negotiation in dark mode |
 | Divider | `#E3EAEC` | Lines between table rows, chart gridlines |
 | Page | `#F0F4F5` | Page background |
-| Panel | `#FFFFFF` | Panels, cards and dialogs |
+| Panel | `#FFFFFF` | Panels, cards and dialogs, and the raised surface for menus, lists, tooltips and messages |
 
 Badge backgrounds are a 16% tint of each color on white, with Midnight text (9 to 11:1): Sea Green `#D7F8F0`, Marigold `#FFF5E1`, Coral `#FEEDE7`, Cerulean `#D9ECF3`, Raspberry `#FCE2E8`, Midnight `#D7E0E2` and grey `#EDF0F1`.
 
 Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Green.
 
+**Colors in dark mode,** from the brand's dark surfaces (concern 13). Each contrast ratio is measured against the black panels, the page and the raised Midnight surface, in that order.
+
+| Role | Value | Use |
+|---|---|---|
+| Page | `#04232E` | Page background (1.3:1 against the panels) |
+| Panel | `#000000` | Panels, cards, the sidebar, dialogs and inputs |
+| Raised | `#073B4C`, Midnight | Menus, select lists, pickers, tooltips, messages and the skip link (1.7:1 against the panels, 1.35:1 against the page) |
+| Ink | `#CDD8DB`, Sea Mist | Main text (14.4:1, 11.2:1, 8.3:1) |
+| Ink muted | `#9DB1B8` | Secondary text (9.4:1, 7.3:1, 5.4:1) |
+| Link | `#4FB6D9` | Cerulean lightened, for links (9.0:1, 7.0:1, 5.2:1) |
+| Primary text | `#51E2BC` | Sea Green lightened, as text (13.0:1, 10.1:1, 7.5:1) |
+| Alert text | `#F47E9A` | Raspberry lightened, for late dates, overdue labels and error messages (8.3:1, 6.5:1, 4.8:1) |
+| Secondary | `#073B4C`, Midnight | Secondary buttons, with Sea Mist text (8.3:1) |
+| Divider | `#1A3540` | Lines between table rows, chart gridlines |
+| Overlay | Midnight at 70% | Behind dialogs |
+| Chart wash | Sea Green at 18% | The line chart's area |
+
+These keep their light-mode values, and pass on the dark surfaces:
+
+- Sea Green, Marigold, Coral, Cerulean, Raspberry and Grey as fills, dots and chart marks. Cerulean is the lowest, at 5.3:1 against the panels and 4.1:1 against the page.
+- Cerulean as the focus ring (5.3:1, 4.1:1, 3.0:1).
+- The field outline (6.3:1, 4.9:1, 3.6:1).
+- Primary buttons, Sea Green with Midnight text (6.4:1), and the Raspberry fill with white text (5.1:1).
+
+Badge backgrounds in dark mode are a 30% shade of each color over black, with Sea Mist text (7.5 to 9.1:1): Sea Green `#024030`, Marigold `#4C3A15`, Coral `#4A2A20` and grey `#2B3133`. Cerulean `#073747` and Raspberry `#601C2C` are a 40% shade, since at 30% they'd match the page. Negotiation's tint is Midnight `#073B4C`.
+
 Components use colors by role, never by the brand's names or by value. The roles are:
 
-- page, panel, ink, ink muted, divider, field outline, focus and link
-- primary, alert and their tints
+- page, panel, raised, ink, ink muted, divider, field outline, focus and link
+- primary, the text on primary, alert and their tints
 - each stage and status, with its tint
 
-Only the theme file maps each role to a color in the tables above, and the charts use the same roles. A dark mode is then one more set of values in that file. The favicon can't read the theme, so its two colors are the theme's ink and primary values, which a test checks.
+Only the theme file maps each role to a color in the tables above, with one value for light mode and one for dark, and the charts use the same roles. The favicon can't read the theme, so its two colors are light mode's ink and primary values, which a test checks. It's the same in both modes.
 
 **Surfaces and shape.**
 
-- **Panels:** white, rounded (16px), with no outline and a soft shadow: `0 1px 2px rgba(7, 59, 76, 0.06), 0 8px 24px rgba(7, 59, 76, 0.06)`.
+- **Panels:** white, rounded (16px), with no outline and a soft shadow: `0 1px 2px rgba(7, 59, 76, 0.06), 0 8px 24px rgba(7, 59, 76, 0.06)`. In dark mode they're black on the dark teal page, and the shadows are black: `0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4)`.
 - **Cards** are rounded 12px, and **buttons and inputs** 10px.
 - **Edges:** no border on one edge of anything, and no line across the top of the page or under the page header. A stage or status shows as a dot or a badge, never as a colored stripe down the side of a card.
 - **Fills** are flat. There are no gradients. The line chart's area uses a flat tint.
@@ -480,11 +520,11 @@ Only the theme file maps each role to a color in the tables above, and the chart
 **Components.**
 
 - **Buttons** are 36px high, in 14px semibold:
-  - Primary: Sea Green with Midnight text.
-  - Secondary: a Midnight tint with Midnight text.
+  - Primary: Sea Green with Midnight text, in both modes.
+  - Secondary: a Midnight tint with Midnight text, or Midnight with Sea Mist text in dark mode.
   - Delete: Raspberry fill with white text.
   - Icon buttons are 32px square, with a label for screen readers and a tooltip.
-- **Inputs:** white, with a full 1px outline in the field outline color. They're 36px high, with the label above and any error message below in Raspberry text.
+- **Inputs:** white, with a full 1px outline in the field outline color. They're 36px high, with the label above and any error message below in Raspberry text. A ticked checkbox is Sea Green with a Midnight tick, in both modes.
 - **Badges:** pill-shaped and 22px high, with a tint background, Midnight 12px medium text and an 8px dot in the full color.
 - **Tables** sit inside a panel.
   - The headings are Slate text with no fill, and rows are 44px high with a divider between them.
@@ -501,12 +541,14 @@ Only the theme file maps each role to a color in the tables above, and the chart
   - Then come the deal name in 13.5px semibold, the value with the probability beside it, and the close date with a calendar icon, in Raspberry text when the deal is late.
   - Won and Lost cards are compact, with 10px padding: the deal name, then the value and close date.
   - A card being dragged gets a deeper shadow, and the place it will land shows as a tinted space.
-- **Dialogs:** white and 520px wide, over Midnight at 40%.
-- **Messages:** white panels at the bottom right. Errors have a Raspberry dot.
+- **Dialogs:** white and 520px wide, over Midnight at 40%, or Midnight at 70% in dark mode (concern 13).
+- **Menus, select lists, pickers and tooltips** open on the raised surface, with the deeper shadow: white in light mode and Midnight in dark mode.
+- **Messages:** on the raised surface at the bottom right. Errors have a Raspberry dot.
+- **The Dark mode switch:** a 36 by 20px pill with a 16px round knob. Off, in light mode, it's the field outline color with a white knob on the left. On, in dark mode, it's Sea Green with a black knob on the right.
 
 **Charts**, with Recharts:
 
-- **Colors by meaning:** "won" figures are Sea Green, and anything by stage uses the stage colors.
+- **Colors by meaning:** "won" figures are Sea Green, and anything by stage uses the stage colors. In dark mode the charts use the dark values of the same roles, so the axis labels, gridlines, funnel gaps and the tinted part of each stage column follow the mode.
 - **Revenue won by month:** a 2.5px Sea Green line over a flat 12% Sea Green area, with points shown on hover. Month labels run along the bottom and short USD amounts up the side, with horizontal gridlines only.
 - **Deals won by month:** Sea Green bars with rounded tops and the count above each bar.
 - **Sales funnel:** a funnel of joined trapezoids, one per stage from New to Won, each in its stage's color. Each one narrows from its own stage's value to the next stage's, with a 2px gap between them, and Won is a plain rectangle.
@@ -515,7 +557,7 @@ Only the theme file maps each role to a color in the tables above, and the chart
 - **Open pipeline by stage:** one column per open stage, its height set by total value, with rounded tops.
   - The expected part is solid in the stage's color, from the baseline up, and the rest is in its tint.
   - The short value sits on top, with the stage's name and its expected revenue underneath.
-- **Tooltips:** white panels with full USD amounts in JetBrains Mono.
+- **Tooltips:** on the raised surface, with full USD amounts in JetBrains Mono.
 - **Text and alternatives:** every chart has a title and a one-line summary in words, such as "$612,000 won in the last 12 months", plus a table of its figures for screen readers. Several brand colors are below 3:1 against white, so every figure is also given in text, never by color alone.
 
 **Words and formats.** Plain business English, short labels, no jargon and no exclamation marks.
@@ -529,9 +571,10 @@ Only the theme file maps each role to a color in the tables above, and the chart
 ### Layout
 
 - **Sidebar:** a floating white panel, 224px wide, 16px in from the top, bottom and left of the window, and rounded with the panel shadow.
-  - It holds the wordmark "Accountable" with its tagline, then the five sections, each with an icon.
+  - It holds the wordmark "Accountable" with its tagline, then the five sections, each with an icon. The logo mark beside the wordmark is a Sea Green dot in a Midnight circle, in both modes.
   - Organizations, Contacts and Deals show how many records they have, on the right in JetBrains Mono.
   - The current section is a Sea Green tint pill with Midnight text.
+  - The **Dark mode** switch sits at the bottom of the sidebar, below the five sections, with a moon icon and the label "Dark mode". The sidebar is on every page, including Page not found, so the switch is too.
 - **Main area:** on the page background, with 24 to 28px of padding and content up to 1440px wide.
 - **Page header:** the title on the left, with the main action on the right, such as "Add deal".
 - **Dashboard,** on a 12-column grid:
@@ -550,7 +593,7 @@ Only the theme file maps each role to a color in the tables above, and the chart
 
 ### Keyboard and accessibility
 
-Everything can be done with the keyboard as well as the mouse, including moving a card on the pipeline. Text meets WCAG AA contrast, and every form field has a label.
+Everything can be done with the keyboard as well as the mouse, including moving a card on the pipeline. Text meets WCAG AA contrast in both modes, and every form field has a label.
 
 - **Tab order:** everything can be reached with Tab, in reading order. Everything that can be focused shows a 2px Cerulean focus ring, 2px outside its edge.
 - **Structure:** a "Skip to content" link comes first. Each page has one main heading, which is the message when the page can't load, and labelled navigation and main areas.
@@ -563,6 +606,7 @@ Everything can be done with the keyboard as well as the mouse, including moving 
   - Space drops it, and Escape puts it back where it was.
   - Enter opens the deal when no card is being moved.
   - A screen reader announces each step, such as "Picked up Harbor Logistics fleet analytics, in Proposal, position 2 of 5", and "Dropped in Negotiation, position 1 of 4".
+- **Dark mode switch:** a real switch, reached with Tab after the five sections. Space or Enter flips it, and a screen reader announces it as the "Dark mode" switch, on or off.
 - **Not by color alone:** stage, status, late and overdue are always written in words as well as shown in color.
 - **Motion:** animations are turned off for anyone whose system asks for reduced motion.
 
@@ -572,3 +616,4 @@ Everything can be done with the keyboard as well as the mouse, including moving 
 - `ACCOUNTABLE_TODAY` fixes the date the backend treats as today, with noon as the time now, so the tests for late deals, follow-ups and months always give the same results. The end-to-end tests set Chrome's clock to 11:00 on the same date, since the pipeline works out late cards in the browser too, and a time Chrome fills in as now is then never later than the backend's now.
 - The sample data generator takes today's date as an input, for the same reason.
 - `ACCOUNTABLE_API_PORT` and `ACCOUNTABLE_WEB_PORT` set the ports the frontend's dev server uses, so the tests can run their own copy of the app while it's open.
+- The browser saves the light or dark choice for each address separately, so the tests' copy of the app on port 5273 keeps its own choice and never changes the app on 5173. Each end-to-end test starts with nothing saved, so in light mode.
