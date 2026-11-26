@@ -1,6 +1,6 @@
 /* The only file with color values in it. Components use colors by role, such as
    bg-panel, text-ink-muted or var(--color-stage-won), and each role is mapped to a
-   brand color here. A dark mode is one more set of values for the same roles. */
+   brand color here, once for light mode in @theme and once for dark mode below it. */
 
 @import 'tailwindcss';
 
@@ -11,20 +11,29 @@
   /* Surfaces and text */
   --color-page: #f0f4f5;
   --color-panel: #ffffff;
+  --color-raised: #ffffff; /* menus, lists, tooltips and messages, over the panels */
   --color-ink: #073b4c; /* Midnight */
   --color-ink-muted: #4f6873; /* Slate */
+  --color-on-primary: #073b4c; /* text on Sea Green */
   --color-on-fill: #ffffff; /* text on Raspberry fill */
+  --color-logo: #073b4c; /* the logo mark's circle, matching the favicon */
   --color-divider: #e3eaec;
   --color-field: #7a9097; /* the outline of inputs */
   --color-focus: #118ab2; /* Cerulean */
   --color-link: #0e7191; /* Cerulean text */
   --color-overlay: rgb(7 59 76 / 0.4); /* Midnight at 40%, behind dialogs */
+  /* Used inside the shadows below. Tailwind copies a shadow's value into its class, so dark
+     mode can only change a shadow through these. */
+  --color-shadow: rgb(7 59 76 / 0.06);
+  --color-shadow-lift-near: rgb(7 59 76 / 0.08);
+  --color-shadow-lift-far: rgb(7 59 76 / 0.12);
 
   /* Actions and alerts */
   --color-primary: #06d6a0; /* Sea Green, with ink text */
   --color-primary-text: #037558;
   --color-primary-tint: #d7f8f0;
   --color-secondary: #d7e0e2; /* Midnight tint, with ink text */
+  --secondary-hover-brightness: 95%; /* a secondary button darkens on hover, as the others do */
   --color-alert: #ef476f; /* Raspberry: dots and marks */
   --color-alert-text: #cd123f;
   --color-alert-fill: #d91342; /* behind on-fill text */
@@ -71,8 +80,8 @@
   --radius-column: 14px;
   --radius-card: 12px;
   --radius-control: 10px;
-  --shadow-panel: 0 1px 2px rgb(7 59 76 / 0.06), 0 8px 24px rgb(7 59 76 / 0.06);
-  --shadow-lift: 0 2px 4px rgb(7 59 76 / 0.08), 0 16px 32px rgb(7 59 76 / 0.12);
+  --shadow-panel: 0 1px 2px var(--color-shadow), 0 8px 24px var(--color-shadow);
+  --shadow-lift: 0 2px 4px var(--color-shadow-lift-near), 0 16px 32px var(--color-shadow-lift-far);
 
   /* Fonts, bundled with the app by @fontsource */
   --font-sans: 'Instrument Sans', system-ui, sans-serif;
@@ -87,6 +96,76 @@
 }
 
 @layer base {
+  /* Dark mode (concern 13): every role again, with its dark value. index.html's script and
+     colorMode.ts mark the page with data-theme="dark". */
+  :root[data-theme='dark'] {
+    /* Surfaces and text */
+    --color-page: #04232e;
+    --color-panel: #000000;
+    --color-raised: #073b4c; /* Midnight, so it shows against the black panels */
+    --color-ink: #cdd8db; /* Sea Mist */
+    --color-ink-muted: #9db1b8;
+    --color-on-primary: #073b4c; /* Midnight, since Sea Mist on Sea Green is about 1.3:1 */
+    --color-on-fill: #ffffff;
+    --color-logo: #073b4c;
+    --color-divider: #1a3540;
+    --color-field: #7a9097;
+    --color-focus: #118ab2;
+    --color-link: #4fb6d9; /* Cerulean lightened */
+    --color-overlay: rgb(7 59 76 / 0.7); /* Midnight at 70% */
+    --color-shadow: rgb(0 0 0 / 0.4);
+    --color-shadow-lift-near: rgb(0 0 0 / 0.5);
+    --color-shadow-lift-far: rgb(0 0 0 / 0.6);
+
+    /* Actions and alerts. The tints are a 30% shade over black, or 40% for Cerulean and
+       Raspberry, which at 30% would match the page. */
+    --color-primary: #06d6a0;
+    --color-primary-text: #51e2bc; /* Sea Green lightened */
+    --color-primary-tint: #024030;
+    --color-secondary: #073b4c; /* Midnight, with Sea Mist text */
+    --secondary-hover-brightness: 125%; /* lighter, since darkening Midnight barely shows */
+    --color-alert: #ef476f;
+    --color-alert-text: #f47e9a; /* Raspberry lightened */
+    --color-alert-fill: #d91342;
+    --color-alert-tint: #601c2c;
+    --color-caution: #ffc145;
+    --color-caution-tint: #4c3a15;
+    --color-neutral: #8fa3a9;
+    --color-neutral-tint: #2b3133;
+
+    /* Stages */
+    --color-stage-new: #118ab2;
+    --color-stage-new-tint: #073747;
+    --color-stage-qualified: #ffc145;
+    --color-stage-qualified-tint: #4c3a15;
+    --color-stage-proposal: #f78c6b;
+    --color-stage-proposal-tint: #4a2a20;
+    --color-stage-negotiation: #cdd8db; /* Sea Mist, since Midnight is 1.7:1 on black */
+    --color-stage-negotiation-tint: #073b4c; /* Midnight */
+    --color-stage-won: #06d6a0;
+    --color-stage-won-tint: #024030;
+    --color-stage-lost: #8fa3a9;
+    --color-stage-lost-tint: #2b3133;
+
+    /* Contact statuses */
+    --color-status-lead: #118ab2;
+    --color-status-lead-tint: #073747;
+    --color-status-qualified: #ffc145;
+    --color-status-qualified-tint: #4c3a15;
+    --color-status-customer: #06d6a0;
+    --color-status-customer-tint: #024030;
+
+    /* Timeline entry icons */
+    --color-kind-call-tint: #073747;
+    --color-kind-email-tint: #4c3a15;
+    --color-kind-note-tint: #2b3133;
+    --color-kind-status-tint: #024030;
+
+    /* Charts */
+    --color-chart-won: #06d6a0;
+    --color-chart-wash: rgb(6 214 160 / 0.18); /* Sea Green at 18% */
+  }
+
   html {
     background: var(--color-page);
     color: var(--color-ink);

@@ -162,7 +162,7 @@ export function DoneCheckbox({ id, checked, onCheckedChange, label, describedBy,
       className="grid size-[18px] shrink-0 place-items-center rounded-[5px] border border-field bg-panel data-[state=checked]:border-primary-text data-[state=checked]:bg-primary"
     >
       <Checkbox.Indicator>
-        <Check aria-hidden size={13} strokeWidth={3} className="text-ink" />
+        <Check aria-hidden size={13} strokeWidth={3} className="text-on-primary" />
       </Checkbox.Indicator>
     </Checkbox.Root>
   )

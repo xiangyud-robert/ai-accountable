@@ -76,7 +76,7 @@ Choices about behavior that the rules below don't make obvious, each with its re
     - If nothing is saved, or the saved value isn't light or dark, the app is in light mode.
     - If the browser won't save it, the switch still works until the page is reloaded.
     - Another open tab changes when it's next loaded.
-    - Switching is instant, with no fade and no message.
+    - Switching happens at once, with no message. The few things that already animate on hover, such as the dashboard's tiles and the buttons, take their usual 150ms to change.
 
 ## Requirements
 
@@ -523,6 +523,7 @@ Only the theme file maps each role to a color in the tables above, with one valu
   - Primary: Sea Green with Midnight text, in both modes.
   - Secondary: a Midnight tint with Midnight text, or Midnight with Sea Mist text in dark mode.
   - Delete: Raspberry fill with white text.
+  - On hover, these three darken to 95% brightness, except a secondary button in dark mode, which lightens to 125%, since darkening Midnight barely shows.
   - Icon buttons are 32px square, with a label for screen readers and a tooltip.
 - **Inputs:** white, with a full 1px outline in the field outline color. They're 36px high, with the label above and any error message below in Raspberry text. A ticked checkbox is Sea Green with a Midnight tick, in both modes.
 - **Badges:** pill-shaped and 22px high, with a tint background, Midnight 12px medium text and an 8px dot in the full color.

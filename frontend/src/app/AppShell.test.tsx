@@ -47,6 +47,12 @@ describe('AppShell', () => {
     expect(links.map((link) => link.textContent?.replace(/\d+$/, ''))).toEqual(SECTIONS)
   })
 
+  test('the sidebar has the Dark mode switch, after the five sections', () => {
+    renderShell()
+    const darkMode = within(screen.getByRole('complementary')).getByRole('switch', { name: 'Dark mode' })
+    expect(section('Pipeline').compareDocumentPosition(darkMode) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   test('Organizations, Contacts and Deals show how many records they have', () => {
     renderShell('/', '/', { organizations: 3, contacts: 12, deals: 0 })
     expect(section('Dashboard')).toHaveTextContent(/^Dashboard$/)

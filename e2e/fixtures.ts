@@ -62,6 +62,27 @@ export const test = base.extend<Fixtures>({
 
 export { expect }
 
+/** Every section and Page not found: a name for the test, its address and its main heading. */
+export const PAGES = [
+  ['the dashboard', '/', 'Dashboard'],
+  ['the organizations', '/organizations', 'Organizations'],
+  ['an organization', '/organizations/1', 'Harbor Logistics'],
+  ['the contacts', '/contacts', 'Contacts'],
+  ['a contact', '/contacts/1', 'Priya Raman'],
+  ['the deals', '/deals', 'Deals'],
+  ['a deal', '/deals/12', 'Harbor Logistics fleet analytics'],
+  ['the pipeline', '/pipeline', 'Pipeline'],
+  ['a missing page', '/no-such-page', 'Page not found'],
+] as const
+
+/** Turns dark mode on with the switch, from the dashboard, so the next page a test opens is dark.
+ *  Each test starts with nothing saved, so in light mode. */
+export async function turnOnDarkMode(page: Page) {
+  await page.goto('/')
+  await page.getByRole('switch', { name: 'Dark mode' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+}
+
 /** Fails if axe finds any WCAG 2 A or AA problem, such as contrast or a missing label. */
 export async function expectNoAxeProblems(page: Page, include?: string) {
   let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

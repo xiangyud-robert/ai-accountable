@@ -1,6 +1,6 @@
 import { Toaster as Sonner, toast } from 'sonner'
 
-/** White panels at the bottom right. Errors have an alert dot. */
+/** Messages on the raised surface at the bottom right. Errors have an alert dot. */
 export function Toaster() {
   return (
     <Sonner
@@ -8,7 +8,7 @@ export function Toaster() {
       toastOptions={{
         unstyled: true,
         classNames: {
-          toast: 'flex w-[356px] items-center gap-2.5 rounded-card bg-panel px-4 py-3 text-sm text-ink shadow-lift',
+          toast: 'flex w-[356px] items-center gap-2.5 rounded-card bg-raised px-4 py-3 text-sm text-ink shadow-lift',
         },
       }}
     />

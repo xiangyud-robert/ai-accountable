@@ -96,7 +96,7 @@ export function SelectField<T extends string>({
         <Select.Content
           position="popper"
           sideOffset={4}
-          className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-card bg-panel shadow-lift"
+          className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-card bg-raised shadow-lift"
         >
           {/* The options take focus, and show the focus ring 2px outside their edge. The
               padding is on the viewport, which scrolls, so the ring isn't cut off. */}
@@ -177,7 +177,7 @@ export function Picker({
           aria-label={placeholder}
           align="start"
           sideOffset={4}
-          className="z-50 w-[var(--radix-popover-trigger-width)] rounded-card bg-panel p-1.5 shadow-lift"
+          className="z-50 w-[var(--radix-popover-trigger-width)] rounded-card bg-raised p-1.5 shadow-lift"
         >
           <Command
             label={placeholder}

@@ -7,6 +7,10 @@ afterEach(() => {
   cleanup()
   // Sonner keeps open toasts outside React and shows them to the next test's Toaster.
   toast.dismiss()
+  // Each test starts in light mode with nothing saved, as a first visit does.
+  localStorage.clear()
+  document.documentElement.removeAttribute('data-theme')
+  document.documentElement.removeAttribute('style')
 })
 // Radix hands focus back on a timer once a dialog closes, which mustn't fire after jsdom is gone.
 afterAll(() => new Promise((resolve) => setTimeout(resolve)))

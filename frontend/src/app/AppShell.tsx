@@ -3,10 +3,11 @@ import { NavLink, Outlet } from 'react-router'
 import { useContacts } from '../features/contacts/queries'
 import { useDeals } from '../features/deals/queries'
 import { useOrganizations } from '../features/organizations/queries'
+import { DarkModeSwitch } from './DarkModeSwitch'
 
 type Section = { to: string; label: string; icon: LucideIcon; count?: number }
 
-/** The floating sidebar with the five sections, and the main area beside it. */
+/** The floating sidebar with the five sections and the Dark mode switch, and the main area beside it. */
 export function AppShell() {
   const organizations = useOrganizations()
   const contacts = useContacts()
@@ -24,14 +25,14 @@ export function AppShell() {
     <div className="min-h-screen">
       <a
         href="#content"
-        className="sr-only z-50 rounded-control bg-panel px-4 py-2 font-semibold shadow-lift focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        className="sr-only z-50 rounded-control bg-raised px-4 py-2 font-semibold shadow-lift focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
         Skip to content
       </a>
       <aside className="fixed bottom-4 left-4 top-4 flex w-56 flex-col gap-[30px] overflow-y-auto rounded-panel bg-panel px-3.5 py-6 shadow-panel">
         <div className="px-2.5">
           <p className="flex items-center gap-2.5 text-[19px] font-bold tracking-[-0.01em]">
-            <span aria-hidden className="grid size-[30px] place-items-center rounded-full bg-ink">
+            <span aria-hidden className="grid size-[30px] place-items-center rounded-full bg-logo">
               <span className="size-3 rounded-full bg-primary" />
             </span>
             Accountable
@@ -63,6 +64,7 @@ export function AppShell() {
             ))}
           </ul>
         </nav>
+        <DarkModeSwitch className="mt-auto" />
       </aside>
       <main id="content" tabIndex={-1} className="pb-4 pl-[264px] pr-7 pt-7 outline-none">
         <div className="mx-auto max-w-[1440px]">

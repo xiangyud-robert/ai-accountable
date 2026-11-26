@@ -107,7 +107,7 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
                 <DropdownMenu.Content
                   align="end"
                   sideOffset={4}
-                  className="z-50 min-w-32 rounded-card bg-panel p-1 shadow-lift"
+                  className="z-50 min-w-32 rounded-card bg-raised p-1 shadow-lift"
                 >
                   <DropdownMenu.Item
                     onSelect={() => setEditing(true)}

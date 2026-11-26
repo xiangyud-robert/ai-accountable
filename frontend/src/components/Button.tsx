@@ -4,8 +4,8 @@ import type { ComponentProps, ReactNode } from 'react'
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-primary text-ink hover:brightness-95',
-  secondary: 'bg-secondary text-ink hover:brightness-95',
+  primary: 'bg-primary text-on-primary hover:brightness-95',
+  secondary: 'bg-secondary text-ink hover:brightness-(--secondary-hover-brightness)',
   danger: 'bg-alert-fill text-on-fill hover:brightness-95',
   ghost: 'text-ink hover:bg-page',
 }
@@ -56,7 +56,7 @@ export function IconButton({ label, tooltip, className = '', children, type = 'b
       <Tooltip.Portal>
         <Tooltip.Content
           sideOffset={6}
-          className="z-50 rounded-control bg-panel px-2.5 py-1.5 text-xs font-medium text-ink shadow-lift"
+          className="z-50 rounded-control bg-raised px-2.5 py-1.5 text-xs font-medium text-ink shadow-lift"
         >
           {tooltip ?? label}
         </Tooltip.Content>

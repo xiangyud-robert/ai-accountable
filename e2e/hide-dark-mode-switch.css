@@ -1,0 +1,5 @@
+/* For the light-mode comparison in screenshots.ts: the switch is the one thing allowed to differ
+   from the pictures taken before it existed. This matches nothing without it. */
+aside :has(> [role='switch']) {
+  visibility: hidden;
+}
