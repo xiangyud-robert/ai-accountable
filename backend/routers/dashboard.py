@@ -8,7 +8,7 @@ from backend.services import dashboard
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 
-@router.get("")
-def get_dashboard(engine: Engine) -> Dashboard:
+@router.get("", response_model=Dashboard)
+def get_dashboard(engine: Engine) -> dict:
     with transaction(engine) as conn:
         return dashboard.figures(conn)

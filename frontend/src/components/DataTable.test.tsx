@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
-import { STAGES, renderWithApp } from '../test-utils'
+import { STAGES, bodyRows, renderWithApp } from '../test-utils'
 import type { StageKey } from '../lib/types'
 import { DataTable, type Column } from './DataTable'
 
@@ -26,10 +26,18 @@ const COLUMNS: Column<Row>[] = [
     text: (r) => STAGES.find((s) => s.key === r.stage)!.name,
     compare: (a, b) => order(a.stage) - order(b.stage),
   },
-  { id: 'value', header: 'Value (USD)', value: (r) => r.value, text: (r) => `$${r.value.toLocaleString('en-US')}`, numeric: true },
+  {
+    id: 'value',
+    header: 'Value (USD)',
+    value: (r) => r.value,
+    text: (r) => `$${r.value.toLocaleString('en-US')}`,
+    numeric: true,
+  },
 ]
 
-function renderTable(rows = ROWS) {
+function renderTable(rows = ROWS, props: Partial<Parameters<typeof DataTable<Row>>[0]> = {}) {
+  const onEdit = vi.fn()
+  const onDelete = vi.fn()
   renderWithApp(
     <DataTable
       label="Deals"
@@ -39,17 +47,15 @@ function renderTable(rows = ROWS) {
       initialSort={{ id: 'name' }}
       rowId={(r) => r.id}
       rowName={(r) => r.name}
-      onEdit={vi.fn()}
-      onDelete={vi.fn()}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      {...props}
     />,
   )
+  return { onEdit, onDelete }
 }
 
-const names = () =>
-  within(screen.getByRole('table', { name: 'Deals' }))
-    .getAllByRole('row')
-    .slice(1)
-    .map((row) => within(row).getAllByRole('cell')[0].textContent)
+const names = () => bodyRows('Deals').map(([name]) => name)
 
 describe('DataTable', () => {
   test('starts sorted by its first sort, ignoring case', () => {
@@ -93,9 +99,21 @@ describe('DataTable', () => {
     renderTable([...ROWS, { id: 5, name: 'Nowhere deal', city: '', stage: 'new', value: 1000 }])
     const city = screen.getByRole('button', { name: 'City' })
     await userEvent.click(city)
-    expect(names()).toEqual(['acme renewal', 'Harbor Logistics fleet', 'Brightline POS', 'Cobalt Bank pilot', 'Nowhere deal'])
+    expect(names()).toEqual([
+      'acme renewal',
+      'Harbor Logistics fleet',
+      'Brightline POS',
+      'Cobalt Bank pilot',
+      'Nowhere deal',
+    ])
     await userEvent.click(city)
-    expect(names()).toEqual(['Cobalt Bank pilot', 'Brightline POS', 'Harbor Logistics fleet', 'acme renewal', 'Nowhere deal'])
+    expect(names()).toEqual([
+      'Cobalt Bank pilot',
+      'Brightline POS',
+      'Harbor Logistics fleet',
+      'acme renewal',
+      'Nowhere deal',
+    ])
   })
 
   test('the stage column sorts in pipeline order, not alphabetically', async () => {
@@ -117,14 +135,35 @@ describe('DataTable', () => {
     expect(await screen.findByText('No deals match "acme corp".')).toBeInTheDocument()
   })
 
+  test('a single row is counted in the singular', async () => {
+    renderTable(ROWS.slice(0, 1))
+    expect(screen.getByText('1 deal')).toBeInTheDocument()
+    await userEvent.type(screen.getByRole('searchbox'), 'harbor')
+    expect(await screen.findByText('1 of 1 deal')).toBeInTheDocument()
+  })
+
   test('the message when there are no rows at all', () => {
     renderTable([])
     expect(screen.getByText('No deals yet.')).toBeInTheDocument()
+  })
+
+  test('with no rows at all, it offers its Add button instead of a table', () => {
+    renderTable([], { emptyAction: <button type="button">Add deal</button> })
+    expect(screen.getByRole('button', { name: 'Add deal' })).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
   test('every row has Edit and Delete buttons', () => {
     renderTable()
     expect(screen.getByRole('button', { name: 'Edit Cobalt Bank pilot' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete Cobalt Bank pilot' })).toBeInTheDocument()
+  })
+
+  test('Edit and Delete act on their own row', async () => {
+    const { onEdit, onDelete } = renderTable()
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Cobalt Bank pilot' }))
+    expect(onEdit).toHaveBeenCalledExactlyOnceWith(ROWS[1])
+    await userEvent.click(screen.getByRole('button', { name: 'Delete Brightline POS' }))
+    expect(onDelete).toHaveBeenCalledExactlyOnceWith(ROWS[3])
   })
 })

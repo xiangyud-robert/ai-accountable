@@ -34,7 +34,14 @@ const COLUMNS: Column<OrganizationRow>[] = [
   },
   { id: 'contacts', header: 'Contacts', value: (o) => o.contact_count, numeric: true },
   { id: 'open_deals', header: 'Open deals', value: (o) => o.open_deal_count, numeric: true },
-  { id: 'open_value', header: 'Open value (USD)', value: (o) => o.open_value, text: (o) => money(o.open_value), cell: (o) => money(o.open_value), numeric: true },
+  {
+    id: 'open_value',
+    header: 'Open value (USD)',
+    value: (o) => o.open_value,
+    text: (o) => money(o.open_value),
+    cell: (o) => money(o.open_value),
+    numeric: true,
+  },
 ]
 
 export function OrganizationsPage() {

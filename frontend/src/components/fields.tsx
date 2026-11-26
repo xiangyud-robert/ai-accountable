@@ -68,7 +68,16 @@ type SelectFieldProps<T extends string> = {
   ref?: Ref<HTMLButtonElement>
 }
 
-export function SelectField<T extends string>({ id, value, onChange, options, disabled, invalid, describedBy, ref }: SelectFieldProps<T>) {
+export function SelectField<T extends string>({
+  id,
+  value,
+  onChange,
+  options,
+  disabled,
+  invalid,
+  describedBy,
+  ref,
+}: SelectFieldProps<T>) {
   return (
     <Select.Root value={value} onValueChange={(v) => onChange(v as T)} disabled={disabled}>
       <Select.Trigger
@@ -123,9 +132,20 @@ type PickerProps = {
 }
 
 /** A picker you can search, for choosing one record out of hundreds. */
-export function Picker({ id, value, onChange, options, placeholder, noneLabel, invalid, describedBy, ref }: PickerProps) {
+export function Picker({
+  id,
+  value,
+  onChange,
+  options,
+  placeholder,
+  noneLabel,
+  invalid,
+  describedBy,
+  ref,
+}: PickerProps) {
   const [open, setOpen] = useState(false)
   const selected = options.find((option) => option.value === value)
+  const popupId = `${id}-popup`
 
   const choose = (next: number | null) => {
     onChange(next)
@@ -140,7 +160,9 @@ export function Picker({ id, value, onChange, options, placeholder, noneLabel, i
           id={id}
           type="button"
           role="combobox"
+          // What Radix sets itself, written out so the lint can check the combobox has them.
           aria-expanded={open}
+          aria-controls={open ? popupId : undefined}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
           className={`${CONTROL} flex items-center justify-between gap-2 text-left`}
@@ -151,6 +173,7 @@ export function Picker({ id, value, onChange, options, placeholder, noneLabel, i
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
+          id={popupId}
           aria-label={placeholder}
           align="start"
           sideOffset={4}
@@ -185,7 +208,9 @@ export function Picker({ id, value, onChange, options, placeholder, noneLabel, i
                   className={`${PICKER_OPTION} gap-2`}
                 >
                   <span className="truncate">{option.label}</span>
-                  {option.hint && <span className="ml-auto shrink-0 truncate text-xs text-ink-muted">{option.hint}</span>}
+                  {option.hint && (
+                    <span className="ml-auto shrink-0 truncate text-xs text-ink-muted">{option.hint}</span>
+                  )}
                 </Command.Item>
               ))}
             </Command.List>

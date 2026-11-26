@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 import {
   ConfirmDelete,
@@ -63,5 +64,35 @@ describe('ConfirmDelete', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus()
     screen.getByRole('button', { name: 'Delete organization' }).click()
     expect(onConfirm).toHaveBeenCalledOnce()
+  })
+
+  test('with nothing more to say, the question has no description', () => {
+    render(
+      <ConfirmDelete
+        open
+        onOpenChange={() => {}}
+        question={activityQuestion('call')}
+        confirmLabel="Delete call"
+        onConfirm={() => {}}
+      />,
+    )
+    expect(screen.getByRole('alertdialog', { name: 'Delete this call?' })).not.toHaveAccessibleDescription()
+  })
+
+  test('while deleting, the delete button is disabled, and Cancel still closes it', async () => {
+    const onOpenChange = vi.fn()
+    render(
+      <ConfirmDelete
+        open
+        onOpenChange={onOpenChange}
+        question={dealQuestion('Northwind analytics rollout', 0)}
+        confirmLabel="Delete deal"
+        onConfirm={() => {}}
+        busy
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Delete deal' })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(false)
   })
 })

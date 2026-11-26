@@ -29,12 +29,17 @@ def test_r11_deleting_a_contact(make, conn):
     assert deals.get_row(conn, deal["id"])["contact_id"] is None
     assert count(conn, activities_table, activities_table.c.contact_id == contact["id"]) == 0
     assert count(conn, status_changes) == 0
-    assert {e["text"] for e in timeline.for_deal(conn, deal["id"])} == {"On the deal", "Added at New"}
+    assert {e["text"] for e in timeline.for_deal(conn, deal["id"])} == {
+        "On the deal",
+        "Added at New",
+    }
 
 
 def test_r11_deleting_a_deal(make, conn):
     contact = make.contact()
-    deal = make.deal(name="Northwind analytics rollout", contact_id=contact["id"], stage="won", close_date=None)
+    deal = make.deal(
+        name="Northwind analytics rollout", contact_id=contact["id"], stage="won", close_date=None
+    )
     make.activity(deal_id=deal["id"])
     deals.delete(conn, deal["id"])
     assert count(conn, activities_table) == 0

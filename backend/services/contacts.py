@@ -16,9 +16,7 @@ def _query() -> sa.Select:
         sa.select(sa.func.count()).where(deals.c.contact_id == contacts.c.id).scalar_subquery()
     )
     activity_count = (
-        sa.select(sa.func.count())
-        .where(activities.c.contact_id == contacts.c.id)
-        .scalar_subquery()
+        sa.select(sa.func.count()).where(activities.c.contact_id == contacts.c.id).scalar_subquery()
     )
     return sa.select(
         contacts,
@@ -57,7 +55,10 @@ def get(conn: sa.Connection, contact_id: int) -> dict:
 
 
 def exists(conn: sa.Connection, contact_id: int) -> bool:
-    return conn.execute(sa.select(contacts.c.id).where(contacts.c.id == contact_id)).first() is not None
+    return (
+        conn.execute(sa.select(contacts.c.id).where(contacts.c.id == contact_id)).first()
+        is not None
+    )
 
 
 def check_organization(conn: sa.Connection, organization_id: int | None) -> None:
@@ -72,8 +73,8 @@ def add(conn: sa.Connection, data: dict) -> dict:
     """A new contact starts as a lead unless another status is given. Adding isn't a change."""
     check_organization(conn, data.get("organization_id"))
     now = clock.now()
-    result = conn.execute(contacts.insert().values(**data, created_at=now, updated_at=now))
-    return get_row(conn, result.inserted_primary_key[0])
+    insert = contacts.insert().values(**data, created_at=now, updated_at=now)
+    return get_row(conn, conn.execute(insert.returning(contacts.c.id)).scalar_one())
 
 
 def change(conn: sa.Connection, contact_id: int, data: dict) -> dict:
@@ -101,7 +102,9 @@ def set_status(
     won_deal_id: int | None = None,
 ) -> bool:
     """Changes a contact's status and records the change (R7). Returns False if it was already that."""
-    current = conn.execute(sa.select(contacts.c.status).where(contacts.c.id == contact_id)).scalar_one()
+    current = conn.execute(
+        sa.select(contacts.c.status).where(contacts.c.id == contact_id)
+    ).scalar_one()
     if current == status:
         return False
     conn.execute(

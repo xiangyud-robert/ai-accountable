@@ -30,14 +30,14 @@ test.describe(() => {
   test.use({ expectedConsole: [SENDS_A_422] })
 
   test('a bad email gets the server’s message under the field', async ({ page }) => {
-  await page.goto('/contacts')
-  await page.getByRole('button', { name: 'Add contact' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Add contact' })
-  await dialog.getByLabel('Name').fill('Rosa Diaz')
-  await dialog.getByLabel(/^Email/).fill('rosa@')
-  await dialog.getByRole('button', { name: 'Save' }).click()
-  await expect(dialog.getByText('Enter an email address like name@example.com.')).toBeVisible()
-  await expect(dialog.getByLabel(/^Email/)).toBeFocused()
+    await page.goto('/contacts')
+    await page.getByRole('button', { name: 'Add contact' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Add contact' })
+    await dialog.getByLabel('Name').fill('Rosa Diaz')
+    await dialog.getByLabel(/^Email/).fill('rosa@')
+    await dialog.getByRole('button', { name: 'Save' }).click()
+    await expect(dialog.getByText('Enter an email address like name@example.com.')).toBeVisible()
+    await expect(dialog.getByLabel(/^Email/)).toBeFocused()
   })
 })
 
@@ -63,8 +63,14 @@ test('criterion 3: a contact’s page shows their organization and deals', async
   await page.getByRole('link', { name: 'Priya Raman' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Priya Raman' })).toBeVisible()
   await expect(page.getByText('Customer', { exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Harbor Logistics', exact: true })).toHaveAttribute('href', /\/organizations\/1$/)
-  await expect(page.getByRole('link', { name: 'priya@harborlogistics.example' })).toHaveAttribute('href', 'mailto:priya@harborlogistics.example')
+  await expect(page.getByRole('link', { name: 'Harbor Logistics', exact: true })).toHaveAttribute(
+    'href',
+    /\/organizations\/1$/,
+  )
+  await expect(page.getByRole('link', { name: 'priya@harborlogistics.example' })).toHaveAttribute(
+    'href',
+    'mailto:priya@harborlogistics.example',
+  )
   const deals = page.getByRole('region', { name: 'Deals' })
   await expect(deals.getByRole('listitem')).toHaveCount(4)
   await expect(deals.getByRole('link', { name: 'Harbor Logistics fleet analytics' })).toBeVisible()
@@ -75,7 +81,9 @@ test('deleting a contact keeps their deals, with no main contact', async ({ page
   await page.getByRole('link', { name: 'Priya Raman' }).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   const question = page.getByRole('alertdialog', { name: 'Delete Priya Raman?' })
-  await expect(question).toContainText(/Their 4 deals will be kept, with no main contact\. The \d+ activit(y|ies) logged on this contact will be deleted\./)
+  await expect(question).toContainText(
+    /Their 4 deals will be kept, with no main contact\. The \d+ activit(y|ies) logged on this contact will be deleted\./,
+  )
   await question.getByRole('button', { name: 'Delete contact' }).click()
   await expect(page).toHaveURL('/contacts')
   await expect(page.getByText('39 contacts')).toBeVisible()

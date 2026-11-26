@@ -1,4 +1,4 @@
-import { MutationCache, QueryClient } from '@tanstack/react-query'
+import { type DefaultOptions, MutationCache, QueryClient } from '@tanstack/react-query'
 
 /** The server turned down some fields, with a message for each (a 422). */
 export class FieldErrors extends Error {
@@ -40,17 +40,24 @@ export async function api<T>(path: string, { method = 'GET', body }: Options = {
   return response.json() as Promise<T>
 }
 
-export const queryClient: QueryClient = new QueryClient({
-  // Every successful change refetches every query. With hundreds of records that's cheap,
-  // and it's always right, since one change can move figures on several screens.
-  mutationCache: new MutationCache({
-    onSuccess: () => queryClient.invalidateQueries(),
-  }),
-  defaultOptions: {
-    queries: {
-      // A missing record or a 422 won't come right by asking again.
-      retry: (count, error) => error instanceof Unreachable && count < 1,
-      refetchOnWindowFocus: false,
+/** A query client that works the way the app's does. `queries` replaces some of its query defaults. */
+export function createQueryClient(queries: DefaultOptions['queries'] = {}) {
+  const client: QueryClient = new QueryClient({
+    // Every successful change refetches every query. With hundreds of records that's cheap,
+    // and it's always right, since one change can move figures on several screens.
+    mutationCache: new MutationCache({
+      onSuccess: () => client.invalidateQueries(),
+    }),
+    defaultOptions: {
+      queries: {
+        // A missing record or a 422 won't come right by asking again.
+        retry: (count, error) => error instanceof Unreachable && count < 1,
+        refetchOnWindowFocus: false,
+        ...queries,
+      },
     },
-  },
-})
+  })
+  return client
+}
+
+export const queryClient = createQueryClient()

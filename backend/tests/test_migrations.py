@@ -31,12 +31,16 @@ def test_the_check_constraints_are_the_ones_in_tables_py(tmp_path):
     engine = db.make_engine(sqlite_url(tmp_path / "empty.db"))
     db.migrate(engine)
     inspector = sa.inspect(engine)
-    normal = lambda sql: " ".join(str(sql).split())  # noqa: E731
+    normal = lambda sql: " ".join(str(sql).split())
     for table in tables.metadata.tables.values():
         expected = {
-            (c.name, normal(c.sqltext)) for c in table.constraints if isinstance(c, sa.CheckConstraint)
+            (c.name, normal(c.sqltext))
+            for c in table.constraints
+            if isinstance(c, sa.CheckConstraint)
         }
-        found = {(c["name"], normal(c["sqltext"])) for c in inspector.get_check_constraints(table.name)}
+        found = {
+            (c["name"], normal(c["sqltext"])) for c in inspector.get_check_constraints(table.name)
+        }
         assert found == expected, table.name
     engine.dispose()
 
@@ -63,8 +67,14 @@ def test_foreign_keys_and_indexes_are_there(tmp_path):
     engine = db.make_engine(sqlite_url(tmp_path / "empty.db"))
     db.migrate(engine)
     inspector = sa.inspect(engine)
-    activity_fks = {fk["referred_table"]: fk["options"].get("ondelete") for fk in inspector.get_foreign_keys("activities")}
-    deal_fks = {fk["referred_table"]: fk["options"].get("ondelete") for fk in inspector.get_foreign_keys("deals")}
+    activity_fks = {
+        fk["referred_table"]: fk["options"].get("ondelete")
+        for fk in inspector.get_foreign_keys("activities")
+    }
+    deal_fks = {
+        fk["referred_table"]: fk["options"].get("ondelete")
+        for fk in inspector.get_foreign_keys("deals")
+    }
     deal_indexes = {tuple(ix["column_names"]) for ix in inspector.get_indexes("deals")}
     engine.dispose()
     assert activity_fks == {"contacts": "CASCADE", "deals": "CASCADE"}

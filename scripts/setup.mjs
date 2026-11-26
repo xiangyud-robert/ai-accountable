@@ -31,7 +31,10 @@ export function start(command, args, options = {}) {
 export function run(command, args, options = {}) {
   return new Promise((resolve) => {
     const child = start(command, args, { detached: false, ...options })
-    child.on('error', () => resolve(1))
+    child.on('error', (error) => {
+      console.error(`Couldn't run ${command}: ${error.message}`)
+      resolve(1)
+    })
     child.on('exit', (code, signal) => resolve(signal ? 1 : (code ?? 1)))
   })
 }
@@ -49,7 +52,7 @@ export function stop(child) {
   }
 }
 
-function fail(message) {
+export function fail(message) {
   console.error(`\n${message}\n`)
   process.exit(1)
 }
@@ -64,9 +67,13 @@ function checkNode() {
   }
 }
 
+export function isInstalled(command, versionArgs = ['--version']) {
+  const result = spawnSync(...commandLine(command, versionArgs), { cwd: root, shell: isWindows, stdio: 'ignore' })
+  return !result.error && result.status === 0
+}
+
 function checkUv() {
-  const result = spawnSync(...commandLine('uv', ['--version']), { cwd: root, shell: isWindows, stdio: 'ignore' })
-  if (result.error || result.status !== 0) {
+  if (!isInstalled('uv')) {
     fail(
       'Accountable needs uv, and it was not found.\n' +
         'Install it from https://docs.astral.sh/uv/getting-started/installation/, ' +

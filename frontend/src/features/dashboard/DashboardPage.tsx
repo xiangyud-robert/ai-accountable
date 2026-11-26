@@ -53,7 +53,10 @@ export function DashboardPage() {
       <div className="grid grid-cols-12 gap-5">
         <HeroRevenue dashboard={dashboard} />
         <div className="col-span-4 flex flex-col gap-5">
-          <StatTile label={`Deals won in ${monthName(`${dashboard.this_month.month}-01`)}`} value={String(dashboard.this_month.count)}>
+          <StatTile
+            label={`Deals won in ${monthName(`${dashboard.this_month.month}-01`)}`}
+            value={String(dashboard.this_month.count)}
+          >
             {monthName(`${dashboard.last_month.month}-01`)}: {b(dashboard.last_month.count)}
           </StatTile>
           <StatTile label="Open pipeline" value={money(open.value)}>

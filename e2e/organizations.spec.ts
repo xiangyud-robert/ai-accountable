@@ -76,7 +76,13 @@ test('deleting an organization asks first, with counts, and keeps its contacts a
 
   await page.goto('/contacts')
   await expect(page.getByRole('row', { name: /Priya Raman/ })).toBeVisible()
-  expect(await page.getByRole('row', { name: /Priya Raman/ }).locator('td').nth(1).innerText()).toBe('')
+  expect(
+    await page
+      .getByRole('row', { name: /Priya Raman/ })
+      .locator('td')
+      .nth(1)
+      .innerText(),
+  ).toBe('')
 
   await page.goto('/deals')
   const deal = page.getByRole('row', { name: /Harbor Logistics fleet analytics/ })

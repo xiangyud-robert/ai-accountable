@@ -19,9 +19,31 @@ export function Funnel({ dashboard, stages }: { dashboard: Dashboard; stages: St
         <div aria-hidden className="shrink-0">
           {/* Each trapezoid narrows from its stage's value to the next one's, and Won is a
               rectangle. The panel-colored outline makes the 2px gap between them. */}
-          <FunnelChart width={150} height={steps.length * STEP} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} accessibilityLayer={false}>
-            <Tooltip content={<ChartTooltip title={(p) => String(p.name)} lines={(p) => [['Deals', String(p.count)], ['Value', usd(p.value)]]} />} />
-            <FunnelShape dataKey="value" data={steps} lastShapeType="rectangle" stroke="var(--color-panel)" strokeWidth={2} isAnimationActive={false} />
+          <FunnelChart
+            width={150}
+            height={steps.length * STEP}
+            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            accessibilityLayer={false}
+          >
+            <Tooltip
+              content={
+                <ChartTooltip
+                  title={(p) => String(p.name)}
+                  lines={(p) => [
+                    ['Deals', String(p.count)],
+                    ['Value', usd(p.value)],
+                  ]}
+                />
+              }
+            />
+            <FunnelShape
+              dataKey="value"
+              data={steps}
+              lastShapeType="rectangle"
+              stroke="var(--color-panel)"
+              strokeWidth={2}
+              isAnimationActive={false}
+            />
           </FunnelChart>
         </div>
         <ul className="flex min-w-0 flex-1 flex-col">

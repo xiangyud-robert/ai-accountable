@@ -3,7 +3,9 @@
 "Won in a month" means a Won deal whose close date falls in that calendar month.
 """
 
+from collections.abc import Sequence
 from datetime import date, timedelta
+from typing import TypedDict
 
 import sqlalchemy as sa
 
@@ -13,6 +15,29 @@ from backend.tables import activities, contacts, deals, stage_changes
 
 FOLLOW_UP_DAYS = 7
 FUNNEL_KEYS = ("new", "qualified", "proposal", "negotiation", "won")
+
+
+# The figures added up deal by deal, in the shapes of their models in schemas.py.
+class _MonthFigures(TypedDict):
+    month: str  # YYYY-MM
+    revenue: int
+    count: int
+
+
+class _OpenFigures(TypedDict):
+    count: int
+    value: int
+    expected: float
+
+
+class _StageFigures(_OpenFigures):
+    stage: str
+
+
+class _FunnelStage(TypedDict):
+    stage: str
+    count: int
+    value: int
 
 
 def last_12_months(today: date) -> list[str]:
@@ -25,7 +50,7 @@ def last_12_months(today: date) -> list[str]:
     return months[::-1]
 
 
-def _funnel(deal_rows: list[sa.Row], history: list[sa.Row]) -> list[dict]:
+def _funnel(deal_rows: Sequence[sa.Row], history: Sequence[sa.Row]) -> list[_FunnelStage]:
     """Concern 7: each deal counts in every stage up to the furthest one it has reached.
 
     A won deal counts in every stage. A lost deal counts up to the furthest open stage in
@@ -36,7 +61,9 @@ def _funnel(deal_rows: list[sa.Row], history: list[sa.Row]) -> list[dict]:
     for row in history:
         if stages.is_open(row.to_stage):
             furthest[row.deal_id] = max(furthest.get(row.deal_id, 0), order[row.to_stage])
-    funnel = {key: {"stage": key, "count": 0, "value": 0} for key in FUNNEL_KEYS}
+    funnel: dict[str, _FunnelStage] = {
+        key: {"stage": key, "count": 0, "value": 0} for key in FUNNEL_KEYS
+    }
     for deal in deal_rows:
         if deal.stage == "won":
             reached = order["won"]
@@ -66,8 +93,9 @@ def follow_ups(conn: sa.Connection, today: date) -> list[dict]:
             deals.c.name.label("deal_name"),
         )
         .select_from(
-            activities.outerjoin(contacts, activities.c.contact_id == contacts.c.id)
-            .outerjoin(deals, activities.c.deal_id == deals.c.id)
+            activities.outerjoin(contacts, activities.c.contact_id == contacts.c.id).outerjoin(
+                deals, activities.c.deal_id == deals.c.id
+            )
         )
         .where(
             activities.c.follow_up_done.is_(False),
@@ -91,10 +119,12 @@ def figures(conn: sa.Connection) -> dict:
     history = conn.execute(sa.select(stage_changes.c.deal_id, stage_changes.c.to_stage)).all()
 
     months = last_12_months(today)
-    won = {m: {"month": m, "revenue": 0, "count": 0} for m in months}
+    won: dict[str, _MonthFigures] = {m: {"month": m, "revenue": 0, "count": 0} for m in months}
     previous = f"{(today.replace(day=1) - timedelta(days=1)):%Y-%m}"
-    open_figures = {"count": 0, "value": 0, "expected": 0.0}
-    by_stage = {k: {"stage": k, "count": 0, "value": 0, "expected": 0.0} for k in stages.OPEN_KEYS}
+    open_figures: _OpenFigures = {"count": 0, "value": 0, "expected": 0.0}
+    by_stage: dict[str, _StageFigures] = {
+        k: {"stage": k, "count": 0, "value": 0, "expected": 0.0} for k in stages.OPEN_KEYS
+    }
     lost = {"count": 0, "value": 0}
 
     for deal in deal_rows:

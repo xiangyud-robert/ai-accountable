@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 /**
  * Dialogs here open from state rather than from a Radix trigger, so Radix doesn't know where
@@ -8,10 +8,10 @@ import { useRef } from 'react'
  */
 export function useReturnFocus(open: boolean) {
   const opener = useRef<Element | null>(null)
-  const wasOpen = useRef(false)
-  // Noted while rendering the dialog open, before it moves focus inside itself.
-  if (open && !wasOpen.current) opener.current = openerOf(document.activeElement)
-  wasOpen.current = open
+  // A layout effect runs before Radix's own effect moves focus inside the dialog.
+  useLayoutEffect(() => {
+    if (open) opener.current = openerOf(document.activeElement)
+  }, [open])
 
   return (event: Event) => {
     event.preventDefault()

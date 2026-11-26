@@ -8,14 +8,14 @@ from backend.services import activities
 router = APIRouter(prefix="/api/activities", tags=["activities"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
-def add_activity(body: ActivityIn, engine: Engine) -> ActivityOut:
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=ActivityOut)
+def add_activity(body: ActivityIn, engine: Engine) -> dict:
     with transaction(engine) as conn:
         return activities.add(conn, body.model_dump(exclude_unset=True))
 
 
-@router.patch("/{activity_id}")
-def change_activity(activity_id: RecordId, body: ActivityPatch, engine: Engine) -> ActivityOut:
+@router.patch("/{activity_id}", response_model=ActivityOut)
+def change_activity(activity_id: RecordId, body: ActivityPatch, engine: Engine) -> dict:
     with transaction(engine) as conn:
         return activities.change(conn, activity_id, body.model_dump(exclude_unset=True))
 

@@ -68,8 +68,7 @@ function compareValues(a: Value, b: Value): number {
   return String(a).localeCompare(String(b), 'en', { sensitivity: 'base', numeric: true })
 }
 
-const columnText = <T,>(column: Column<T>, row: T) =>
-  column.text ? column.text(row) : String(column.value(row) ?? '')
+const columnText = <T,>(column: Column<T>, row: T) => (column.text ? column.text(row) : String(column.value(row) ?? ''))
 
 /** A real HTML table with search, sorting by any column, a row count, and Edit and Delete
  *  on every row (R13). Rows load all at once, which is fine for hundreds. */
@@ -101,7 +100,9 @@ export function DataTable<T extends RowData>({
         accessorFn: (row: T) => sortValue(column.value(row)),
         sortUndefined: 'last' as const,
         sortFn: (a, b) =>
-          column.compare ? column.compare(a.original, b.original) : compareValues(column.value(a.original), column.value(b.original)),
+          column.compare
+            ? column.compare(a.original, b.original)
+            : compareValues(column.value(a.original), column.value(b.original)),
       })),
     [columns],
   )
@@ -139,7 +140,11 @@ export function DataTable<T extends RowData>({
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <div className="relative w-72">
-          <Search aria-hidden size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+          <Search
+            aria-hidden
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+          />
           <input
             type="search"
             aria-label={`Search ${plural}`}
@@ -206,10 +211,18 @@ export function DataTable<T extends RowData>({
                 })}
                 <td className="h-11 px-2.5 pr-0">
                   <div className="flex justify-end gap-1">
-                    <IconButton label={`Edit ${rowName(row.original)}`} tooltip="Edit" onClick={() => onEdit(row.original)}>
+                    <IconButton
+                      label={`Edit ${rowName(row.original)}`}
+                      tooltip="Edit"
+                      onClick={() => onEdit(row.original)}
+                    >
                       <Pencil aria-hidden size={16} />
                     </IconButton>
-                    <IconButton label={`Delete ${rowName(row.original)}`} tooltip="Delete" onClick={() => onDelete(row.original)}>
+                    <IconButton
+                      label={`Delete ${rowName(row.original)}`}
+                      tooltip="Delete"
+                      onClick={() => onDelete(row.original)}
+                    >
                       <Trash2 aria-hidden size={16} />
                     </IconButton>
                   </div>

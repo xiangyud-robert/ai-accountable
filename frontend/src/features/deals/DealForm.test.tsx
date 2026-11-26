@@ -1,36 +1,19 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { addDaysISO, todayISO } from '../../lib/format'
-import type { ContactRow, DealRow, OrganizationRow } from '../../lib/types'
-import { mockFetch, renderWithApp } from '../../test-utils'
+import { contactRow, dealRow, mockFetch, organizationRow, renderWithApp } from '../../test-utils'
 import { DealForm } from './DealForm'
 
-const org = (id: number, name: string) => ({ id, name }) as OrganizationRow
-const ORGANIZATIONS = [org(1, 'Harbor Logistics'), org(2, 'Cobalt Bank')]
+const ORGANIZATIONS = [organizationRow(), organizationRow({ id: 2, name: 'Cobalt Bank' })]
 const CONTACTS = [
-  { id: 10, name: 'Priya Raman', organization_id: 1, organization_name: 'Harbor Logistics' },
-  { id: 11, name: 'Daniel Okafor', organization_id: 2, organization_name: 'Cobalt Bank' },
-] as ContactRow[]
+  contactRow(),
+  contactRow({ id: 11, name: 'Daniel Okafor', organization_id: 2, organization_name: 'Cobalt Bank' }),
+  contactRow({ id: 12, name: 'Mei Chen', organization_id: null, organization_name: null }),
+]
 
-const DEAL = {
-  id: 7,
-  name: 'Harbor Logistics fleet analytics',
-  organization_id: 1,
-  organization_name: 'Harbor Logistics',
-  contact_id: 10,
-  contact_name: 'Priya Raman',
-  stage: 'proposal',
-  value: 72000,
-  probability: 65,
-  expected: 46800,
-  close_date: '2026-12-11',
-  position: 0,
-  late: false,
-  activity_count: 0,
-  created_at: '',
-  updated_at: '',
-} as DealRow
+// At a probability of its own, not its stage's usual one.
+const DEAL = dealRow({ probability: 65 })
 
 function renderForm(props: Partial<Parameters<typeof DealForm>[0]> = {}) {
   const onOpenChange = vi.fn()
@@ -53,8 +36,6 @@ async function pick(label: string, option: string) {
   await userEvent.click(await screen.findByRole('option', { name: new RegExp(`^${option}`) }))
 }
 
-afterEach(() => vi.unstubAllGlobals())
-
 describe('DealForm', () => {
   test('a new deal starts at New, with its usual probability, closing in 30 days', () => {
     renderForm()
@@ -67,6 +48,25 @@ describe('DealForm', () => {
     renderForm({ defaults: { stage: 'negotiation' } })
     expect(screen.getByLabelText('Stage')).toHaveTextContent('Negotiation')
     expect(screen.getByLabelText('Probability (%)')).toHaveValue('75')
+  })
+
+  test('a new deal from the Won column closes today, at a probability that can’t be edited', () => {
+    renderForm({ defaults: { stage: 'won' } })
+    expect(screen.getByLabelText('Stage')).toHaveTextContent('Won')
+    expect(screen.getByLabelText('Probability (%)')).toHaveValue('100')
+    expect(screen.getByLabelText('Probability (%)')).toHaveAttribute('readonly')
+    expect(screen.getByLabelText('Close date')).toHaveValue(todayISO())
+  })
+
+  test('a new deal from a record page starts with its organization and main contact', () => {
+    renderForm({ defaults: { organization_id: 2, contact_id: 11 } })
+    expect(screen.getByLabelText(/^Organization/)).toHaveTextContent('Cobalt Bank')
+    expect(screen.getByLabelText(/^Main contact/)).toHaveTextContent('Daniel Okafor')
+  })
+
+  test('a closed form shows nothing', () => {
+    renderForm({ open: false })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('changing the stage fills in its usual probability', async () => {
@@ -99,6 +99,13 @@ describe('DealForm', () => {
     expect(screen.getByLabelText(/^Organization/)).toHaveTextContent('Harbor Logistics')
   })
 
+  test('choosing a main contact with no organization leaves the organization empty', async () => {
+    renderForm()
+    await pick('Main contact', 'Mei Chen')
+    expect(screen.getByLabelText(/^Main contact/)).toHaveTextContent('Mei Chen')
+    expect(screen.getByLabelText(/^Organization/)).toHaveTextContent('Choose an organization')
+  })
+
   test('only changed fields are sent', async () => {
     const calls = mockFetch(() => ({ body: DEAL }))
     const { onOpenChange } = renderForm({ deal: DEAL })
@@ -107,7 +114,9 @@ describe('DealForm', () => {
     await userEvent.type(name, 'Harbor Logistics fleet analytics phase 2')
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
-    expect(calls).toEqual([{ method: 'PATCH', path: '/deals/7', body: { name: 'Harbor Logistics fleet analytics phase 2' } }])
+    expect(calls).toEqual([
+      { method: 'PATCH', path: '/deals/7', body: { name: 'Harbor Logistics fleet analytics phase 2' } },
+    ])
   })
 
   test('a new stage sends what the form filled in with it', async () => {
@@ -175,5 +184,22 @@ describe('DealForm', () => {
     expect(value).toHaveAttribute('aria-invalid', 'true')
     expect(value).toHaveAccessibleDescription('Enter a value from $0 to $100,000,000.')
     expect(value).toHaveFocus()
+  })
+
+  test.each([
+    ['Organization', 'organization_id', 'Cobalt Bank', 'That organization no longer exists.'],
+    ['Main contact', 'contact_id', 'Daniel Okafor', 'That contact no longer exists.'],
+  ])('the server’s message about the %s appears under its picker', async (label, field, option, message) => {
+    const calls = mockFetch(() => ({ status: 422, body: { errors: { [field]: message } } }))
+    const { onOpenChange } = renderForm({ deal: DEAL })
+    await pick(label, option)
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    const picker = screen.getByLabelText(new RegExp(`^${label}`))
+    await waitFor(() => expect(picker).toHaveAttribute('aria-invalid', 'true'))
+    expect(screen.getByText(message)).toBeInTheDocument()
+    expect(picker).toHaveAccessibleDescription(message)
+    expect(picker).toHaveFocus()
+    expect(calls).toHaveLength(1)
+    expect(onOpenChange).not.toHaveBeenCalled()
   })
 })

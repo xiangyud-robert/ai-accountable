@@ -167,7 +167,9 @@ def recent(conn: sa.Connection, limit: int = 10) -> list[dict]:
     entries = [
         _activity_entry(r)
         for r in conn.execute(
-            _activities().order_by(activities.c.occurred_at.desc(), activities.c.id.desc()).limit(limit)
+            _activities()
+            .order_by(activities.c.occurred_at.desc(), activities.c.id.desc())
+            .limit(limit)
         )
     ]
     entries += [

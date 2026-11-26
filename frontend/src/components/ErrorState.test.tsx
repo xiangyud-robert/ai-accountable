@@ -6,7 +6,9 @@ import { ErrorState } from './ErrorState'
 
 describe('ErrorState', () => {
   test('a record page that can’t reach the server has the message as its main heading', () => {
-    renderWithApp(<ErrorState error={new Unreachable(UNREACHABLE_MESSAGE)} kind="deal" listPath="/deals" listName="deals" />)
+    renderWithApp(
+      <ErrorState error={new Unreachable(UNREACHABLE_MESSAGE)} kind="deal" listPath="/deals" listName="deals" />,
+    )
     expect(screen.getByRole('heading', { level: 1, name: UNREACHABLE_MESSAGE })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE_MESSAGE)
   })

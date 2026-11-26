@@ -53,7 +53,11 @@ export function PipelinePage() {
       <div aria-live="assertive" role="status" className="sr-only" data-testid="pipeline-announcements">
         {announcement}
       </div>
-      <DealForm open={adding !== null} onOpenChange={(open) => !open && setAdding(null)} defaults={{ stage: adding ?? 'new' }} />
+      <DealForm
+        open={adding !== null}
+        onOpenChange={(open) => !open && setAdding(null)}
+        defaults={{ stage: adding ?? 'new' }}
+      />
     </>
   )
 }

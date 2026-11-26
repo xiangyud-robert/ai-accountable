@@ -8,32 +8,32 @@ from backend.services import deals
 router = APIRouter(prefix="/api/deals", tags=["deals"])
 
 
-@router.get("")
-def list_deals(engine: Engine) -> list[DealRow]:
+@router.get("", response_model=list[DealRow])
+def list_deals(engine: Engine) -> list[dict]:
     with transaction(engine) as conn:
         return deals.list_all(conn)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
-def add_deal(body: DealIn, engine: Engine) -> DealRow:
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=DealRow)
+def add_deal(body: DealIn, engine: Engine) -> dict:
     with transaction(engine) as conn:
         return deals.add(conn, body.model_dump(exclude_unset=True))
 
 
-@router.get("/{deal_id}")
-def get_deal(deal_id: RecordId, engine: Engine) -> DealDetail:
+@router.get("/{deal_id}", response_model=DealDetail)
+def get_deal(deal_id: RecordId, engine: Engine) -> dict:
     with transaction(engine) as conn:
         return deals.get(conn, deal_id)
 
 
-@router.patch("/{deal_id}")
-def change_deal(deal_id: RecordId, body: DealPatch, engine: Engine) -> DealRow:
+@router.patch("/{deal_id}", response_model=DealRow)
+def change_deal(deal_id: RecordId, body: DealPatch, engine: Engine) -> dict:
     with transaction(engine) as conn:
         return deals.change(conn, deal_id, body.model_dump(exclude_unset=True))
 
 
-@router.post("/{deal_id}/move")
-def move_deal(deal_id: RecordId, body: DealMove, engine: Engine) -> DealRow:
+@router.post("/{deal_id}/move", response_model=DealRow)
+def move_deal(deal_id: RecordId, body: DealMove, engine: Engine) -> dict:
     with transaction(engine) as conn:
         return deals.move(conn, deal_id, body.stage, body.index)
 

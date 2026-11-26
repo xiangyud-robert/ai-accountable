@@ -5,7 +5,8 @@ import { drag, expect, test } from './fixtures'
 const API = `http://127.0.0.1:${API_PORT}/api`
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`
 const card = (page: Page, name: string) => page.locator('[data-deal-id]').filter({ hasText: name })
-const cardsIn = (page: Page, stage: string) => page.getByRole('region', { name: stage, exact: true }).locator('[data-deal-id]')
+const cardsIn = (page: Page, stage: string) =>
+  page.getByRole('region', { name: stage, exact: true }).locator('[data-deal-id]')
 const DEAL = 'Ridgeway Manufacturing support plan renewal'
 
 test('criteria 4, 5 and 6: drag a deal to Won', async ({ page }) => {
@@ -41,7 +42,9 @@ test('criteria 4, 5 and 6: drag a deal to Won', async ({ page }) => {
   // The dashboard's revenue and deals won this month go up by its value and by one.
   await page.goto('/')
   await expect(page.getByText(usd(before.this_month.revenue + deal.value), { exact: true }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: /^Deals won in June/ })).toContainText(`Deals won in June${before.this_month.count + 1}`)
+  await expect(page.getByRole('link', { name: /^Deals won in June/ })).toContainText(
+    `Deals won in June${before.this_month.count + 1}`,
+  )
   const recent = page.getByRole('region', { name: 'Recent activity' })
   await expect(recent.getByRole('listitem').first()).toContainText(`Became a customer when ${DEAL} was won`)
 

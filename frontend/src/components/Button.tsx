@@ -12,7 +12,14 @@ const VARIANTS: Record<Variant, string> = {
 
 type ButtonProps = ComponentProps<'button'> & { variant?: Variant; icon?: ReactNode }
 
-export function Button({ variant = 'secondary', icon, className = '', children, type = 'button', ...props }: ButtonProps) {
+export function Button({
+  variant = 'secondary',
+  icon,
+  className = '',
+  children,
+  type = 'button',
+  ...props
+}: ButtonProps) {
   return (
     <button
       type={type}

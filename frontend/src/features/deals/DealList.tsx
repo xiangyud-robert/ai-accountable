@@ -21,7 +21,9 @@ export function DealList({ deals, empty }: { deals: DealRow[]; empty: string }) 
           </div>
           <div className="shrink-0 text-right">
             <p className="font-mono text-[13px]">{money(deal.value)}</p>
-            <p className={`font-mono text-xs ${deal.late ? 'text-alert-text' : 'text-ink-muted'}`}>{shortDate(deal.close_date)}</p>
+            <p className={`font-mono text-xs ${deal.late ? 'text-alert-text' : 'text-ink-muted'}`}>
+              {shortDate(deal.close_date)}
+            </p>
           </div>
         </li>
       ))}

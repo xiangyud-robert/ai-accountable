@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
 import { Checkbox } from 'radix-ui'
 import { useId } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { FormDialog } from '../../components/FormDialog'
 import { Field, SelectField, TextArea, TextInput, described } from '../../components/fields'
@@ -51,12 +51,12 @@ function EditDialog({ open, onOpenChange, activity }: ActivityDialogProps) {
     follow_up_date: activity.follow_up_date ?? '',
     follow_up_done: activity.follow_up_done,
   }
-  const { register, handleSubmit, setError, control, formState, watch } = useForm<Values>({
+  const { register, handleSubmit, setError, control, formState } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: initial,
   })
   const error = (field: keyof Values) => formState.errors[field]?.message
-  const hasFollowUp = watch('follow_up_date') !== ''
+  const hasFollowUp = useWatch({ control, name: 'follow_up_date' }) !== ''
 
   const toBody = (v: Values) => ({
     type: v.type,
@@ -77,19 +77,36 @@ function EditDialog({ open, onOpenChange, activity }: ActivityDialogProps) {
   })
 
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title={`Edit ${activity.type}`} onSubmit={onSubmit} busy={change.isPending}>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Edit ${activity.type}`}
+      onSubmit={onSubmit}
+      busy={change.isPending}
+    >
       <div className="grid grid-cols-[140px_1fr] gap-4">
         <Field id={`${id}-type`} label="Type" error={error('type')}>
           <Controller
             control={control}
             name="type"
             render={({ field }) => (
-              <SelectField ref={field.ref} id={`${id}-type`} value={field.value} onChange={field.onChange} options={ACTIVITY_TYPES} />
+              <SelectField
+                ref={field.ref}
+                id={`${id}-type`}
+                value={field.value}
+                onChange={field.onChange}
+                options={ACTIVITY_TYPES}
+              />
             )}
           />
         </Field>
         <Field id={`${id}-when`} label="When" error={error('occurred_at')}>
-          <TextInput type="datetime-local" {...described(`${id}-when`, error('occurred_at'))} {...register('occurred_at')} className="font-mono" />
+          <TextInput
+            type="datetime-local"
+            {...described(`${id}-when`, error('occurred_at'))}
+            {...register('occurred_at')}
+            className="font-mono"
+          />
         </Field>
       </div>
       <Field id={`${id}-description`} label="Description" error={error('description')}>
@@ -97,7 +114,12 @@ function EditDialog({ open, onOpenChange, activity }: ActivityDialogProps) {
       </Field>
       <div className="grid grid-cols-2 items-end gap-4">
         <Field id={`${id}-follow`} label="Follow-up date" optional error={error('follow_up_date')}>
-          <TextInput type="date" {...described(`${id}-follow`, error('follow_up_date'))} {...register('follow_up_date')} className="font-mono" />
+          <TextInput
+            type="date"
+            {...described(`${id}-follow`, error('follow_up_date'))}
+            {...register('follow_up_date')}
+            className="font-mono"
+          />
         </Field>
         {hasFollowUp && (
           <Controller

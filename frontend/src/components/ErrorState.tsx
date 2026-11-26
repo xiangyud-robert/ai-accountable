@@ -28,7 +28,11 @@ export function ErrorState({ error, kind, listPath, listName }: ErrorStateProps)
   return (
     <Panel>
       <div role="alert">
-        {kind ? <h1 className="text-xl font-semibold">{UNREACHABLE_MESSAGE}</h1> : <p className="text-ink">{UNREACHABLE_MESSAGE}</p>}
+        {kind ? (
+          <h1 className="text-xl font-semibold">{UNREACHABLE_MESSAGE}</h1>
+        ) : (
+          <p className="text-ink">{UNREACHABLE_MESSAGE}</p>
+        )}
       </div>
     </Panel>
   )

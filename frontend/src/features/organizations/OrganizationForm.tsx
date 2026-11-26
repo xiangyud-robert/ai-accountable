@@ -55,9 +55,17 @@ function OrganizationDialog({ open, onOpenChange, organization, onSaved }: Organ
       industry: orNull(values.industry),
       notes: orNull(values.notes),
     }
-    const start = { name: initial.name, website: orNull(initial.website), industry: orNull(initial.industry), notes: orNull(initial.notes) }
+    const start = {
+      name: initial.name,
+      website: orNull(initial.website),
+      industry: orNull(initial.industry),
+      notes: orNull(initial.notes),
+    }
     try {
-      const saved = await save.mutateAsync({ id: organization?.id, values: organization ? changedOnly(body, start) : body })
+      const saved = await save.mutateAsync({
+        id: organization?.id,
+        values: organization ? changedOnly(body, start) : body,
+      })
       notify.done('Organization saved')
       onSaved?.(saved)
       onOpenChange(false)
@@ -78,10 +86,19 @@ function OrganizationDialog({ open, onOpenChange, organization, onSaved }: Organ
         <TextInput {...described(`${id}-name`, error('name'))} {...register('name')} autoComplete="off" />
       </Field>
       <Field id={`${id}-website`} label="Website" optional error={error('website')}>
-        <TextInput {...described(`${id}-website`, error('website'))} {...register('website')} placeholder="example.com" />
+        <TextInput
+          {...described(`${id}-website`, error('website'))}
+          {...register('website')}
+          placeholder="example.com"
+        />
       </Field>
       <Field id={`${id}-industry`} label="Industry" optional error={error('industry')}>
-        <TextInput {...described(`${id}-industry`, error('industry'))} {...register('industry')} list={`${id}-industries`} autoComplete="off" />
+        <TextInput
+          {...described(`${id}-industry`, error('industry'))}
+          {...register('industry')}
+          list={`${id}-industries`}
+          autoComplete="off"
+        />
         <datalist id={`${id}-industries`}>
           {industries.map((industry) => (
             <option key={industry} value={industry!} />

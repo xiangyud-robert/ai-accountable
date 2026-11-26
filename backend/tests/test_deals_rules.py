@@ -20,7 +20,9 @@ def history(conn, deal_id):
 
 def status_history(conn, contact_id):
     query = (
-        sa.select(status_changes.c.from_status, status_changes.c.to_status, status_changes.c.won_deal_id)
+        sa.select(
+            status_changes.c.from_status, status_changes.c.to_status, status_changes.c.won_deal_id
+        )
         .where(status_changes.c.contact_id == contact_id)
         .order_by(status_changes.c.id)
     )
@@ -84,7 +86,10 @@ def test_r3_takes_the_usual_probability(make, conn):
 
 def test_r3_keeps_a_probability_set_in_the_same_save(make, conn):
     deal = make.deal(stage="new")
-    assert deals.change(conn, deal["id"], {"stage": "proposal", "probability": 65})["probability"] == 65
+    assert (
+        deals.change(conn, deal["id"], {"stage": "proposal", "probability": 65})["probability"]
+        == 65
+    )
 
 
 def test_r3_won_and_lost_set_today_as_the_close_date(make, conn):
@@ -149,7 +154,9 @@ def test_r3_stage_changes_are_timed_now(make, conn):
 def test_r4_a_hand_set_probability_survives_an_edit_that_keeps_the_stage(make, conn):
     deal = make.deal(stage="proposal")
     deals.change(conn, deal["id"], {"probability": 65})
-    changed = deals.change(conn, deal["id"], {"name": "Renamed", "value": 12_000, "stage": "proposal"})
+    changed = deals.change(
+        conn, deal["id"], {"name": "Renamed", "value": 12_000, "stage": "proposal"}
+    )
     assert changed["probability"] == 65
 
 

@@ -57,7 +57,20 @@ describe('colors are used by role', () => {
   })
 
   test('the spec’s other roles are there', () => {
-    for (const name of ['page', 'panel', 'ink', 'ink-muted', 'divider', 'field', 'focus', 'link', 'primary', 'primary-tint', 'alert', 'alert-tint']) {
+    for (const name of [
+      'page',
+      'panel',
+      'ink',
+      'ink-muted',
+      'divider',
+      'field',
+      'focus',
+      'link',
+      'primary',
+      'primary-tint',
+      'alert',
+      'alert-tint',
+    ]) {
       expect(role(name), name).toBe(true)
     }
   })

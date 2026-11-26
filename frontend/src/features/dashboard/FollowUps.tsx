@@ -25,8 +25,8 @@ export function FollowUps({ dashboard }: { dashboard: Dashboard }) {
       title="Follow-ups"
       subtitle={
         <>
-          <span className="font-mono">{overdue}</span> overdue, <span className="font-mono">{dashboard.follow_ups.length - overdue}</span>{' '}
-          due in the next 7 days
+          <span className="font-mono">{overdue}</span> overdue,{' '}
+          <span className="font-mono">{dashboard.follow_ups.length - overdue}</span> due in the next 7 days
         </>
       }
       className="col-span-6"
@@ -38,7 +38,10 @@ export function FollowUps({ dashboard }: { dashboard: Dashboard }) {
         // 12th shows, so it's clear the list scrolls.
         <ul aria-label="Follow-ups" className="-mr-2 max-h-[652px] overflow-y-auto pr-2">
           {dashboard.follow_ups.map((followUp) => (
-            <li key={followUp.id} className="grid grid-cols-[18px_30px_1fr_auto] items-center gap-3 border-t border-divider py-[9px] first:border-t-0">
+            <li
+              key={followUp.id}
+              className="grid grid-cols-[18px_30px_1fr_auto] items-center gap-3 border-t border-divider py-[9px] first:border-t-0"
+            >
               <DoneCheckbox
                 checked={false}
                 onCheckedChange={() => done(followUp)}

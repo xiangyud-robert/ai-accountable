@@ -1,0 +1,8 @@
+# For the scan of the files on disk only: the same rules, but the git-ignored .env, where local
+# secrets belong, is allowed. The history scan doesn't use this file, so a committed .env fails.
+[extend]
+path = ".gitleaks.toml"
+
+[[allowlists]]
+description = "The git-ignored .env"
+paths = ['''(^|/)\.env$''']

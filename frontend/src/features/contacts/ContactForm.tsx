@@ -35,37 +35,58 @@ export function ContactForm(props: ContactFormProps) {
   return props.open ? <ContactDialog {...props} /> : null
 }
 
+/** What the form starts with: the contact as saved, or a new contact's defaults. */
+function initialValues(contact: ContactRow | undefined, defaults: ContactFormProps['defaults'] = {}): Values {
+  if (!contact) {
+    return {
+      name: '',
+      email: '',
+      phone: '',
+      job_title: '',
+      organization_id: defaults.organization_id ?? null,
+      status: defaults.status ?? 'lead',
+    }
+  }
+  return {
+    name: contact.name,
+    email: contact.email ?? '',
+    phone: contact.phone ?? '',
+    job_title: contact.job_title ?? '',
+    organization_id: contact.organization_id,
+    status: contact.status,
+  }
+}
+
+function toBody(values: Values) {
+  return {
+    name: values.name.trim(),
+    email: orNull(values.email),
+    phone: orNull(values.phone),
+    job_title: orNull(values.job_title),
+    organization_id: values.organization_id,
+    status: values.status,
+  }
+}
+
 function ContactDialog({ open, onOpenChange, contact, defaults, onSaved }: ContactFormProps) {
   const id = useId()
   const save = useSaveContact()
   const { data: organizations = [] } = useOrganizations()
 
-  const initial: Values = {
-    name: contact?.name ?? '',
-    email: contact?.email ?? '',
-    phone: contact?.phone ?? '',
-    job_title: contact?.job_title ?? '',
-    organization_id: contact ? contact.organization_id : (defaults?.organization_id ?? null),
-    status: contact?.status ?? defaults?.status ?? 'lead',
-  }
+  const initial = initialValues(contact, defaults)
   const { register, handleSubmit, setError, control, formState } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: initial,
   })
   const error = (field: keyof Values) => formState.errors[field]?.message
-  const toBody = (v: Values) => ({
-    name: v.name.trim(),
-    email: orNull(v.email),
-    phone: orNull(v.phone),
-    job_title: orNull(v.job_title),
-    organization_id: v.organization_id,
-    status: v.status,
-  })
 
   const onSubmit = handleSubmit(async (values) => {
     const body = toBody(values)
     try {
-      const saved = await save.mutateAsync({ id: contact?.id, values: contact ? changedOnly(body, toBody(initial)) : body })
+      const saved = await save.mutateAsync({
+        id: contact?.id,
+        values: contact ? changedOnly(body, toBody(initial)) : body,
+      })
       notify.done('Contact saved')
       onSaved?.(saved)
       onOpenChange(false)
@@ -75,16 +96,32 @@ function ContactDialog({ open, onOpenChange, contact, defaults, onSaved }: Conta
   })
 
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title={contact ? 'Edit contact' : 'Add contact'} onSubmit={onSubmit} busy={save.isPending}>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={contact ? 'Edit contact' : 'Add contact'}
+      onSubmit={onSubmit}
+      busy={save.isPending}
+    >
       <Field id={`${id}-name`} label="Name" error={error('name')}>
         <TextInput {...described(`${id}-name`, error('name'))} {...register('name')} autoComplete="off" />
       </Field>
       <div className="grid grid-cols-2 gap-4">
         <Field id={`${id}-email`} label="Email" optional error={error('email')}>
-          <TextInput type="email" {...described(`${id}-email`, error('email'))} {...register('email')} autoComplete="off" />
+          <TextInput
+            type="email"
+            {...described(`${id}-email`, error('email'))}
+            {...register('email')}
+            autoComplete="off"
+          />
         </Field>
         <Field id={`${id}-phone`} label="Phone" optional error={error('phone')}>
-          <TextInput type="tel" {...described(`${id}-phone`, error('phone'))} {...register('phone')} autoComplete="off" />
+          <TextInput
+            type="tel"
+            {...described(`${id}-phone`, error('phone'))}
+            {...register('phone')}
+            autoComplete="off"
+          />
         </Field>
       </div>
       <Field id={`${id}-job`} label="Job title" optional error={error('job_title')}>

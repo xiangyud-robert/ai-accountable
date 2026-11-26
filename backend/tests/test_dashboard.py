@@ -25,8 +25,18 @@ def test_the_12_months_include_this_one_with_zeros(make, conn):
     figures = dashboard.figures(conn)
     months = figures["months"]
     assert [m["month"] for m in months] == [
-        "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12",
-        "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
     ]
     assert months[0] == {"month": "2025-07", "revenue": 2_000, "count": 1}
     assert all(m["revenue"] == 0 and m["count"] == 0 for m in months[1:])
@@ -48,7 +58,11 @@ def test_the_open_pipeline_and_each_open_stage(make, conn):
     won(make, 100_000, TODAY)
     make.deal(stage="lost", value=60_000, close_date=TODAY)
     figures = dashboard.figures(conn)
-    assert figures["open"] == {"count": 4, "value": 88_000, "expected": 1_000 + 6_000 + 20_000 + 6_000}
+    assert figures["open"] == {
+        "count": 4,
+        "value": 88_000,
+        "expected": 1_000 + 6_000 + 20_000 + 6_000,
+    }
     assert figures["by_stage"] == [
         {"stage": "new", "count": 2, "value": 40_000, "expected": 7_000},
         {"stage": "qualified", "count": 0, "value": 0, "expected": 0},
@@ -80,7 +94,11 @@ def test_the_funnel(make, conn):
 def test_recent_activity_is_the_10_newest_of_all_three_kinds(make, conn):
     contact = make.contact()
     for n in range(12):
-        make.activity(contact_id=contact["id"], description=f"Note {n}", occurred_at=NOW - timedelta(days=n + 1))
+        make.activity(
+            contact_id=contact["id"],
+            description=f"Note {n}",
+            occurred_at=NOW - timedelta(days=n + 1),
+        )
     deal = make.deal(contact_id=contact["id"], stage="negotiation")
     deals.move(conn, deal["id"], "won", 0)
     recent = dashboard.figures(conn)["recent"]

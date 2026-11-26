@@ -6,6 +6,6 @@ from backend.schemas import StageOut
 router = APIRouter(prefix="/api/stages", tags=["stages"])
 
 
-@router.get("")
-def list_stages() -> list[StageOut]:
+@router.get("", response_model=list[StageOut])
+def list_stages() -> list[dict]:
     return stages.as_dicts()

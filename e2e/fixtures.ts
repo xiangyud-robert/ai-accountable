@@ -76,14 +76,24 @@ export async function expectNoAxeProblems(page: Page, include?: string) {
 /** Drags with the mouse in small steps, the way a person does, so dnd-kit sees a drag.
  *  It drops on the top quarter of `to`, its middle, just inside its bottom edge, or in the
  *  8px gap just above it, between it and the card before. */
-export async function drag(page: Page, from: Locator, to: Locator, at: 'top' | 'middle' | 'bottom' | 'gap above' = 'middle') {
+export async function drag(
+  page: Page,
+  from: Locator,
+  to: Locator,
+  at: 'top' | 'middle' | 'bottom' | 'gap above' = 'middle',
+) {
   const start = await from.boundingBox()
   const end = await to.boundingBox()
   if (!start || !end) throw new Error('Nothing to drag, or nowhere to drop it')
   const x0 = start.x + start.width / 2
   const y0 = start.y + start.height / 2
   const x1 = end.x + end.width / 2
-  const y1 = { top: end.y + end.height / 4, middle: end.y + end.height / 2, bottom: end.y + end.height - 6, 'gap above': end.y - 4 }[at]
+  const y1 = {
+    top: end.y + end.height / 4,
+    middle: end.y + end.height / 2,
+    bottom: end.y + end.height - 6,
+    'gap above': end.y - 4,
+  }[at]
   await page.mouse.move(x0, y0)
   await page.mouse.down()
   await page.mouse.move(x0 + 8, y0 + 8, { steps: 4 })
@@ -104,7 +114,10 @@ export async function pick(scope: Page | Locator, label: string, option: string)
   const page = 'page' in scope ? scope.page() : scope
   await scope.getByRole('combobox', { name: new RegExp(`^${label}`) }).click()
   await page.locator('[cmdk-input]').fill(option)
-  await page.getByRole('option', { name: new RegExp(`^${option}`) }).first().click()
+  await page
+    .getByRole('option', { name: new RegExp(`^${option}`) })
+    .first()
+    .click()
 }
 
 /** The text in one column of a table, row by row. */
@@ -112,10 +125,9 @@ export async function columnText(table: Locator, header: string): Promise<string
   const headers = await table.getByRole('columnheader').allTextContents()
   const index = headers.findIndex((h) => h.trim() === header)
   if (index < 0) throw new Error(`No column called ${header}: ${headers.join(', ')}`)
-  return table.locator('tbody tr').evaluateAll(
-    (rows, i) => rows.map((row) => (row.children[i] as HTMLElement).innerText.trim()),
-    index,
-  )
+  return table
+    .locator('tbody tr')
+    .evaluateAll((rows, i) => rows.map((row) => (row.children[i] as HTMLElement).innerText.trim()), index)
 }
 
 /** Chrome logs every 422 reply as a console error. Tests that send bad fields on purpose expect it. */

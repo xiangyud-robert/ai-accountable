@@ -7,7 +7,9 @@ from backend.tests.conftest import NOW
 
 def changes(conn, contact_id):
     query = (
-        sa.select(status_changes.c.from_status, status_changes.c.to_status, status_changes.c.changed_at)
+        sa.select(
+            status_changes.c.from_status, status_changes.c.to_status, status_changes.c.changed_at
+        )
         .where(status_changes.c.contact_id == contact_id)
         .order_by(status_changes.c.id)
     )
@@ -41,7 +43,9 @@ def test_r7_saving_the_same_status_records_nothing(make, conn):
 
 
 def test_an_organization_is_optional(client):
-    response = client.post("/api/contacts", json={"name": "Grace Whitfield", "organization_id": None})
+    response = client.post(
+        "/api/contacts", json={"name": "Grace Whitfield", "organization_id": None}
+    )
     assert response.status_code == 201
     assert response.json()["organization_id"] is None
 

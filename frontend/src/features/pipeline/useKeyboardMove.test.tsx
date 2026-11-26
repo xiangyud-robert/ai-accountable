@@ -1,17 +1,11 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, test, vi } from 'vitest'
-import type { DealRow, StageKey } from '../../lib/types'
-import { STAGES, mockFetch, renderWithApp } from '../../test-utils'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { describe, expect, test } from 'vitest'
+import type { StageKey } from '../../lib/types'
+import { STAGES, dealRow, mockFetch, renderWithApp } from '../../test-utils'
 import { PipelinePage } from './PipelinePage'
 
-function deal(id: number, name: string, stage: StageKey, position: number): DealRow {
-  return {
-    id, name, stage, position,
-    organization_id: null, organization_name: null, contact_id: null, contact_name: null,
-    value: 10_000, probability: stage === 'new' ? 10 : 25, expected: 1_000,
-    close_date: '2026-12-01', late: false, activity_count: 0, created_at: '', updated_at: '',
-  }
-}
+const deal = (id: number, name: string, stage: StageKey, position: number) =>
+  dealRow({ id, name, stage, position, value: 10_000 })
 
 const DEALS = [
   deal(1, 'Alpha pilot', 'new', 0),
@@ -33,10 +27,11 @@ function renderBoard() {
 const card = (id: number) => document.querySelector<HTMLElement>(`[data-deal-id="${id}"]`)!
 const press = (key: string) => fireEvent.keyDown(document.activeElement!, { key })
 const announced = () => screen.getByTestId('pipeline-announcements').textContent
+const region = (stage: string) => screen.getByRole('region', { name: stage })
 const column = (stage: string) =>
-  [...screen.getByRole('region', { name: stage }).querySelectorAll<HTMLElement>('[data-deal-id]')].map((el) => Number(el.dataset.dealId))
-
-afterEach(() => vi.unstubAllGlobals())
+  [...region(stage).querySelectorAll<HTMLElement>('[data-deal-id]')].map((el) => Number(el.dataset.dealId))
+/** The column's value, the first sum of money under its name. */
+const columnValue = (stage: string) => within(region(stage)).getAllByText(/^\$[\d,]+$/)[0].textContent
 
 describe('useKeyboardMove', () => {
   test('Space, the four arrows and Space again give the right moves, each one announced', async () => {
@@ -69,21 +64,22 @@ describe('useKeyboardMove', () => {
 
     press(' ')
     await waitFor(() => expect(announced()).toBe('Dropped in Qualified, position 2 of 3'))
-    await waitFor(() => expect(calls[0]).toEqual({ method: 'POST', path: '/deals/2/move', body: { stage: 'qualified', index: 1 } }))
+    await waitFor(() =>
+      expect(calls[0]).toEqual({ method: 'POST', path: '/deals/2/move', body: { stage: 'qualified', index: 1 } }),
+    )
     await waitFor(() => expect(calls.filter((c) => c.method === 'GET').length).toBeGreaterThan(0))
   })
 
   test('the figures change when the card drops, not while it is moving', async () => {
     renderBoard()
-    const heading = () => screen.getByRole('region', { name: 'Qualified' }).querySelector('p')!.textContent
-    expect(heading()).toBe('$20,000')
+    expect(columnValue('Qualified')).toBe('$20,000')
     card(1).focus()
     press(' ')
     press('ArrowRight')
     await waitFor(() => expect(column('Qualified')).toContain(1))
-    expect(heading()).toBe('$20,000')
+    expect(columnValue('Qualified')).toBe('$20,000')
     press(' ')
-    await waitFor(() => expect(heading()).toBe('$30,000'))
+    await waitFor(() => expect(columnValue('Qualified')).toBe('$30,000'))
   })
 
   test('Escape puts the card back', async () => {
@@ -122,9 +118,45 @@ describe('useKeyboardMove', () => {
     // A mouse drag that remounts the card it moves (Yankee, to Proposal) leaves focus on the page.
     fireEvent.pointerDown(document.body)
     card(3).blur()
-    act(() => client.setQueryData(['deals'], DEALS.map((d) => (d.id === 5 ? { ...d, stage: 'proposal' as const, position: 0 } : d))))
+    act(() =>
+      client.setQueryData(
+        ['deals'],
+        DEALS.map((d) => (d.id === 5 ? { ...d, stage: 'proposal' as const, position: 0 } : d)),
+      ),
+    )
     await waitFor(() => expect(column('Proposal')).toEqual([5]))
     expect(document.activeElement).toBe(document.body)
+  })
+
+  test('Enter opens the deal, except while its card is picked up', async () => {
+    const { router } = renderBoard()
+    card(2).focus()
+    press(' ')
+    press('Enter')
+    await waitFor(() => expect(announced()).toBe('Picked up Bravo rollout, in New, position 2 of 3'))
+    expect(router.state.location.pathname).toBe('/')
+    press('Escape')
+    press('Enter')
+    await waitFor(() => expect(router.state.location.pathname).toBe('/deals/2'))
+  })
+
+  test('while a card is picked up, other keys and keys on other cards leave it where it is', async () => {
+    const { calls } = renderBoard()
+    card(2).focus()
+    press(' ')
+    press('ArrowDown')
+    await waitFor(() => expect(announced()).toBe('Moved to New, position 3 of 3'))
+    press('a')
+    fireEvent.keyDown(card(1), { key: ' ' })
+    fireEvent.keyDown(card(4), { key: 'ArrowUp' })
+    expect(column('New')).toEqual([1, 3, 2])
+    expect(announced()).toBe('Moved to New, position 3 of 3')
+    press(' ')
+    await waitFor(() => expect(announced()).toBe('Dropped in New, position 3 of 3'))
+    await waitFor(() =>
+      expect(calls[0]).toEqual({ method: 'POST', path: '/deals/2/move', body: { stage: 'new', index: 2 } }),
+    )
+    await waitFor(() => expect(calls.filter((c) => c.method === 'GET').length).toBeGreaterThan(0))
   })
 
   test('the arrows do nothing until a card is picked up, and stop at the edges', async () => {

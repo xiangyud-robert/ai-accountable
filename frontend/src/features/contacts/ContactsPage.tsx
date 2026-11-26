@@ -40,8 +40,18 @@ const COLUMNS: Column<ContactRow>[] = [
       ),
   },
   { id: 'job_title', header: 'Job title', value: (c) => c.job_title },
-  { id: 'email', header: 'Email', value: (c) => c.email, cell: (c) => <span className="text-ink-muted">{c.email}</span> },
-  { id: 'phone', header: 'Phone', value: (c) => c.phone, cell: (c) => <span className="font-mono text-[13px] text-ink-muted">{c.phone}</span> },
+  {
+    id: 'email',
+    header: 'Email',
+    value: (c) => c.email,
+    cell: (c) => <span className="text-ink-muted">{c.email}</span>,
+  },
+  {
+    id: 'phone',
+    header: 'Phone',
+    value: (c) => c.phone,
+    cell: (c) => <span className="font-mono text-[13px] text-ink-muted">{c.phone}</span>,
+  },
   {
     id: 'status',
     header: 'Status',

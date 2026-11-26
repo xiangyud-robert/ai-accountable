@@ -14,6 +14,19 @@ Commands are npm scripts in a `package.json` at the repo root, with `frontend/` 
 - `npm run dev` starts the backend and the frontend together
 - `npm test` runs all the tests and fails if any test fails
 - `npm run seed` resets the database to the sample data
+- `npm run check` runs every check below and all the tests, and fails if any of them fails; `npm run check:quick` is the same without the end-to-end tests
+- `npm run format` fixes the formatting
+
+The checks:
+
+1. gitleaks across the git history and the files, allowing only the git-ignored `.env` (gitleaks is installed separately)
+2. Prettier and ESLint for the frontend, the end-to-end tests and the scripts, with the recommended rules of typescript-eslint, React Hooks and jsx-a11y
+3. ruff format and ruff check for the backend
+4. A cyclomatic complexity of at most 15 per function, with ESLint's `complexity` and ruff's C901
+5. tsc for the frontend and the end-to-end tests, and ty for the backend
+6. At least 80% unit test coverage, for Vitest and pytest
+
+typescript-eslint needs the TypeScript 6 API, which TypeScript 7 no longer has, so the repo root has TypeScript 6 for ESLint, and `frontend/` has TypeScript 7 for tsc.
 
 `docs/STATUS.md` says how to run the app. `README.md` is the course's own guide, so leave it as it is.
 

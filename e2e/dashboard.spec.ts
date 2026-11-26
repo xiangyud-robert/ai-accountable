@@ -46,7 +46,11 @@ async function workedOut(request: APIRequestContext) {
     thisMonth: { revenue: sum(thisMonth), count: thisMonth.length },
     lastMonth: { revenue: sum(lastMonth), count: lastMonth.length },
     year: { revenue: sum(yearWon), count: yearWon.length },
-    open: { count: open.length, value: sum(open), expected: open.reduce((s, d) => s + (d.value * d.probability) / 100, 0) },
+    open: {
+      count: open.length,
+      value: sum(open),
+      expected: open.reduce((s, d) => s + (d.value * d.probability) / 100, 0),
+    },
     byStage: OPEN.map((stage) => {
       const list = open.filter((d) => d.stage === stage)
       return { value: sum(list), expected: list.reduce((s, d) => s + (d.value * d.probability) / 100, 0) }
@@ -70,10 +74,16 @@ test('criterion 6: the tiles, each chart’s summary and the funnel match the sa
   await expect(page.getByText(`${figures.year.count} deals won · USD`)).toBeVisible()
 
   const tiles = page.getByRole('link').filter({ has: page.getByRole('heading', { level: 2 }) })
-  await expect(tiles.filter({ hasText: /^Deals won in June/ })).toContainText(`Deals won in June${figures.thisMonth.count}May: ${figures.lastMonth.count}`)
-  await expect(tiles.filter({ hasText: /^Open pipeline/ })).toContainText(`${usd(figures.open.value)}${figures.open.count} open deals`)
+  await expect(tiles.filter({ hasText: /^Deals won in June/ })).toContainText(
+    `Deals won in June${figures.thisMonth.count}May: ${figures.lastMonth.count}`,
+  )
+  await expect(tiles.filter({ hasText: /^Open pipeline/ })).toContainText(
+    `${usd(figures.open.value)}${figures.open.count} open deals`,
+  )
   const share = Math.round((figures.open.expected / figures.open.value) * 100)
-  await expect(tiles.filter({ hasText: /^Expected revenue/ })).toContainText(`${usd(figures.open.expected)}${share}% of the open pipeline`)
+  await expect(tiles.filter({ hasText: /^Expected revenue/ })).toContainText(
+    `${usd(figures.open.expected)}${share}% of the open pipeline`,
+  )
 
   // The summaries in words.
   await expect(page.getByText(`${usd(figures.year.revenue)} won in the last 12 months`)).toBeAttached()
@@ -85,7 +95,9 @@ test('criterion 6: the tiles, each chart’s summary and the funnel match the sa
   const names = ['New', 'Qualified', 'Proposal', 'Negotiation', 'Won']
   for (const [i, step] of figures.funnel.entries()) {
     const share = Math.round((step.value / figures.funnel[0].value) * 100)
-    await expect(funnel.getByRole('listitem').nth(i)).toHaveText(`${names[i]} · ${step.count}${short(step.value)} · ${share}%`)
+    await expect(funnel.getByRole('listitem').nth(i)).toHaveText(
+      `${names[i]} · ${step.count}${short(step.value)} · ${share}%`,
+    )
   }
   const lostValue = figures.lost.reduce((s, d) => s + d.value, 0)
   await expect(funnel).toContainText(`Lost: ${figures.lost.length} deals, ${usd(lostValue)}`)
@@ -101,7 +113,9 @@ test('the follow-ups: overdue first, oldest first, then the rest soonest first',
   await page.goto('/')
   const followUps = panel(page, 'Follow-ups')
   await expect(followUps).toContainText('5 overdue, 6 due in the next 7 days')
-  const badges = await followUps.getByRole('listitem').evaluateAll((items) => items.map((li) => li.lastElementChild!.textContent))
+  const badges = await followUps
+    .getByRole('listitem')
+    .evaluateAll((items) => items.map((li) => li.lastElementChild!.textContent))
   expect(badges).toEqual([
     '9 days overdue',
     '6 days overdue',
@@ -115,7 +129,10 @@ test('the follow-ups: overdue first, oldest first, then the rest soonest first',
     'Due in 5 days',
     'Due in 7 days',
   ])
-  await expect(followUps.getByRole('link', { name: 'Sable Hotels booking engine rollout' })).toHaveAttribute('href', /\/deals\/\d+$/)
+  await expect(followUps.getByRole('link', { name: 'Sable Hotels booking engine rollout' })).toHaveAttribute(
+    'href',
+    /\/deals\/\d+$/,
+  )
 })
 
 test('each chart has its table for screen readers', async ({ page }) => {
@@ -130,7 +147,9 @@ test('each chart has its table for screen readers', async ({ page }) => {
     await expect(table).toBeAttached()
     await expect(table.locator('tbody tr')).toHaveCount(rows)
   }
-  await expect(page.getByRole('table', { name: 'Revenue won by month' }).locator('tbody tr').last()).toContainText('June 2026')
+  await expect(page.getByRole('table', { name: 'Revenue won by month' }).locator('tbody tr').last()).toContainText(
+    'June 2026',
+  )
 })
 
 test('the tiles and the pipeline visual link to the Pipeline', async ({ page }) => {

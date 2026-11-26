@@ -40,8 +40,8 @@ def add(conn: sa.Connection, data: dict) -> dict:
     activity.setdefault("follow_up_date", None)
     activity.setdefault("follow_up_done", False)
     _check(activity)
-    result = conn.execute(activities.insert().values(**activity, created_at=now, updated_at=now))
-    return get(conn, result.inserted_primary_key[0])
+    insert = activities.insert().values(**activity, created_at=now, updated_at=now)
+    return get(conn, conn.execute(insert.returning(activities.c.id)).scalar_one())
 
 
 def change(conn: sa.Connection, activity_id: int, data: dict) -> dict:

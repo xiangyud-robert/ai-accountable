@@ -5,7 +5,15 @@ import sqlalchemy as sa
 
 from backend import db
 from backend.services import deals
-from backend.tables import contacts, deals as deals_table, organizations, stage_changes, status_changes
+from backend.tables import (
+    contacts,
+    organizations,
+    stage_changes,
+    status_changes,
+)
+from backend.tables import (
+    deals as deals_table,
+)
 from backend.tests.conftest import Make
 
 
@@ -23,10 +31,9 @@ def test_transaction_commits_on_success(engine):
 
 
 def test_transaction_rolls_back_everything_on_an_error(engine):
-    with pytest.raises(RuntimeError):
-        with db.transaction(engine) as conn:
-            Make(conn).org(name="Gone")
-            raise RuntimeError("partway")
+    with pytest.raises(RuntimeError), db.transaction(engine) as conn:
+        Make(conn).org(name="Gone")
+        raise RuntimeError("partway")
     with engine.connect() as conn:
         assert conn.execute(sa.select(sa.func.count()).select_from(organizations)).scalar() == 0
 
@@ -41,9 +48,8 @@ def test_a_move_to_won_that_fails_partway_changes_nothing(engine, monkeypatch):
         raise RuntimeError("the contact couldn't be changed")
 
     monkeypatch.setattr(deals.contacts_service, "set_status", broken_set_status)
-    with pytest.raises(RuntimeError):
-        with db.transaction(engine) as conn:
-            deals.move(conn, deal["id"], "won", 0)
+    with pytest.raises(RuntimeError), db.transaction(engine) as conn:
+        deals.move(conn, deal["id"], "won", 0)
 
     with engine.connect() as conn:
         row = conn.execute(sa.select(deals_table).where(deals_table.c.id == deal["id"])).one()

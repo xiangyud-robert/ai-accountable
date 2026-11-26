@@ -92,7 +92,11 @@ class Make:
         return self._add(contacts.add, data)
 
     def deal(self, **fields) -> dict:
-        data = {"name": "Harbor Logistics fleet analytics", "value": 10_000, "close_date": date(2026, 7, 15)}
+        data = {
+            "name": "Harbor Logistics fleet analytics",
+            "value": 10_000,
+            "close_date": date(2026, 7, 15),
+        }
         return self._add(deals.add, {**data, **fields})
 
     def activity(self, **fields) -> dict:

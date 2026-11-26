@@ -1,14 +1,16 @@
 """Pydantic models for every request and response, with the field rules from the data model.
 
-Patch models give every field a default of None and use exclude_unset, so a PATCH changes
-only the fields it sends. A required field sent as null fails its type check.
+Every field of a patch model has a default, and the routers dump the model with exclude_unset,
+so a PATCH changes only the fields it sends. A field that can be emptied defaults to None. One
+that can't defaults to MISSING, so it can be left out, but sent as null it fails its type check.
 """
 
 import re
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Literal, LiteralString
 
 from pydantic import (
+    MISSING,
     AfterValidator,
     BaseModel,
     BeforeValidator,
@@ -24,7 +26,7 @@ ActivityType = Literal["note", "call", "email"]
 
 # The message for each field when its value is missing or the wrong kind. Rules with
 # their own wording raise PydanticCustomError, and main.py uses that message instead.
-MESSAGES = {
+MESSAGES: dict[str, LiteralString] = {
     "name": "Enter a name.",
     "email": "Enter an email address like name@example.com.",
     "website": "Enter a website address, such as example.com.",
@@ -76,7 +78,11 @@ def _check_website(value: str | None) -> str | None:
     elif not WEB_SCHEME.match(value):
         raise PydanticCustomError("accountable", MESSAGES["website"])
     if len(value) > WEBSITE_LENGTH:
-        raise PydanticCustomError("accountable", f"Keep this to {WEBSITE_LENGTH:,} characters or fewer.")
+        raise PydanticCustomError(
+            "accountable",
+            "Keep this to {max_length} characters or fewer.",
+            {"max_length": f"{WEBSITE_LENGTH:,}"},
+        )
     return value
 
 
@@ -87,30 +93,32 @@ def _local_time(value: datetime) -> datetime:
     return value.replace(microsecond=0)
 
 
-def _optional(max_length: int):
-    # The limit goes on the str alone: on the whole union it would also be applied to None.
-    text = Annotated[str, StringConstraints(max_length=max_length)]
-    return Annotated[text | None, BeforeValidator(_blank_to_none)]
+def _required(max_length: int) -> StringConstraints:
+    # Text that must be given. It's trimmed first, so only spaces counts as empty.
+    return StringConstraints(strip_whitespace=True, min_length=1, max_length=max_length)
 
 
-def _required(max_length: int):
-    return Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=max_length)]
+BlankToNone = BeforeValidator(_blank_to_none)
 
-
-OrgName = _required(120)
-ContactName = _required(120)
-DealName = _required(160)
-Description = _required(5000)
-Notes = _optional(5000)
-Industry = _optional(80)
-Phone = _optional(40)
-JobTitle = _optional(120)
-Website = Annotated[str | None, BeforeValidator(_blank_to_none), AfterValidator(_check_website)]
-Email = Annotated[_optional(254), AfterValidator(_check_email)]
+OrgName = Annotated[str, _required(120)]
+ContactName = Annotated[str, _required(120)]
+DealName = Annotated[str, _required(160)]
+Description = Annotated[str, _required(5000)]
+# Optional text's limit goes on the str alone: on the whole union it would apply to None too.
+Notes = Annotated[Annotated[str, StringConstraints(max_length=5000)] | None, BlankToNone]
+Industry = Annotated[Annotated[str, StringConstraints(max_length=80)] | None, BlankToNone]
+Phone = Annotated[Annotated[str, StringConstraints(max_length=40)] | None, BlankToNone]
+JobTitle = Annotated[Annotated[str, StringConstraints(max_length=120)] | None, BlankToNone]
+Email = Annotated[
+    Annotated[str, StringConstraints(max_length=254)] | None,
+    BlankToNone,
+    AfterValidator(_check_email),
+]
+Website = Annotated[str | None, BlankToNone, AfterValidator(_check_website)]
 Money = Annotated[int, Field(ge=0, le=100_000_000)]
 Percent = Annotated[int, Field(ge=0, le=100)]
-OptionalId = Annotated[Annotated[int, Field(le=MAX_ID)] | None, BeforeValidator(_blank_to_none)]
-OptionalDate = Annotated[date | None, BeforeValidator(_blank_to_none)]
+OptionalId = Annotated[Annotated[int, Field(le=MAX_ID)] | None, BlankToNone]
+OptionalDate = Annotated[date | None, BlankToNone]
 LocalTime = Annotated[datetime, AfterValidator(_local_time)]
 
 
@@ -129,7 +137,7 @@ class OrganizationIn(Request):
 
 
 class OrganizationPatch(Request):
-    name: OrgName = None
+    name: OrgName | MISSING = MISSING
     website: Website = None
     industry: Industry = None
     notes: Notes = None
@@ -145,12 +153,12 @@ class ContactIn(Request):
 
 
 class ContactPatch(Request):
-    name: ContactName = None
+    name: ContactName | MISSING = MISSING
     email: Email = None
     phone: Phone = None
     job_title: JobTitle = None
     organization_id: OptionalId = None
-    status: Status = None
+    status: Status | MISSING = MISSING
 
 
 class DealIn(Request):
@@ -164,13 +172,13 @@ class DealIn(Request):
 
 
 class DealPatch(Request):
-    name: DealName = None
+    name: DealName | MISSING = MISSING
     organization_id: OptionalId = None
     contact_id: OptionalId = None
-    stage: StageKey = None
-    value: Money = None
-    probability: Percent = None
-    close_date: date = None
+    stage: StageKey | MISSING = MISSING
+    value: Money | MISSING = MISSING
+    probability: Percent | MISSING = MISSING
+    close_date: date | MISSING = MISSING
 
 
 class DealMove(Request):
@@ -189,11 +197,11 @@ class ActivityIn(Request):
 
 
 class ActivityPatch(Request):
-    type: ActivityType = None
-    description: Description = None
-    occurred_at: LocalTime = None
+    type: ActivityType | MISSING = MISSING
+    description: Description | MISSING = MISSING
+    occurred_at: LocalTime | MISSING = MISSING
     follow_up_date: OptionalDate = None
-    follow_up_done: bool = None
+    follow_up_done: bool | MISSING = MISSING
 
 
 # Responses

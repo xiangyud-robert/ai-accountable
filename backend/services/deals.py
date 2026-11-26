@@ -120,7 +120,9 @@ def _column(conn: sa.Connection, stage: str, leaving_out: int) -> list[int]:
 def _number(conn: sa.Connection, ids: list[int]) -> None:
     if ids:
         conn.execute(
-            deals.update().where(deals.c.id == sa.bindparam("deal_id")).values(position=sa.bindparam("pos")),
+            deals.update()
+            .where(deals.c.id == sa.bindparam("deal_id"))
+            .values(position=sa.bindparam("pos")),
             [{"deal_id": deal_id, "pos": pos} for pos, deal_id in enumerate(ids)],
         )
 
@@ -191,18 +193,16 @@ def add(conn: sa.Connection, data: dict) -> dict:
     if close_date is None and stages.is_open(stage):
         raise Invalid("close_date", "Enter a close date.")
     now = clock.now()
-    result = conn.execute(
-        deals.insert().values(
-            **data,
-            stage=stage,
-            probability=stages.usual_probability(stage),
-            close_date=close_date or clock.today(),
-            position=0,
-            created_at=now,
-            updated_at=now,
-        )
+    insert = deals.insert().values(
+        **data,
+        stage=stage,
+        probability=stages.usual_probability(stage),
+        close_date=close_date or clock.today(),
+        position=0,
+        created_at=now,
+        updated_at=now,
     )
-    deal_id = result.inserted_primary_key[0]
+    deal_id = conn.execute(insert.returning(deals.c.id)).scalar_one()
     change_stage(
         conn, deal_id, stage, probability=probability, close_date=close_date, index=0, added=True
     )

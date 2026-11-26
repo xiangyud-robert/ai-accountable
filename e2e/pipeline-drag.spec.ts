@@ -8,7 +8,8 @@ const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`
 const column = (page: Page, stage: string) => page.getByRole('region', { name: stage, exact: true })
 const card = (page: Page, name: string) => page.locator('[data-deal-id]').filter({ hasText: name })
 const cardsIn = (page: Page, stage: string) => column(page, stage).locator('[data-deal-id]')
-const headerFigure = (page: Page, label: string) => page.getByRole('definition').filter({ has: page.locator(`xpath=preceding-sibling::dt[.="${label}"]`) })
+const headerFigure = (page: Page, label: string) =>
+  page.getByRole('definition').filter({ has: page.locator(`xpath=preceding-sibling::dt[.="${label}"]`) })
 
 /** Waits for a column's cards to finish sliding into place after a drop, so their boxes
  *  are where they'll stay, as someone would before grabbing the next one. */
@@ -22,7 +23,9 @@ async function namesIn(page: Page, stage: string) {
 }
 
 test('criterion 4: drag a card to another column; the figures change before the server answers', async ({ page }) => {
-  const deals: { name: string; stage: string; value: number; probability: number }[] = await (await page.request.get(`${API}/deals`)).json()
+  const deals: { name: string; stage: string; value: number; probability: number }[] = await (
+    await page.request.get(`${API}/deals`)
+  ).json()
   const moving = deals.find((d) => d.name === 'Cobalt Bank fraud analytics pilot')!
   const sum = (stage: string) => deals.filter((d) => d.stage === stage).reduce((s, d) => s + d.value, 0)
   const open = deals.filter((d) => ['new', 'qualified', 'proposal', 'negotiation'].includes(d.stage))
@@ -45,7 +48,9 @@ test('criterion 4: drag a card to another column; the figures change before the 
   await expect(column(page, 'New')).toContainText(usd(sum('new') - moving.value))
   await expect(column(page, 'Proposal')).toContainText(usd(sum('proposal') + moving.value))
   await expect(headerFigure(page, 'Open value')).toHaveText(usd(open.reduce((s, d) => s + d.value, 0)))
-  await expect(headerFigure(page, 'Expected revenue')).toHaveText(usd(expected + (moving.value * (50 - moving.probability)) / 100))
+  await expect(headerFigure(page, 'Expected revenue')).toHaveText(
+    usd(expected + (moving.value * (50 - moving.probability)) / 100),
+  )
   await expect(card(page, moving.name)).toContainText('50%')
 
   const saved = page.waitForResponse('**/api/deals/*/move')

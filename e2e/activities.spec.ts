@@ -65,7 +65,9 @@ test('criterion 5: a call with a follow-up on a deal, also on its main contact�
   await expect(timeline(page).first()).toContainText('Call with Elena about the rollout plan.')
 })
 
-test('criterion 5: a stage change adds "Moved from ... to ..." to the deal’s timeline and recent activity', async ({ page }) => {
+test('criterion 5: a stage change adds "Moved from ... to ..." to the deal’s timeline and recent activity', async ({
+  page,
+}) => {
   await openDeal(page, 'Northwind Health analytics rollout')
   await page.getByRole('button', { name: 'Edit', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit deal' })
@@ -106,7 +108,9 @@ test('criteria 5 and 6: a new follow-up shows on the dashboard, and marking it d
 
   // Marked done from the dashboard, it shows as done in the timeline.
   await openContact(page, 'Kofi Mensah')
-  await expect(entry(page, 'Send Kofi the customs integration brief').getByRole('checkbox', { name: 'Done' })).toBeChecked()
+  await expect(
+    entry(page, 'Send Kofi the customs integration brief').getByRole('checkbox', { name: 'Done' }),
+  ).toBeChecked()
 })
 
 test('a follow-up can be marked done and not done in the timeline', async ({ page }) => {

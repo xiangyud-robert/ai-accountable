@@ -23,7 +23,10 @@ export function RecentActivity({ dashboard }: { dashboard: Dashboard }) {
       ) : (
         groups.map((group) => (
           <section key={group.title} aria-labelledby={`recent-${group.title}`} className="mt-2.5 first:mt-0">
-            <h3 id={`recent-${group.title}`} className="mb-0.5 text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">
+            <h3
+              id={`recent-${group.title}`}
+              className="mb-0.5 text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted"
+            >
               {group.title}
             </h3>
             <ul>
@@ -39,7 +42,9 @@ export function RecentActivity({ dashboard }: { dashboard: Dashboard }) {
                       </Link>
                     </div>
                     <span className="whitespace-nowrap font-mono text-xs text-ink-muted">
-                      {group.title === 'Earlier' ? timelineTime(entry.at, new Date(`${dashboard.today}T12:00:00`)) : clockTime(entry.at)}
+                      {group.title === 'Earlier'
+                        ? timelineTime(entry.at, new Date(`${dashboard.today}T12:00:00`))
+                        : clockTime(entry.at)}
                     </span>
                   </li>
                 )

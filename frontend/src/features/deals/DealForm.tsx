@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useId } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { FormDialog } from '../../components/FormDialog'
 import { Field, Picker, SelectField, TextInput, described } from '../../components/fields'
@@ -21,7 +21,9 @@ const schema = z.object({
   contact_id: z.number().nullable(),
   stage: z.enum(['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost']),
   value: z.string().refine((v) => /^\$?\s*[\d,]+$/.test(v.trim()), 'Enter a value from $0 to $100,000,000.'),
-  probability: z.string().refine((v) => /^\d{1,3}$/.test(v.trim()) && Number(v) <= 100, 'Enter a probability from 0 to 100.'),
+  probability: z
+    .string()
+    .refine((v) => /^\d{1,3}$/.test(v.trim()) && Number(v) <= 100, 'Enter a probability from 0 to 100.'),
   close_date: z.string().min(1, 'Enter a close date.'),
 })
 type Values = z.infer<typeof schema>
@@ -86,12 +88,12 @@ function DealDialog({ open, onOpenChange, deal, defaults, onSaved, stages }: Dea
         close_date: newDealCloseDate(startStage),
       }
 
-  const { register, handleSubmit, setError, control, formState, setValue, getValues, watch } = useForm<Values>({
+  const { register, handleSubmit, setError, control, formState, setValue, getValues } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: initial,
   })
   const error = (field: keyof Values) => formState.errors[field]?.message
-  const stage = stageOf(watch('stage'))
+  const stage = stageOf(useWatch({ control, name: 'stage' }))
 
   // Changing the stage fills in its usual probability, and Won or Lost also fills in
   // today as the close date (R3). Either can still be changed before saving.
@@ -134,7 +136,13 @@ function DealDialog({ open, onOpenChange, deal, defaults, onSaved, stages }: Dea
   })
 
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title={deal ? 'Edit deal' : 'Add deal'} onSubmit={onSubmit} busy={save.isPending}>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={deal ? 'Edit deal' : 'Add deal'}
+      onSubmit={onSubmit}
+      busy={save.isPending}
+    >
       <Field id={`${id}-name`} label="Name" error={error('name')}>
         <TextInput {...described(`${id}-name`, error('name'))} {...register('name')} autoComplete="off" />
       </Field>
@@ -218,7 +226,12 @@ function DealDialog({ open, onOpenChange, deal, defaults, onSaved, stages }: Dea
           />
         </Field>
         <Field id={`${id}-close`} label="Close date" error={error('close_date')}>
-          <TextInput type="date" {...described(`${id}-close`, error('close_date'))} {...register('close_date')} className="font-mono" />
+          <TextInput
+            type="date"
+            {...described(`${id}-close`, error('close_date'))}
+            {...register('close_date')}
+            className="font-mono"
+          />
         </Field>
       </div>
     </FormDialog>

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useId, useRef } from 'react'
+import { useId, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Button } from '../../components/Button'
@@ -25,15 +25,15 @@ export function LogActivityForm({ on }: { on: { contact_id: number } | { deal_id
   const id = useId()
   const log = useLogActivity()
   // "When" starts as the time the form appeared. Left as it is, it's the time of saving.
-  const start = useRef(blank())
+  const [start, setStart] = useState(blank)
   const { register, handleSubmit, setError, control, formState, reset } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: start.current,
+    defaultValues: start,
   })
   const error = (field: keyof Values) => formState.errors[field]?.message
 
   const onSubmit = handleSubmit(async (values) => {
-    const when = values.occurred_at === start.current.occurred_at ? localMinute() : values.occurred_at
+    const when = values.occurred_at === start.occurred_at ? localMinute() : values.occurred_at
     try {
       await log.mutateAsync({
         ...on,
@@ -43,30 +43,52 @@ export function LogActivityForm({ on }: { on: { contact_id: number } | { deal_id
         follow_up_date: values.follow_up_date || null,
       })
       notify.done('Activity logged')
-      start.current = blank()
-      reset(start.current)
+      const next = blank()
+      setStart(next)
+      reset(next)
     } catch (e) {
       showSaveError(e, setError, [...ORDER])
     }
   })
 
   return (
-    <form noValidate onSubmit={onSubmit} aria-label="Log activity" className="flex flex-col gap-3 rounded-card bg-page p-4">
+    <form
+      noValidate
+      onSubmit={onSubmit}
+      aria-label="Log activity"
+      className="flex flex-col gap-3 rounded-card bg-page p-4"
+    >
       <div className="grid grid-cols-[140px_1fr_1fr] gap-3">
         <Field id={`${id}-type`} label="Type" error={error('type')}>
           <Controller
             control={control}
             name="type"
             render={({ field }) => (
-              <SelectField ref={field.ref} id={`${id}-type`} value={field.value} onChange={field.onChange} options={ACTIVITY_TYPES} />
+              <SelectField
+                ref={field.ref}
+                id={`${id}-type`}
+                value={field.value}
+                onChange={field.onChange}
+                options={ACTIVITY_TYPES}
+              />
             )}
           />
         </Field>
         <Field id={`${id}-when`} label="When" error={error('occurred_at')}>
-          <TextInput type="datetime-local" {...described(`${id}-when`, error('occurred_at'))} {...register('occurred_at')} className="font-mono" />
+          <TextInput
+            type="datetime-local"
+            {...described(`${id}-when`, error('occurred_at'))}
+            {...register('occurred_at')}
+            className="font-mono"
+          />
         </Field>
         <Field id={`${id}-follow`} label="Follow-up date" optional error={error('follow_up_date')}>
-          <TextInput type="date" {...described(`${id}-follow`, error('follow_up_date'))} {...register('follow_up_date')} className="font-mono" />
+          <TextInput
+            type="date"
+            {...described(`${id}-follow`, error('follow_up_date'))}
+            {...register('follow_up_date')}
+            className="font-mono"
+          />
         </Field>
       </div>
       <Field id={`${id}-description`} label="Description" error={error('description')}>

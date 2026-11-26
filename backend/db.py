@@ -1,6 +1,6 @@
 """The database engine, one transaction per request, and migrations."""
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -8,6 +8,7 @@ import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
+from sqlalchemy import event
 
 from backend import settings
 
@@ -30,12 +31,12 @@ def make_engine(url: str | None = None) -> sa.Engine:
         database = engine.url.database
         if database and database != ":memory:":
             Path(database).parent.mkdir(parents=True, exist_ok=True)
-        sa.event.listen(engine, "connect", _sqlite_pragmas)
+        event.listen(engine, "connect", _sqlite_pragmas)
     return engine
 
 
 @contextmanager
-def transaction(engine: sa.Engine) -> Iterator[sa.Connection]:
+def transaction(engine: sa.Engine) -> Generator[sa.Connection]:
     """Commits when the block ends normally, and rolls back everything on an error."""
     with engine.begin() as conn:
         yield conn
@@ -49,7 +50,7 @@ def alembic_config(connection: sa.Connection | None = None) -> Config:
 
 
 @contextmanager
-def foreign_keys_off(conn: sa.Connection) -> Iterator[None]:
+def foreign_keys_off(conn: sa.Connection) -> Generator[None]:
     """For migrating, from the app or the command line. Batch migrations rebuild a table by
     copying it and dropping the old one. With SQLite's foreign keys on, that drop would
     cascade, so they're off until the migration is committed, and on again after."""

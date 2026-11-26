@@ -82,7 +82,9 @@ export function putBack(deals: DealRow[], before: DealRow[], stages: Stage[], id
   if (!old) return deals
   const index = columnOf(before, old.stage).findIndex((d) => d.id === id)
   // moveDeal gives the new stage's usual probability, so the deal's own figures come back after.
-  return moveDeal(deals, stages, id, old.stage, index, today).map((d) => (d.id === id ? { ...old, position: d.position } : d))
+  return moveDeal(deals, stages, id, old.stage, index, today).map((d) =>
+    d.id === id ? { ...old, position: d.position } : d,
+  )
 }
 
 /** Each stage's column with its figures. Expected revenue counts open deals only (R2). */

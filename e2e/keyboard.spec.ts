@@ -18,7 +18,9 @@ async function expectFocusRing(target: Locator) {
   await expect(target).toHaveCSS('outline-offset', '2px')
 }
 
-test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an activity, by keyboard only', async ({ page }) => {
+test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an activity, by keyboard only', async ({
+  page,
+}) => {
   await page.goto('/')
   await page.keyboard.press('Tab')
   const skip = page.getByRole('link', { name: 'Skip to content' })
@@ -85,7 +87,9 @@ test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an 
   await page.keyboard.type('Called about the autumn term.')
   await tabTo(page, form.getByRole('button', { name: 'Log activity' }))
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('list', { name: 'Timeline' }).getByRole('listitem').first()).toContainText('Called about the autumn term.')
+  await expect(page.getByRole('list', { name: 'Timeline' }).getByRole('listitem').first()).toContainText(
+    'Called about the autumn term.',
+  )
 })
 
 test('a delete question by keyboard: Cancel has focus, and focus goes back after', async ({ page }) => {
@@ -118,7 +122,9 @@ test('a picker can be searched and chosen from by keyboard', async ({ page }) =>
   await expect(contact).toBeFocused()
 })
 
-test('an activity’s menu by keyboard: its items show the focus ring, and focus goes back to its button', async ({ page }) => {
+test('an activity’s menu by keyboard: its items show the focus ring, and focus goes back to its button', async ({
+  page,
+}) => {
   await page.goto('/deals/16')
   const actions = page.getByRole('button', { name: /^Actions for this/ }).first()
   await tabTo(page, actions)

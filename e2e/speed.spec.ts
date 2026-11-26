@@ -21,11 +21,37 @@ test.describe(() => {
   // reloaded once the browser has the app's files. A brand-new browser fetching every file
   // from the dev server for the first time is the dev server starting up, not the screen.
   for (const [name, path, link, ready] of [
-    ['organizations', '/organizations', 'Organizations', (page: Page) => expect(page.getByRole('table', { name: 'Organizations' }).locator('tbody tr').nth(500)).toBeAttached()],
-    ['contacts', '/contacts', 'Contacts', (page: Page) => expect(page.getByRole('table', { name: 'Contacts' }).locator('tbody tr').nth(500)).toBeAttached()],
-    ['deals', '/deals', 'Deals', (page: Page) => expect(page.getByRole('table', { name: 'Deals' }).locator('tbody tr').nth(500)).toBeAttached()],
-    ['pipeline', '/pipeline', 'Pipeline', (page: Page) => expect(page.locator('[data-deal-id]').nth(544)).toBeAttached()],
-    ['dashboard', '/', 'Dashboard', (page: Page) => expect(page.getByRole('region', { name: 'Follow-ups' })).toBeVisible()],
+    [
+      'organizations',
+      '/organizations',
+      'Organizations',
+      (page: Page) =>
+        expect(page.getByRole('table', { name: 'Organizations' }).locator('tbody tr').nth(500)).toBeAttached(),
+    ],
+    [
+      'contacts',
+      '/contacts',
+      'Contacts',
+      (page: Page) => expect(page.getByRole('table', { name: 'Contacts' }).locator('tbody tr').nth(500)).toBeAttached(),
+    ],
+    [
+      'deals',
+      '/deals',
+      'Deals',
+      (page: Page) => expect(page.getByRole('table', { name: 'Deals' }).locator('tbody tr').nth(500)).toBeAttached(),
+    ],
+    [
+      'pipeline',
+      '/pipeline',
+      'Pipeline',
+      (page: Page) => expect(page.locator('[data-deal-id]').nth(544)).toBeAttached(),
+    ],
+    [
+      'dashboard',
+      '/',
+      'Dashboard',
+      (page: Page) => expect(page.getByRole('region', { name: 'Follow-ups' })).toBeVisible(),
+    ],
   ] as const) {
     test(`the ${name} screen shows its data within a second`, async ({ page }) => {
       await page.goto(path)
@@ -37,7 +63,10 @@ test.describe(() => {
         () => ready(page),
       )
       expect(fromSidebar).toBeLessThan(1000)
-      const reloaded = await timed(() => page.reload(), () => ready(page))
+      const reloaded = await timed(
+        () => page.reload(),
+        () => ready(page),
+      )
       expect(reloaded).toBeLessThan(1000)
     })
   }

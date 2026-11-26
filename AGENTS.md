@@ -12,9 +12,16 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 
 Update `docs/STATUS.md` when you finish a piece of work
 
+## Checks
+
+- `npm run check` runs every check: gitleaks over the git history and the files, Prettier and ESLint for the frontend, ruff format and ruff check for the backend, tsc and ty, and `npm test`. It runs them all even if one fails, prints a summary, and exits with 1 if any failed.
+- Run `npm run check` before calling a piece of work done, and fix every failure first. Don't skip, delete or loosen a test, and don't weaken a rule with a disable comment, a config change or a coverage exclusion. If a rule doesn't suit the code, ask first.
+- `npm run check:quick` is the same without the end-to-end tests, for quick feedback while working. `npm run format` fixes the formatting.
+- ESLint and ruff allow a cyclomatic complexity of at most 15 per function.
+
 ## Tests
 
 - `npm test` runs every test: the frontend unit tests (Vitest), the backend tests (pytest) and the end-to-end tests in Chrome (Playwright). It runs all three even if one fails, prints a summary, and exits with 1 if any test failed.
-- Run `npm test` before calling a piece of work done, and fix every failure first. Don't skip, delete or loosen a test to get it passing.
+- The unit tests fail if their coverage is under 80% (statements, branches, functions and lines for Vitest; lines and branches together for pytest).
 - A test left with `.only` fails the run, because it would skip every other test.
 - It uses its own database and ports (8100 and 5273), so it never changes your data and works while `npm run dev` is running.

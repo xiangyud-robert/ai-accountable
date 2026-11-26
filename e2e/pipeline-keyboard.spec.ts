@@ -1,7 +1,8 @@
 import { type Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 
-const cardsIn = (page: Page, stage: string) => page.getByRole('region', { name: stage, exact: true }).locator('[data-deal-id]')
+const cardsIn = (page: Page, stage: string) =>
+  page.getByRole('region', { name: stage, exact: true }).locator('[data-deal-id]')
 const live = (page: Page) => page.getByTestId('pipeline-announcements')
 
 async function namesIn(page: Page, stage: string) {
@@ -9,7 +10,9 @@ async function namesIn(page: Page, stage: string) {
   return cardsIn(page, stage).evaluateAll((cards) => cards.map((c) => c.querySelector('p.font-semibold')!.textContent))
 }
 
-test('criterion 8: move a card to another column and position with the keyboard only, and it stays there', async ({ page }) => {
+test('criterion 8: move a card to another column and position with the keyboard only, and it stays there', async ({
+  page,
+}) => {
   await page.goto('/pipeline')
   const qualified = await namesIn(page, 'Qualified')
   const proposal = await namesIn(page, 'Proposal')

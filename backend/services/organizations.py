@@ -60,8 +60,8 @@ def exists(conn: sa.Connection, organization_id: int) -> bool:
 
 def add(conn: sa.Connection, data: dict) -> dict:
     now = clock.now()
-    result = conn.execute(organizations.insert().values(**data, created_at=now, updated_at=now))
-    return get_row(conn, result.inserted_primary_key[0])
+    insert = organizations.insert().values(**data, created_at=now, updated_at=now)
+    return get_row(conn, conn.execute(insert.returning(organizations.c.id)).scalar_one())
 
 
 def change(conn: sa.Connection, organization_id: int, data: dict) -> dict:

@@ -32,34 +32,39 @@ export function Column({ figures, ids, onAdd, children }: ColumnProps) {
           smaller total, so the stage's name and its figures still fit. */}
       <div className="@container rounded-column bg-panel shadow-panel">
         <div className="py-3 pl-2.5 pr-2 @[130px]:pl-3.5 @[130px]:pr-3">
-        <div className="flex items-center gap-1.5 @[130px]:gap-2">
-          <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: stageColor(stage.key) }} />
-          <h2 id={`column-${stage.key}`} className="truncate font-semibold">
-            {stage.name}
-          </h2>
-          <span className="font-mono text-xs text-ink-muted">{count}</span>
-          <IconButton label={`Add deal in ${stage.name}`} tooltip="Add deal" onClick={onAdd} className="ml-auto size-[26px] bg-page text-ink">
-            <Plus aria-hidden size={15} />
-          </IconButton>
-        </div>
-        <p className="mt-1.5 font-mono text-[14px] font-medium @[130px]:text-[17px]">{money(value)}</p>
-        {stage.open ? (
-          <>
-            <p className="text-xs text-ink-muted">
-              <span className="font-mono font-medium text-ink">{money(expected)}</span> expected
-            </p>
-            <div
-              title="Expected share of the value"
-              aria-hidden
-              className="mt-2.5 h-1 overflow-hidden rounded"
-              style={{ background: stageTint(stage.key) }}
+          <div className="flex items-center gap-1.5 @[130px]:gap-2">
+            <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: stageColor(stage.key) }} />
+            <h2 id={`column-${stage.key}`} className="truncate font-semibold">
+              {stage.name}
+            </h2>
+            <span className="font-mono text-xs text-ink-muted">{count}</span>
+            <IconButton
+              label={`Add deal in ${stage.name}`}
+              tooltip="Add deal"
+              onClick={onAdd}
+              className="ml-auto size-[26px] bg-page text-ink"
             >
-              <div className="h-full rounded-r" style={{ width: `${share}%`, background: stageColor(stage.key) }} />
-            </div>
-          </>
-        ) : (
-          <p className="text-xs text-ink-muted">{stage.key === 'won' ? 'Won, all time' : 'Lost, all time'}</p>
-        )}
+              <Plus aria-hidden size={15} />
+            </IconButton>
+          </div>
+          <p className="mt-1.5 font-mono text-[14px] font-medium @[130px]:text-[17px]">{money(value)}</p>
+          {stage.open ? (
+            <>
+              <p className="text-xs text-ink-muted">
+                <span className="font-mono font-medium text-ink">{money(expected)}</span> expected
+              </p>
+              <div
+                title="Expected share of the value"
+                aria-hidden
+                className="mt-2.5 h-1 overflow-hidden rounded"
+                style={{ background: stageTint(stage.key) }}
+              >
+                <div className="h-full rounded-r" style={{ width: `${share}%`, background: stageColor(stage.key) }} />
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-ink-muted">{stage.key === 'won' ? 'Won, all time' : 'Lost, all time'}</p>
+          )}
         </div>
       </div>
       <div

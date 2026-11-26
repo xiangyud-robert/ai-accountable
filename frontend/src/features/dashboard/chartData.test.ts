@@ -31,8 +31,30 @@ const DASHBOARD: Dashboard = {
   ],
   lost: { count: 5, value: 268_000 },
   follow_ups: [
-    { id: 1, type: 'call', description: 'Chase', follow_up_date: '2026-06-06', days: -9, overdue: true, contact_id: null, contact_name: null, deal_id: 3, deal_name: 'Sable' },
-    { id: 2, type: 'email', description: 'Send', follow_up_date: '2026-06-16', days: 1, overdue: false, contact_id: 4, contact_name: 'Grace', deal_id: null, deal_name: null },
+    {
+      id: 1,
+      type: 'call',
+      description: 'Chase',
+      follow_up_date: '2026-06-06',
+      days: -9,
+      overdue: true,
+      contact_id: null,
+      contact_name: null,
+      deal_id: 3,
+      deal_name: 'Sable',
+    },
+    {
+      id: 2,
+      type: 'email',
+      description: 'Send',
+      follow_up_date: '2026-06-16',
+      days: 1,
+      overdue: false,
+      contact_id: 4,
+      contact_name: 'Grace',
+      deal_id: null,
+      deal_name: null,
+    },
   ],
   recent: [],
 }
@@ -71,7 +93,10 @@ describe('chart data', () => {
       ['Proposal', 245_500, 132_250, 113_250],
       ['Negotiation', 259_000, 197_175, 61_825],
     ])
-    expect(bars[3]).toMatchObject({ color: 'var(--color-stage-negotiation)', tint: 'var(--color-stage-negotiation-tint)' })
+    expect(bars[3]).toMatchObject({
+      color: 'var(--color-stage-negotiation)',
+      tint: 'var(--color-stage-negotiation-tint)',
+    })
   })
 
   test('the summaries in words', () => {

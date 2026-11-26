@@ -1,0 +1,4 @@
+# gitleaks' own rules, with no exceptions. gitleaks reads this file by itself, so the scan of
+# the git history uses it, and a committed .env fails.
+[extend]
+useDefault = true

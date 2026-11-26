@@ -52,7 +52,10 @@ const collisions: CollisionDetection = (args) => {
  * column. Either way it lands between them. Above the first card it's the first, and below
  * the last there's none, so the column takes it.
  */
-function cardBesideGap(args: Parameters<CollisionDetection>[0], cards: DroppableContainer[]): DroppableContainer | null {
+function cardBesideGap(
+  args: Parameters<CollisionDetection>[0],
+  cards: DroppableContainer[],
+): DroppableContainer | null {
   const y = args.pointerCoordinates?.y
   if (y === undefined) return null
   const placed = cards
@@ -89,12 +92,8 @@ export function Board({ deals, stages, onAdd, announcement }: BoardProps) {
     today,
     onDrop: (id, place) => move({ id, ...place }),
     onOpen: open,
+    announce: announcement,
   })
-  const lastAnnouncement = useRef('')
-  if (keyboard.announcement !== lastAnnouncement.current) {
-    lastAnnouncement.current = keyboard.announcement
-    queueMicrotask(() => announcement(keyboard.announcement))
-  }
 
   // While a card is dragged over another column, it's shown there as a tinted space.
   const [drag, setDrag] = useState<Place | null>(null)
@@ -121,7 +120,9 @@ export function Board({ deals, stages, onAdd, announcement }: BoardProps) {
 
   const onDragOver = ({ active, over }: DragOverEvent) => {
     if (!drag || !over) return
-    const overStage = isColumn(over.id) ? (over.data.current?.stage as StageKey) : shown.find((d) => d.id === over.id)?.stage
+    const overStage = isColumn(over.id)
+      ? (over.data.current?.stage as StageKey)
+      : shown.find((d) => d.id === over.id)?.stage
     if (!overStage || overStage === drag.stage) return
     // Into another column: next to the card under the pointer, or below the last one.
     const target = columnOf(shown, overStage)
@@ -174,7 +175,12 @@ export function Board({ deals, stages, onAdd, announcement }: BoardProps) {
     >
       <div className="flex h-[calc(100vh-112px)] min-h-[420px] gap-3 overflow-x-auto pb-1">
         {columns.map((column, i) => (
-          <Column key={column.stage.key} figures={figures[i]} ids={column.deals.map((d) => d.id)} onAdd={() => onAdd(column.stage.key)}>
+          <Column
+            key={column.stage.key}
+            figures={figures[i]}
+            ids={column.deals.map((d) => d.id)}
+            onAdd={() => onAdd(column.stage.key)}
+          >
             {column.deals.map((deal) => (
               <SortableCard
                 key={deal.id}
@@ -219,6 +225,9 @@ const SortableCard = memo(function SortableCard({ deal, compact, lifted, onKeyDo
       className={look.className}
       style={{ ...look.style, transform: CSS.Translate.toString(transform), transition }}
       {...attributes}
+      // The same role and tab stop dnd-kit's attributes give it, written out so the lint sees them.
+      role="button"
+      tabIndex={0}
       {...listeners}
       onKeyDown={(event) => onKeyDown(deal, event)}
       onClick={() => onOpen(deal)}

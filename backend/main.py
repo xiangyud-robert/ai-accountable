@@ -63,13 +63,21 @@ async def _not_found(_request: Request, exc: NotFound) -> JSONResponse:
 
 def create_app() -> FastAPI:
     # The API is everything there is: no /docs, /redoc or /openapi.json.
-    app = FastAPI(title="Accountable", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(
+        title="Accountable",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+        exception_handlers={
+            RequestValidationError: _validation_error,
+            Invalid: _invalid,
+            NotFound: _not_found,
+        },
+    )
     # Only requests addressed to this computer, so a web page that points its own name at
     # 127.0.0.1 (DNS rebinding) can't use the API.
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
-    app.add_exception_handler(RequestValidationError, _validation_error)
-    app.add_exception_handler(Invalid, _invalid)
-    app.add_exception_handler(NotFound, _not_found)
     for module in (stages, organizations, contacts, deals, activities, dashboard):
         app.include_router(module.router)
     return app

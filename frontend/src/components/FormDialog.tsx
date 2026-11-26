@@ -15,7 +15,15 @@ type FormDialogProps = {
 
 /** A form in a 520px dialog over the overlay. Focus stays inside, Escape closes it, and
  *  focus goes back to whatever opened it. */
-export function FormDialog({ open, onOpenChange, title, onSubmit, submitLabel = 'Save', busy, children }: FormDialogProps) {
+export function FormDialog({
+  open,
+  onOpenChange,
+  title,
+  onSubmit,
+  submitLabel = 'Save',
+  busy,
+  children,
+}: FormDialogProps) {
   const returnFocus = useReturnFocus(open)
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

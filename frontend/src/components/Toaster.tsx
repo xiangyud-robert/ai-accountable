@@ -18,6 +18,5 @@ export function Toaster() {
 export const notify = {
   /** A short message confirming a save or delete, such as "Deal saved". */
   done: (message: string) => toast(message),
-  failed: (message: string) =>
-    toast(message, { icon: <span aria-hidden className="size-2 rounded-full bg-alert" /> }),
+  failed: (message: string) => toast(message, { icon: <span aria-hidden className="size-2 rounded-full bg-alert" /> }),
 }

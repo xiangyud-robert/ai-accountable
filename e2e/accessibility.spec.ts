@@ -50,14 +50,20 @@ test('axe finds no problems in a delete question', async ({ page }) => {
 
 test('axe finds no problems in the activity dialog, and with a picker open', async ({ page }) => {
   await page.goto('/deals/16')
-  await page.getByRole('button', { name: /^Actions for this/ }).first().click()
+  await page
+    .getByRole('button', { name: /^Actions for this/ })
+    .first()
+    .click()
   await page.getByRole('menuitem', { name: 'Edit' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expectNoAxeProblems(page)
 
   await page.goto('/deals')
   await page.getByRole('button', { name: 'Add deal' }).click()
-  await page.getByRole('dialog').getByRole('combobox', { name: /^Organization/ }).click()
+  await page
+    .getByRole('dialog')
+    .getByRole('combobox', { name: /^Organization/ })
+    .click()
   await expect(page.locator('[cmdk-input]')).toBeFocused()
   await expectNoAxeProblems(page)
 })

@@ -1,3 +1,4 @@
+import itertools
 from collections import Counter
 from datetime import date, datetime, timedelta
 
@@ -28,9 +29,18 @@ def test_the_counts_by_kind(rows):
 
 def test_the_counts_by_stage_and_status(rows):
     assert Counter(d["stage"] for d in rows["deals"]) == {
-        "new": 5, "qualified": 5, "proposal": 5, "negotiation": 4, "won": 20, "lost": 6,
+        "new": 5,
+        "qualified": 5,
+        "proposal": 5,
+        "negotiation": 4,
+        "won": 20,
+        "lost": 6,
     }
-    assert Counter(c["status"] for c in rows["contacts"]) == {"lead": 16, "qualified": 10, "customer": 14}
+    assert Counter(c["status"] for c in rows["contacts"]) == {
+        "lead": 16,
+        "qualified": 10,
+        "customer": 14,
+    }
 
 
 def test_two_organizations_have_no_deals_and_two_contacts_no_organization(rows):
@@ -59,9 +69,12 @@ def test_the_follow_up_spread(rows):
     follow_ups = [a for a in rows["activities"] if a["follow_up_date"] is not None]
     week = TODAY + timedelta(days=7)
     spread = Counter(
-        "done" if a["follow_up_done"]
-        else "overdue" if a["follow_up_date"] < TODAY
-        else "soon" if a["follow_up_date"] <= week
+        "done"
+        if a["follow_up_done"]
+        else "overdue"
+        if a["follow_up_date"] < TODAY
+        else "soon"
+        if a["follow_up_date"] <= week
         else "later"
         for a in follow_ups
     )
@@ -100,13 +113,19 @@ def test_wins_cover_10_months_whatever_the_date():
     for offset in range(0, 366, 7):
         today = date(2026, 1, 1) + timedelta(days=offset)
         months = set(dashboard.last_12_months(today))
-        won = {f"{d['close_date']:%Y-%m}" for d in seed.build(today)["deals"] if d["stage"] == "won"}
+        won = {
+            f"{d['close_date']:%Y-%m}" for d in seed.build(today)["deals"] if d["stage"] == "won"
+        }
         assert len(months & won) >= 10, today
 
 
 def test_losses_from_at_least_three_stages(rows):
     lost_ids = {d["id"] for d in rows["deals"] if d["stage"] == "lost"}
-    lost_from = {c["from_stage"] for c in rows["stage_changes"] if c["deal_id"] in lost_ids and c["to_stage"] == "lost"}
+    lost_from = {
+        c["from_stage"]
+        for c in rows["stage_changes"]
+        if c["deal_id"] in lost_ids and c["to_stage"] == "lost"
+    }
     assert len(lost_from) >= 3
 
 
@@ -118,12 +137,18 @@ def test_every_main_contact_of_a_won_deal_is_a_customer(rows):
 
 
 def test_each_customer_became_one_on_their_first_win(rows):
-    won_at = {c["deal_id"]: c["changed_at"] for c in rows["stage_changes"] if c["to_stage"] == "won"}
+    won_at = {
+        c["deal_id"]: c["changed_at"] for c in rows["stage_changes"] if c["to_stage"] == "won"
+    }
     customers = {c["id"] for c in rows["contacts"] if c["status"] == "customer"}
     assert {s["contact_id"] for s in rows["status_changes"]} == customers
     for change in rows["status_changes"]:
-        wins = [d["id"] for d in rows["deals"] if d["contact_id"] == change["contact_id"] and d["stage"] == "won"]
-        assert change["won_deal_id"] == min(wins, key=won_at.get)
+        wins = [
+            d["id"]
+            for d in rows["deals"]
+            if d["contact_id"] == change["contact_id"] and d["stage"] == "won"
+        ]
+        assert change["won_deal_id"] == min(wins, key=lambda deal_id: won_at[deal_id])
         assert change["changed_at"] == won_at[change["won_deal_id"]]
 
 
@@ -133,7 +158,7 @@ def test_stage_histories_fit_each_deal(rows):
         history = [c for c in rows["stage_changes"] if c["deal_id"] == deal["id"]]
         assert history[0]["from_stage"] is None
         assert history[-1]["to_stage"] == deal["stage"]
-        for before, after in zip(history, history[1:]):
+        for before, after in itertools.pairwise(history):
             assert after["from_stage"] == before["to_stage"]
             assert after["changed_at"] > before["changed_at"]
         assert history[-1]["changed_at"] <= now
@@ -183,7 +208,12 @@ def test_this_morning_is_never_later_than_now(monkeypatch, conn):
 
 def test_large_adds_500_of_each_kind():
     counts = {name: len(table) for name, table in seed.build(TODAY, large=True).items()}
-    assert (counts["organizations"], counts["contacts"], counts["deals"], counts["activities"]) == (515, 540, 545, 600)
+    assert (counts["organizations"], counts["contacts"], counts["deals"], counts["activities"]) == (
+        515,
+        540,
+        545,
+        600,
+    )
 
 
 def test_names_are_unique(rows):

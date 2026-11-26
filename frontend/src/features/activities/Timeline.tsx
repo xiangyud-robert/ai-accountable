@@ -29,7 +29,11 @@ export function entryIcon(entry: TimelineEntry): { Icon: LucideIcon; tint: strin
 /** A 30px round icon on a tint. */
 export function KindIcon({ icon: Icon, tint }: { icon: LucideIcon; tint: string }) {
   return (
-    <span aria-hidden className="grid size-[30px] shrink-0 place-items-center rounded-full text-ink" style={{ background: tint }}>
+    <span
+      aria-hidden
+      className="grid size-[30px] shrink-0 place-items-center rounded-full text-ink"
+      style={{ background: tint }}
+    >
       <Icon size={15} />
     </span>
   )
@@ -89,7 +93,9 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-3">
           <p className="min-w-0 flex-1 whitespace-pre-line font-medium">{entry.text}</p>
-          <span className="shrink-0 whitespace-nowrap pt-0.5 font-mono text-xs text-ink-muted">{timelineTime(entry.at)}</span>
+          <span className="shrink-0 whitespace-nowrap pt-0.5 font-mono text-xs text-ink-muted">
+            {timelineTime(entry.at)}
+          </span>
           {isActivity && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
@@ -98,7 +104,11 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
                 </IconButton>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content align="end" sideOffset={4} className="z-50 min-w-32 rounded-card bg-panel p-1 shadow-lift">
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={4}
+                  className="z-50 min-w-32 rounded-card bg-panel p-1 shadow-lift"
+                >
                   <DropdownMenu.Item
                     onSelect={() => setEditing(true)}
                     className="flex h-8 cursor-pointer items-center rounded-control px-2.5 text-sm data-[highlighted]:bg-page"

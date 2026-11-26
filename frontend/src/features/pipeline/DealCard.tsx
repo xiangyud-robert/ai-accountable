@@ -1,5 +1,5 @@
 import { Calendar } from 'lucide-react'
-import { memo, type CSSProperties, type HTMLAttributes, type KeyboardEventHandler, type MouseEventHandler, type Ref } from 'react'
+import { memo, type CSSProperties } from 'react'
 import { LateBadge } from '../../components/Badge'
 import { initials, money, percent, shortDate } from '../../lib/format'
 import { stageTint } from '../../lib/stages'
@@ -11,13 +11,7 @@ type DealCardProps = {
   compact: boolean
   /** Picked up with the keyboard, or shown under the pointer while dragging. */
   lifted?: boolean
-  /** The place a dragged card will land: a tinted space. */
-  placeholder?: boolean
-  ref?: Ref<HTMLDivElement>
-  style?: CSSProperties
-  onKeyDown?: KeyboardEventHandler
-  onClick?: MouseEventHandler
-} & Omit<HTMLAttributes<HTMLDivElement>, 'onKeyDown' | 'onClick' | 'style'>
+}
 
 /** The card's own look: its padding, surface and shadow. */
 export function cardLook(deal: DealRow, compact: boolean, lifted: boolean, placeholder: boolean) {
@@ -29,19 +23,12 @@ export function cardLook(deal: DealRow, compact: boolean, lifted: boolean, place
   }
 }
 
-/** A deal on the pipeline, as shown under the pointer while it's dragged. */
-export function DealCard({ deal, compact, lifted = false, placeholder = false, ref, style, onKeyDown, onClick, ...attributes }: DealCardProps) {
-  const look = cardLook(deal, compact, lifted, placeholder)
+/** A deal on the pipeline, as shown under the pointer while it's dragged. It's only a
+ *  picture: the card in its column is the one that takes the keyboard and the pointer. */
+export function DealCard({ deal, compact, lifted = false }: DealCardProps) {
+  const look = cardLook(deal, compact, lifted, false)
   return (
-    <div
-      ref={ref}
-      data-deal-id={deal.id}
-      style={{ ...look.style, ...style }}
-      onKeyDown={onKeyDown}
-      onClick={onClick}
-      className={look.className}
-      {...attributes}
-    >
+    <div data-deal-id={deal.id} style={look.style} className={look.className}>
       <CardContent deal={deal} compact={compact} />
     </div>
   )
@@ -95,7 +82,9 @@ export const CardContent = memo(function CardContent({ deal, compact }: { deal: 
             <span className="font-mono text-[15px] font-medium">{money(deal.value)}</span>
             <span className="font-mono text-xs text-ink-muted">{percent(deal.probability)}</span>
           </div>
-          <p className={`mt-1 flex items-center gap-1.5 font-mono text-xs ${deal.late ? 'text-alert-text' : 'text-ink-muted'}`}>
+          <p
+            className={`mt-1 flex items-center gap-1.5 font-mono text-xs ${deal.late ? 'text-alert-text' : 'text-ink-muted'}`}
+          >
             <Calendar aria-hidden size={12} />
             {shortDate(deal.close_date)}
           </p>

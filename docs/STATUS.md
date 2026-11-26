@@ -17,7 +17,9 @@ Open a new terminal after installing, so it finds both.
 Run these in the repo's folder.
 
 - `npm run dev` starts Accountable and prints the address to open in Chrome: http://localhost:5173. The first run installs the npm and Python packages (and Python 3.12 if needed), which needs the internet and takes a few minutes. Ctrl+C stops it.
-- `npm test` runs the frontend, backend and end-to-end tests, and fails if any test fails. It uses its own database and ports (8100 and 5273), so it works while the app is open.
+- `npm test` runs the frontend, backend and end-to-end tests, and fails if any test fails or unit test coverage is under 80%. It uses its own database and ports (8100 and 5273), so it works while the app is open.
+- `npm run check` runs gitleaks, Prettier, ESLint, ruff format, ruff check, tsc, ty and `npm test`, and fails if any of them fails. `npm run check:quick` is the same without the end-to-end tests. It needs gitleaks, installed once with `brew install gitleaks` on a Mac or `winget install -e --id Gitleaks.Gitleaks` on Windows.
+- `npm run format` fixes the formatting, with Prettier for the frontend and ruff format for the backend.
 - `npm run seed` replaces all the data with fresh sample data, dated from today. If the app is open, refresh the page to see it. `npm run seed -- --large` adds 500 of each kind of record, for checking speed.
 
 The data lives in `data/accountable.db`, which git ignores. Deleting that file also resets to the sample data on the next start. Set `DATABASE_URL` to use another database.
@@ -84,6 +86,12 @@ Spec and plan:
 
 - The docs are reorganized for future changes. `docs/spec.md` now describes the whole product as it stands, starting with the problem it solves, and doesn't rely on the intent. The MVP's intent and plan moved to `docs/changes/mvp/`. Each later change gets its own folder there, named after its branch. `AGENTS.md` says to read the spec first and only the current branch's folder. `docs/REVIEW.md` now flags code that the spec doesn't describe.
 - Coding standards: `docs/STANDARDS.md` says how code is written here. `AGENTS.md` points to it, and `docs/REVIEW.md` has a pass that checks each change against it.
+- `npm run check` (Nov 25, 2026), listed in `docs/TECH_STACK.md`, and run by `scripts/check.mjs` from the steps in `scripts/steps.mjs`. It passes: 374 Vitest tests (99.6% statements, 97.4% branches, 100% functions, 99.9% lines), 180 pytest tests (96%) and 74 end-to-end tests. Each check was also shown to fail on a planted problem. What the checks found was fixed without disabling any rule:
+  - ESLint: React Hooks' ref rules (`returnFocus.ts` now notes the opener in a layout effect, `useKeyboardMove.ts` copies the latest values in one and calls `announce` from its key handler, `LogActivityForm.tsx` keeps its start values in state), `useWatch` instead of react-hook-form's `watch()`, `ContactDialog` and the pipeline's key handler split under complexity 15, and ARIA the a11y rules can see on the picker and the cards.
+  - ty: routers declare `response_model` and return dicts; patch fields that may be left out but not null use Pydantic's `MISSING`, and a test checks null still gets a 422 for each; inserts use `.returning(...).scalar_one()`; the dashboard's tallies have TypedDicts.
+  - Frontend unit coverage went from 54% to over 97% on every measure, with tests for every page and component. `test-utils.tsx` has shared record factories, table, details and chart helpers and `holdFetch`, and `lib/api.ts`'s `createQueryClient()` is used by the app and by tests that need its refetch rule. `test-setup.ts` dismisses toasts after each test, since sonner replays open ones to the next test's Toaster.
+- gitleaks reads `.gitleaks.toml` by itself, which has no exceptions, so a committed `.env` fails the history scan. Only the files scan uses `.gitleaks-files.toml`, which allows the git-ignored `.env`.
+- Found while writing the tests, not fixed yet: a successful pipeline move fetches the deals twice (the app's refetch after every change, then the move's own `onSettled`); a failed save's message differs from a successful one only by a red dot, which a screen reader doesn't hear; `DealForm`'s `onSaved` prop is never passed; `Panel` drops a subtitle given without a title.
 
 ## Success criteria and their tests
 

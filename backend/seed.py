@@ -19,18 +19,53 @@ from backend.tables import activities, contacts, deals, organizations, stage_cha
 
 # name, industry, website, notes. The last two have no deals yet.
 ORGANIZATIONS = [
-    ("Harbor Logistics", "Logistics", "harborlogistics.example", "Regional freight and warehousing, about 400 trucks."),
-    ("Brightline Retail", "Retail", "brightline.example", "Home goods chain with 60 stores and a growing online shop."),
-    ("Northwind Health", "Healthcare", "northwindhealth.example", "Hospital group with three sites."),
-    ("Cobalt Bank", "Financial services", "cobaltbank.example", "Community bank. Slow procurement, but loyal once signed."),
+    (
+        "Harbor Logistics",
+        "Logistics",
+        "harborlogistics.example",
+        "Regional freight and warehousing, about 400 trucks.",
+    ),
+    (
+        "Brightline Retail",
+        "Retail",
+        "brightline.example",
+        "Home goods chain with 60 stores and a growing online shop.",
+    ),
+    (
+        "Northwind Health",
+        "Healthcare",
+        "northwindhealth.example",
+        "Hospital group with three sites.",
+    ),
+    (
+        "Cobalt Bank",
+        "Financial services",
+        "cobaltbank.example",
+        "Community bank. Slow procurement, but loyal once signed.",
+    ),
     ("Meridian Insurance", "Financial services", "meridian-insurance.example", None),
-    ("Ridgeway Manufacturing", "Manufacturing", "ridgeway.example", "Precision parts. Two plants, one in Ohio and one in Ontario."),
+    (
+        "Ridgeway Manufacturing",
+        "Manufacturing",
+        "ridgeway.example",
+        "Precision parts. Two plants, one in Ohio and one in Ontario.",
+    ),
     ("Fernhill Schools", "Education", "fernhill.example", "Group of eight independent schools."),
     ("Quarry & Co", "Professional services", "quarryco.example", "Accounting firm, 120 staff."),
     ("Sable Hotels", "Hospitality", "sablehotels.example", "Boutique hotels in five cities."),
     ("Atlas Freight", "Logistics", "atlasfreight.example", None),
-    ("Kestrel Media", "Media", "kestrelmedia.example", "Publisher of trade magazines and podcasts."),
-    ("Pinecrest Foods", "Food and drink", "pinecrestfoods.example", "Packaged foods, sold to grocery chains."),
+    (
+        "Kestrel Media",
+        "Media",
+        "kestrelmedia.example",
+        "Publisher of trade magazines and podcasts.",
+    ),
+    (
+        "Pinecrest Foods",
+        "Food and drink",
+        "pinecrestfoods.example",
+        "Packaged foods, sold to grocery chains.",
+    ),
     ("Larkspur Health", "Healthcare", "larkspurhealth.example", "Network of 14 clinics."),
     ("Juniper Software", "Software", "junipersoftware.example", "Possible partner for resale."),
     ("Oakmont Legal", "Professional services", "oakmontlegal.example", None),
@@ -144,10 +179,31 @@ LOST = [
 # type, description, contact index or ("deal", deal key), days ago it happened,
 # follow-up days from today, done. Deal keys are (stage, work).
 FOLLOW_UPS = [
-    ("call", "Chase the signed order form", ("negotiation", "booking engine rollout"), 16, -9, False),
-    ("email", "Send revised pricing for a 3-year term", ("qualified", "finance reporting setup"), 12, -6, False),
+    (
+        "call",
+        "Chase the signed order form",
+        ("negotiation", "booking engine rollout"),
+        16,
+        -9,
+        False,
+    ),
+    (
+        "email",
+        "Send revised pricing for a 3-year term",
+        ("qualified", "finance reporting setup"),
+        12,
+        -6,
+        False,
+    ),
     ("call", "Confirm the data warehouse scope with IT", 1, 10, -4, False),
-    ("note", "Prepare answers to the security questionnaire", ("proposal", "claims workflow integration"), 7, -2, False),
+    (
+        "note",
+        "Prepare answers to the security questionnaire",
+        ("proposal", "claims workflow integration"),
+        7,
+        -2,
+        False,
+    ),
     ("email", "Share the education case study", 5, 5, -1, False),
     ("call", "Kick-off call to plan the pilot", ("new", "fraud analytics pilot"), 6, 0, False),
     ("email", "Send the contract redlines", ("negotiation", "POS integration"), 4, 1, False),
@@ -155,7 +211,14 @@ FOLLOW_UPS = [
     ("note", "Draft the support plan quote", ("negotiation", "support plan renewal"), 2, 4, False),
     ("call", "Intro call with the operations lead", 24, 1, 5, False),
     ("email", "Follow up on the demo", ("proposal", "customs API integration"), 1, 7, False),
-    ("email", "Send the renewal terms ahead of the review", ("negotiation", "analytics rollout"), 2, 12, False),
+    (
+        "email",
+        "Send the renewal terms ahead of the review",
+        ("negotiation", "analytics rollout"),
+        2,
+        12,
+        False,
+    ),
     ("call", "Quarterly check-in on adoption", 13, 5, 20, False),
     ("note", "Plan the second-phase workshop", ("proposal", "fleet analytics"), 8, 30, False),
     ("call", "Book the onboarding sessions", 4, 45, -40, True),
@@ -168,7 +231,12 @@ FOLLOW_UPS = [
 
 # Two activities from this morning, so the dashboard's Today group has something in it.
 THIS_MORNING = [
-    ("call", "Walked through the fleet analytics proposal. Priya wants a phased rollout.", ("proposal", "fleet analytics"), time(9, 40)),
+    (
+        "call",
+        "Walked through the fleet analytics proposal. Priya wants a phased rollout.",
+        ("proposal", "fleet analytics"),
+        time(9, 40),
+    ),
     ("email", "Sent the onboarding checklist to Grace.", 5, time(8, 15)),
 ]
 
@@ -203,10 +271,43 @@ GENERATED_ACTIVITIES = 100 - len(FOLLOW_UPS) - len(THIS_MORNING)
 
 # For --large: made-up names, numbered so they don't repeat.
 LARGE_COUNT = 500
-LARGE_WORDS = ["Alder", "Birch", "Cedar", "Dunmore", "Elm", "Fairview", "Granite", "Hollis", "Ivy", "Keystone"]
+LARGE_WORDS = [
+    "Alder",
+    "Birch",
+    "Cedar",
+    "Dunmore",
+    "Elm",
+    "Fairview",
+    "Granite",
+    "Hollis",
+    "Ivy",
+    "Keystone",
+]
 LARGE_KINDS = ["Systems", "Partners", "Group", "Industries", "Labs"]
-LARGE_FIRST = ["Alex", "Jordan", "Casey", "Morgan", "Riley", "Taylor", "Jamie", "Avery", "Quinn", "Drew"]
-LARGE_LAST = ["Adams", "Baker", "Clarke", "Dixon", "Ellis", "Foster", "Hughes", "Irwin", "Jensen", "Keller"]
+LARGE_FIRST = [
+    "Alex",
+    "Jordan",
+    "Casey",
+    "Morgan",
+    "Riley",
+    "Taylor",
+    "Jamie",
+    "Avery",
+    "Quinn",
+    "Drew",
+]
+LARGE_LAST = [
+    "Adams",
+    "Baker",
+    "Clarke",
+    "Dixon",
+    "Ellis",
+    "Foster",
+    "Hughes",
+    "Irwin",
+    "Jensen",
+    "Keller",
+]
 LARGE_WORK = ["analytics", "integration", "licenses", "support renewal", "training"]
 
 
@@ -226,7 +327,17 @@ class _Builder:
     def __init__(self, today: date):
         self.today = today
         self.rng = random.Random(2026)
-        self.rows = {name: [] for name in ("organizations", "contacts", "deals", "stage_changes", "status_changes", "activities")}
+        self.rows = {
+            name: []
+            for name in (
+                "organizations",
+                "contacts",
+                "deals",
+                "stage_changes",
+                "status_changes",
+                "activities",
+            )
+        }
         self.deal_keys: dict[tuple[str, str], int] = {}
         self.lifetimes: dict[int, tuple[date, date]] = {}
 
@@ -272,7 +383,9 @@ class _Builder:
     def value(self) -> int:
         return self.rng.randrange(10, 301) * 500
 
-    def deal(self, work, org, contact, stage, close, probability, path, last_change, added_by=None) -> int:
+    def deal(
+        self, work, org, contact, stage, close, probability, path, last_change, added_by=None
+    ) -> int:
         """Adds a deal and a stage history that ends on last_change, spread over the weeks
         before. If added_by is given, the deal was added no later than that day."""
         changes = []
@@ -282,7 +395,10 @@ class _Builder:
             when -= timedelta(days=self.rng.randrange(7, 22), hours=self.rng.randrange(0, 5))
         changes.reverse()
         if added_by is not None and changes[0][1].date() > added_by:
-            changes[0] = (changes[0][0], _at(added_by - timedelta(days=self.rng.randrange(0, 21)), self.rng))
+            changes[0] = (
+                changes[0][0],
+                _at(added_by - timedelta(days=self.rng.randrange(0, 21)), self.rng),
+            )
         name = f"{ORGANIZATIONS[org][0]} {work}"
         deal_id = self.add(
             "deals",
@@ -299,7 +415,13 @@ class _Builder:
         )
         previous = None
         for to_stage, when in changes:
-            self.add("stage_changes", deal_id=deal_id, from_stage=previous, to_stage=to_stage, changed_at=when)
+            self.add(
+                "stage_changes",
+                deal_id=deal_id,
+                from_stage=previous,
+                to_stage=to_stage,
+                changed_at=when,
+            )
             previous = to_stage
         self.deal_keys[(stage, work)] = deal_id
         end = close if not stages.is_open(stage) else self.today
@@ -311,7 +433,17 @@ class _Builder:
             last = _at(self.day(-self.rng.randrange(1, 21)), self.rng)
             path = _path(stage, i % 3 == 1)
             # Added at least 40 days ago, before any activity logged on it.
-            self.deal(work, org, contact, stage, self.day(close_in), probability, path, last, self.day(-40))
+            self.deal(
+                work,
+                org,
+                contact,
+                stage,
+                self.day(close_in),
+                probability,
+                path,
+                last,
+                self.day(-40),
+            )
         for i, (work, org, contact) in enumerate(WON):
             close = self.day(-WON_DAYS_AGO[i])
             path = _path("negotiation", i % 4 == 2) + ["won"]
@@ -324,12 +456,18 @@ class _Builder:
     def customers(self) -> None:
         """Each customer became one when their first deal was won (R3)."""
         won_at = {
-            c["deal_id"]: c["changed_at"] for c in self.rows["stage_changes"] if c["to_stage"] == "won"
+            c["deal_id"]: c["changed_at"]
+            for c in self.rows["stage_changes"]
+            if c["to_stage"] == "won"
         }
         for contact in self.rows["contacts"]:
             if CONTACTS[contact["id"] - 1][3] != "customer":
                 continue
-            wins = [d for d in self.rows["deals"] if d["contact_id"] == contact["id"] and d["stage"] == "won"]
+            wins = [
+                d
+                for d in self.rows["deals"]
+                if d["contact_id"] == contact["id"] and d["stage"] == "won"
+            ]
             first = min(wins, key=lambda d: won_at[d["id"]])
             when = won_at[first["id"]]
             contact["status"] = "customer"
@@ -370,7 +508,9 @@ class _Builder:
     def activities(self) -> None:
         for kind, description, target, days_ago, follow_up_in, done in FOLLOW_UPS:
             occurred = _at(self.day(-days_ago), self.rng)
-            self.activity(kind, description, self.target(target), occurred, self.day(follow_up_in), done)
+            self.activity(
+                kind, description, self.target(target), occurred, self.day(follow_up_in), done
+            )
         for kind, description, target, at in THIS_MORNING:
             self.activity(kind, description, self.target(target), datetime.combine(self.today, at))
         for i in range(GENERATED_ACTIVITIES):
@@ -398,7 +538,15 @@ class _Builder:
         for n in range(LARGE_COUNT):
             name = f"{LARGE_WORDS[n % 10]} {LARGE_KINDS[n // 10 % 5]} {n // 50 + 1}"
             created = datetime.combine(self.day(-400), time(9, 0))
-            self.add("organizations", name=name, industry="Software", website=None, notes=None, created_at=created, updated_at=created)
+            self.add(
+                "organizations",
+                name=name,
+                industry="Software",
+                website=None,
+                notes=None,
+                created_at=created,
+                updated_at=created,
+            )
         for n in range(LARGE_COUNT):
             status = ("lead", "qualified", "customer")[n % 3]
             created = datetime.combine(self.day(-390), time(9, 0))
@@ -417,7 +565,9 @@ class _Builder:
             stage = stages.KEYS[n % 6]
             # Every third large contact is a customer, and won deals go to one of them.
             contact = n // 3 * 3 + 2 if stage == "won" else n
-            close = self.day(rng.randrange(-330, -1) if stage in stages.CLOSED_KEYS else rng.randrange(-10, 150))
+            close = self.day(
+                rng.randrange(-330, -1) if stage in stages.CLOSED_KEYS else rng.randrange(-10, 150)
+            )
             added = datetime.combine(self.day(-360), time(9, 0))
             org_name = self.rows["organizations"][base["organizations"] + n]["name"]
             deal_id = self.add(
@@ -433,12 +583,19 @@ class _Builder:
                 created_at=added,
                 updated_at=added,
             )
-            self.add("stage_changes", deal_id=deal_id, from_stage=None, to_stage=stage, changed_at=added)
+            self.add(
+                "stage_changes", deal_id=deal_id, from_stage=None, to_stage=stage, changed_at=added
+            )
         for n in range(LARGE_COUNT):
             occurred = _at(self.day(-rng.randrange(1, 360)), rng)
             on_deal = n % 2 == 0
             target = -(base["deals"] + n + 1) if on_deal else base["contacts"] + n + 1
-            self.activity(rng.choice(("note", "call", "email")), "Checked in about next steps.", target, occurred)
+            self.activity(
+                rng.choice(("note", "call", "email")),
+                "Checked in about next steps.",
+                target,
+                occurred,
+            )
 
 
 def build(today: date, large: bool = False) -> dict[str, list[dict]]:
@@ -476,7 +633,9 @@ def load(conn: sa.Connection, today: date, large: bool = False) -> dict[str, int
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Replace all the data with fresh sample data.")
-    parser.add_argument("--today", type=date.fromisoformat, help="the date to count from, as YYYY-MM-DD")
+    parser.add_argument(
+        "--today", type=date.fromisoformat, help="the date to count from, as YYYY-MM-DD"
+    )
     parser.add_argument("--large", action="store_true", help="add 500 of each kind of record")
     args = parser.parse_args()
     today = args.today or clock.today()
