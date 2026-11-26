@@ -12,6 +12,8 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 
 Update `docs/STATUS.md` when you finish a piece of work
 
+At Deploy, after the review fixes and before the merge, follow `docs/IMPROVE.md`.
+
 ## Checks
 
 - `npm run check` runs every check: gitleaks over the git history and the files, Prettier and ESLint for the frontend, ruff format and ruff check for the backend, tsc and ty, and `npm test`. It runs them all even if one fails, prints a summary, and exits with 1 if any failed.
