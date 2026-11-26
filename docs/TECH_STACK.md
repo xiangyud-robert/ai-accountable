@@ -32,7 +32,13 @@ The hooks:
 
 1. A git pre-commit hook, with lefthook (`lefthook.yml`), which `npm install` sets up. It formats the staged files and stages the result, then runs ESLint and ruff check on them, tsc and ty across the project, and gitleaks over the staged changes. It skips the tests, so committing stays quick.
 2. Claude Code hooks in `.claude/settings.json`, with their scripts in `scripts/claude-hooks/`. When Claude finishes a turn, one runs `npm run check:quick` and sends any failure back to it to fix. It blocks only once a turn, and skips the check if no file changed since it last passed. The other blocks any edit to `.env`, and any shell command that names it.
-3. CI on GitHub Actions (`.github/workflows/ci.yml`), on every push to any branch. It scans every branch's history with gitleaks first, so a leaked secret fails in a minute, then runs `npm run check` with the Google Chrome on GitHub's Ubuntu runner. If it fails, it uploads the Playwright report.
+3. A Claude Code hook in the reviewer subagent's file (`.claude/agents/reviewer.md`), with its script in `scripts/claude-hooks/read-only-bash.mjs`. It refuses any shell command the reviewer runs that isn't on a list of commands that only read, such as `git diff`, `git log`, `git show`, `git grep` and `grep`, and any output written to a file other than `/dev/null`. A command it lets through still needs the session's usual permission.
+4. CI on GitHub Actions (`.github/workflows/ci.yml`), on every push to any branch. It scans every branch's history with gitleaks first, so a leaked secret fails in a minute, then runs `npm run check` with the Google Chrome on GitHub's Ubuntu runner. If it fails, it uploads the Playwright report.
+
+The Claude Code subagents, in `.claude/agents/`, both on Sonnet:
+
+1. `reviewer` reviews a branch's changes, or a commit, against `docs/REVIEW.md` and reports its findings by severity. It reads files and runs shell commands that only read, and changes nothing.
+2. `ui-check` opens the running app with the Playwright MCP server (`.mcp.json`), takes a screenshot of each page in light and dark mode, checks it against the brand skill and the spec, and reports anything off-brand or broken. It has no tools that write files, and its screenshots go in the git-ignored `.playwright-mcp/`.
 
 `docs/STATUS.md` says how to run the app. `README.md` is the course's own guide, so leave it as it is.
 

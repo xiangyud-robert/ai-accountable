@@ -9,6 +9,7 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 - `docs/TECH_STACK.md`: the stack
 - `docs/STANDARDS.md`: how to write code in this repo
 - `docs/STATUS.md`: what's done so far
+- `.claude/agents/`: two subagents. `reviewer` reviews a change against `docs/REVIEW.md`, and `ui-check` checks the running app in the browser against the brand skill and the spec. Neither changes any code.
 
 Update `docs/STATUS.md` when you finish a piece of work. Then check that `docs/spec.md` describes everything the change does, including anything beyond its plan, such as a new theme role or a limit the code enforces, and update it in the same change.
 
@@ -20,7 +21,7 @@ At Deploy, after the review fixes and before the merge, follow `docs/IMPROVE.md`
 - Run `npm run check` before calling a piece of work done, and fix every failure first. Don't skip, delete or loosen a test, and don't weaken a rule with a disable comment, a config change or a coverage exclusion. If a rule doesn't suit the code, ask first.
 - `npm run check:quick` is the same without the end-to-end tests, for quick feedback while working. `npm run format` fixes the formatting.
 - ESLint and ruff allow a cyclomatic complexity of at most 15 per function.
-- Hooks: a git pre-commit hook (lefthook) formats the staged files, then runs lint, types and gitleaks. Claude Code runs `npm run check:quick` when it finishes a turn and gets any failure back once to fix. A hook blocks every edit to `.env`, and any shell command that names it. Don't skip or loosen a hook either. To change `.env`, tell the person what to change.
+- Hooks: a git pre-commit hook (lefthook) formats the staged files, then runs lint, types and gitleaks. Claude Code runs `npm run check:quick` when it finishes a turn and gets any failure back once to fix. A hook blocks every edit to `.env`, and any shell command that names it. The reviewer subagent has its own hook, which refuses any shell command that doesn't only read. Don't skip or loosen a hook either. To change `.env`, tell the person what to change.
 - CI (`.github/workflows/ci.yml`) runs gitleaks, then `npm run check`, on every push to any branch. If it fails there but passes locally, find the root cause in the run's log or the uploaded Playwright report, and fix it without weakening a test.
 
 ## Tests
