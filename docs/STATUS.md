@@ -122,6 +122,15 @@ The `dark-mode` branch, built from `docs/changes/dark-mode/plan.md` in its order
 - The light comparison matched every picture pixel for pixel, with only the switch hidden: 15 after phase 1, after phase 2 and after phase 4, then all 16 with the hovered button, twice (Nov 26, 2026). Phase 3 changed only tests, so it wasn't run on its own. One run in between had the deals table differ, which matched in the 6 runs after it. Its pictures were gone before they could be looked at, so the cause isn't known.
 - `npm run check` passes: 409 Vitest tests, 180 pytest tests and 97 end-to-end tests (74 before, plus 9 in `dark-mode.spec.ts` and 14 accessibility checks in dark mode).
 - Beyond the plan's list of files: `e2e/hide-dark-mode-switch.css` (the light comparison's hiding rule, since `toHaveScreenshot` takes only a file), `frontend/src/test-setup.ts` (each unit test starts in light mode), and `PAGES` moved into `e2e/fixtures.ts`. `theme.css` has four variables beyond the plan's three roles: the three shadow colors (risk 1) and the secondary hover brightness.
+- Review (Nov 26, 2026), against `docs/REVIEW.md`: no Important findings. `npm run check` passed, and the light comparison matched all 16 pictures again. Two findings don't block the merge and aren't fixed:
+  1. `dark-mode.spec.ts` finds the chart gridline, the funnel's Negotiation step and the chart tooltip by Recharts' class names and order, and the message by Sonner's `data-sonner-toast`. An upgrade that renamed them would fail the tests while the app still works. No other end-to-end test does this.
+  2. The spec's list of color roles leaves out `logo` and the three shadow colors, and the spec doesn't give the deeper shadow's dark values.
+- Improvement step (Nov 26, 2026), from `docs/IMPROVE.md`:
+  - Seen twice, so now in `AGENTS.md`:
+    - A test that passed with the behavior broken: the MVP's concern 8 test (review finding 17) and dark mode's first concern 14 test. `AGENTS.md` now says to show each new test can fail. A check can't do this: mutation testing would be a new dependency, and it wouldn't reach an end-to-end test of timing like concern 14's.
+    - Code the spec didn't describe: the MVP's review findings 24 and 26, and finding 2 above. `AGENTS.md` now says to check the spec after each piece of work. A check can't do this either, since the spec names roles in words, not by their names in `theme.css`.
+  - Seen once so far: tests that rely on a library's class names (finding 1). A wrong `toHaveScreenshot` option that tsc missed because the options were an untyped variable. A full-page screenshot resizing the window, which closes a Radix select. Screenshot runs that differed once with no known cause.
+  - `docs/IMPROVE.md` now says where to look for what went wrong, to ask the person what they corrected, and to record each round in `docs/STATUS.md` like this, including the mistakes seen once.
 
 Running the screenshots, by hand and never on CI:
 

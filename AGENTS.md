@@ -10,7 +10,7 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 - `docs/STANDARDS.md`: how to write code in this repo
 - `docs/STATUS.md`: what's done so far
 
-Update `docs/STATUS.md` when you finish a piece of work
+Update `docs/STATUS.md` when you finish a piece of work. Then check that `docs/spec.md` describes everything the change does, including anything beyond its plan, such as a new theme role or a limit the code enforces, and update it in the same change.
 
 At Deploy, after the review fixes and before the merge, follow `docs/IMPROVE.md`.
 
@@ -28,4 +28,5 @@ At Deploy, after the review fixes and before the merge, follow `docs/IMPROVE.md`
 - `npm test` runs every test: the frontend unit tests (Vitest), the backend tests (pytest) and the end-to-end tests in Chrome (Playwright). It runs all three even if one fails, prints a summary, and exits with 1 if any test failed.
 - The unit tests fail if their coverage is under 80% (statements, branches, functions and lines for Vitest; lines and branches together for pytest).
 - A test left with `.only` fails the run, because it would skip every other test.
+- Show that each new test can fail: run it once with the behavior it checks broken or missing on purpose, then put the code back, and say in `docs/STATUS.md` what you broke. A test that passes either way proves nothing.
 - It uses its own database and ports (8100 and 5273), so it never changes your data and works while `npm run dev` is running.
