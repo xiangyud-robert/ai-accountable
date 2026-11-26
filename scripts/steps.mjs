@@ -24,11 +24,11 @@ export const TESTS = [
 export const CHECKS = [
   // The history scan uses .gitleaks.toml, which gitleaks reads by itself. Only the files scan
   // allows the git-ignored .env.
-  { name: 'gitleaks: git history', command: 'gitleaks', args: ['git', '.', '--redact', '--no-banner'] },
+  { name: 'gitleaks: git history', command: 'gitleaks', args: ['git', '.', '--redact', '--verbose', '--no-banner'] },
   {
     name: 'gitleaks: files',
     command: 'gitleaks',
-    args: ['dir', '.', '--config', '.gitleaks-files.toml', '--redact', '--no-banner'],
+    args: ['dir', '.', '--config', '.gitleaks-files.toml', '--redact', '--verbose', '--no-banner'],
   },
   { name: 'Prettier: frontend, e2e and scripts', command: 'npx', args: ['prettier', '--check', ...NODE_PATHS] },
   { name: 'ruff format: backend', command: 'uv', args: ['run', 'ruff', 'format', '--check', ...BACKEND_PATHS] },

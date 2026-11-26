@@ -1,16 +1,44 @@
 {
+  "enabledPlugins": {
+    "frontend-design@anthropic-plugin-directory": true
+  },
   "permissions": {
     "allow": [
       "Bash(npm test)"
     ],
-    "deny": [
-      "Read(./.env)"
-    ],
     "ask": [
       "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(./.env)"
     ]
   },
-  "enabledPlugins": {
-    "frontend-design@anthropic-plugin-directory": true
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/claude-hooks/protect-env.mjs"],
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/claude-hooks/check-on-stop.mjs"],
+            "timeout": 600,
+            "statusMessage": "Running npm run check:quick"
+          }
+        ]
+      }
+    ]
   }
 }

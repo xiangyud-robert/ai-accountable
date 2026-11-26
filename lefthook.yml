@@ -1,0 +1,43 @@
+# The git pre-commit hook, which npm install sets up. It formats the staged files and stages the
+# result, then runs the lint, type and secret checks. The tests are left to npm run check, so
+# committing stays quick. One commit can skip it with git commit --no-verify.
+glob_matcher: doublestar
+
+pre-commit:
+  # In order, stopping at the first failure. The formatters run one at a time because each
+  # stages what it fixed, and two at once would clash over git's index.
+  piped: true
+  jobs:
+    - name: prettier
+      # The same paths as npm run check.
+      glob: &node_paths ['frontend/**', 'e2e/**', 'scripts/**', 'eslint.config.js']
+      run: npx prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    - name: ruff format
+      glob: &python_files 'backend/**/*.py'
+      run: uv run ruff format {staged_files}
+      stage_fixed: true
+
+    - name: checks
+      group:
+        parallel: true
+        jobs:
+          - name: eslint
+            glob: *node_paths
+            # ESLint's config decides which of the files it lints, without a warning for the rest.
+            run: npx eslint --max-warnings 0 --no-warn-ignored {staged_files}
+
+          - name: ruff check
+            glob: *python_files
+            run: uv run ruff check {staged_files}
+
+          # Types are checked across the whole project, since a change in one file can break another.
+          - name: tsc
+            run: npm run typecheck --workspace frontend
+
+          - name: ty
+            run: uv run ty check backend
+
+          - name: gitleaks
+            run: node scripts/scan-staged.mjs

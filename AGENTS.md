@@ -18,6 +18,7 @@ Update `docs/STATUS.md` when you finish a piece of work
 - Run `npm run check` before calling a piece of work done, and fix every failure first. Don't skip, delete or loosen a test, and don't weaken a rule with a disable comment, a config change or a coverage exclusion. If a rule doesn't suit the code, ask first.
 - `npm run check:quick` is the same without the end-to-end tests, for quick feedback while working. `npm run format` fixes the formatting.
 - ESLint and ruff allow a cyclomatic complexity of at most 15 per function.
+- Hooks: a git pre-commit hook (lefthook) formats the staged files, then runs lint, types and gitleaks. Claude Code runs `npm run check:quick` when it finishes a turn and gets any failure back once to fix. A hook blocks every edit to `.env`, and any shell command that names it. Don't skip or loosen a hook either. To change `.env`, tell the person what to change.
 
 ## Tests
 

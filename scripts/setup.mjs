@@ -13,7 +13,7 @@ const MIN_NODE = 24
 
 // npm and uv are .cmd files on Windows, so they need a shell there. A shell takes one command
 // line, since passing the arguments separately is deprecated (DEP0190). None has a space.
-function commandLine(command, args) {
+export function commandLine(command, args) {
   return isWindows ? [[command, ...args].join(' '), []] : [command, args]
 }
 
@@ -70,6 +70,17 @@ function checkNode() {
 export function isInstalled(command, versionArgs = ['--version']) {
   const result = spawnSync(...commandLine(command, versionArgs), { cwd: root, shell: isWindows, stdio: 'ignore' })
   return !result.error && result.status === 0
+}
+
+// The one tool the first-run setup can't install. `who` names what needs it, for the message.
+export function requireGitleaks(who) {
+  if (!isInstalled('gitleaks', ['version'])) {
+    fail(
+      `${who} needs gitleaks, and it was not found.\n` +
+        'Install it with `brew install gitleaks` on a Mac, `winget install -e --id Gitleaks.Gitleaks` on Windows, ' +
+        'or from https://github.com/gitleaks/gitleaks#installing, then run the command again.',
+    )
+  }
 }
 
 function checkUv() {
