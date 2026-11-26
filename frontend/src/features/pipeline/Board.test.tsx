@@ -36,7 +36,7 @@ function renderBoard({ failMoves = false } = {}) {
   const saved: Layout = structuredClone(START)
   let turnDown = () => {}
   const turnedDown = new Promise<void>((resolve) => (turnDown = resolve))
-  const calls = mockFetch(async (method, path, body) => {
+  const calls = mockFetch(async (_method, path, body) => {
     const move = /^\/deals\/(\d+)\/move$/.exec(path)
     if (failMoves) {
       await (move ? turnedDown : new Promise(() => {}))

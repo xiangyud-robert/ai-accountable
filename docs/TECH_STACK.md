@@ -32,6 +32,7 @@ The hooks:
 
 1. A git pre-commit hook, with lefthook (`lefthook.yml`), which `npm install` sets up. It formats the staged files and stages the result, then runs ESLint and ruff check on them, tsc and ty across the project, and gitleaks over the staged changes. It skips the tests, so committing stays quick.
 2. Claude Code hooks in `.claude/settings.json`, with their scripts in `scripts/claude-hooks/`. When Claude finishes a turn, one runs `npm run check:quick` and sends any failure back to it to fix. It blocks only once a turn, and skips the check if no file changed since it last passed. The other blocks any edit to `.env`, and any shell command that names it.
+3. CI on GitHub Actions (`.github/workflows/ci.yml`), on every push to any branch. It scans every branch's history with gitleaks first, so a leaked secret fails in a minute, then runs `npm run check` with the Google Chrome on GitHub's Ubuntu runner. If it fails, it uploads the Playwright report.
 
 `docs/STATUS.md` says how to run the app. `README.md` is the course's own guide, so leave it as it is.
 

@@ -1,3 +1,5 @@
+// The tests of board.ts. Not named board.test.ts: on Mac and Windows, TypeScript would take that
+// and Board.test.tsx for one file and type-check only this one.
 import { describe, expect, test } from 'vitest'
 import type { DealRow, StageKey } from '../../lib/types'
 import { STAGES, dealRow } from '../../test-utils'

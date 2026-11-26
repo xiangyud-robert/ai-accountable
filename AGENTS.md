@@ -19,6 +19,7 @@ Update `docs/STATUS.md` when you finish a piece of work
 - `npm run check:quick` is the same without the end-to-end tests, for quick feedback while working. `npm run format` fixes the formatting.
 - ESLint and ruff allow a cyclomatic complexity of at most 15 per function.
 - Hooks: a git pre-commit hook (lefthook) formats the staged files, then runs lint, types and gitleaks. Claude Code runs `npm run check:quick` when it finishes a turn and gets any failure back once to fix. A hook blocks every edit to `.env`, and any shell command that names it. Don't skip or loosen a hook either. To change `.env`, tell the person what to change.
+- CI (`.github/workflows/ci.yml`) runs gitleaks, then `npm run check`, on every push to any branch. If it fails there but passes locally, find the root cause in the run's log or the uploaded Playwright report, and fix it without weakening a test.
 
 ## Tests
 

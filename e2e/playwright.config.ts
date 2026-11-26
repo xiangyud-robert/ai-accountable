@@ -25,7 +25,8 @@ export default defineConfig({
   retries: 0,
   timeout: 30_000,
   expect: { timeout: 5_000 },
-  reporter: [['list']],
+  // The list as the tests run, and an HTML report in playwright-report/, which CI uploads when a run fails.
+  reporter: [['list'], ['html', { outputFolder: join(root, 'playwright-report'), open: 'never' }]],
   outputDir: join(root, 'test-results'),
   use: {
     channel: 'chrome',
