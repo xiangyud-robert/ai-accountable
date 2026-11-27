@@ -152,6 +152,16 @@ The `subagents` branch, from the course's Week 1 Day 5 prompt. It changes the ha
 - CI runs `npm run check:quick` instead of `npm run check` (Nov 26, 2026), so it leaves out the end-to-end tests, which now run only locally. The step that uploaded `playwright-report/` is gone, since only the end-to-end tests write that report. Playwright still writes it locally. The timeout is now 15 minutes, down from 45: the last full run on GitHub (`dark-mode`, 8.5 minutes) spent 397 seconds on the end-to-end tests and about 1.5 minutes on every other step together. `AGENTS.md`, `docs/TECH_STACK.md` and the report's comment in `e2e/playwright.config.ts` now say so. actionlint 1.7.12 passes on the workflow, and `npm run check` passes locally (409 Vitest, 180 pytest and 97 end-to-end tests). The workflow hasn't run on GitHub yet, so the first push of this branch is its first real run.
   - The speed tests' limits (Notes on the build) were raised for GitHub's slower runner, which no longer runs them. They're unchanged.
 
+## Spec split (Nov 26, 2026)
+
+On the `multi-user` branch, before its plan. It moves the spec's text, not the product's behavior, so no code or tests changed.
+
+- `docs/spec.md` is now a short summary: the problem, the product, a table of the 11 area files in `docs/specs/`, and an index of where each of the 14 concerns and the rules R1 to R14 live. The detail moved word for word into `dashboard.md`, `organizations.md`, `contacts.md`, `deals.md`, `pipeline.md`, `activities.md`, `records.md` (what every kind of record shares), `look.md`, `light-and-dark.md`, `sample-data.md` and `platform.md` (running it, quality, how it fits together, libraries, the rules every table and API route share, and the testing hooks).
+- Concerns and rules keep their numbers. Each file's concerns are consecutive, so Markdown doesn't renumber them: concern 8 sits with 9 in `pipeline.md`, 11 with 12 in `records.md`, and 1 with 2 and 3 in `platform.md`.
+- What changed in the words: the headings, run-in labels that became headings, references to other sections that now name the file, a line at the top of each area file pointing back to the summary, and "The API is only what's in this table", now "only what's in the API tables of the area files". The `PATCH` paragraph is split in two, its first sentence in `platform.md` and the deal rules in `deals.md`.
+- Checked with a scratch script outside the repo: every non-blank line of the old spec is in the new files, except the 38 headings, labels and references above, and none is there twice except table headings and three table rows the old spec already had twice.
+- `AGENTS.md` says to read `docs/spec.md` first, then only the area files a change touches, and to update every spec file a change affects. `docs/REVIEW.md`'s two spec passes cover the area files, and flag a spec file a change should have updated. `.claude/agents/reviewer.md` already reads the spec files `docs/spec.md` points to, and `ui-check.md` already reads the summary and the files for what it checks, so neither changed.
+
 ## Success criteria and their tests
 
 The MVP's success criteria, from `docs/changes/mvp/intent.md`.

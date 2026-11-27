@@ -4,14 +4,15 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 
 ## Where to find things
 
-- `docs/spec.md`: the whole product as it stands today. Read it first.
-- `docs/changes/<branch name>/`: one folder for each change, named after its branch, with the change's `intent.md` (what it's for) and `plan.md` (how it gets built). Read only the folder for the branch you're on. The others are past changes, which `docs/spec.md` already describes.
+- `docs/spec.md`: a short summary of the whole product as it stands today, with an index of the area files and of the numbered concerns and rules. Read it first.
+- `docs/specs/`: the detail of the spec, in one file per product area, such as `docs/specs/deals.md`. After `docs/spec.md`, read only the area files the current change touches.
+- `docs/changes/<branch name>/`: one folder for each change, named after its branch, with the change's `intent.md` (what it's for) and `plan.md` (how it gets built). Read only the folder for the branch you're on. The others are past changes, which the spec already describes.
 - `docs/TECH_STACK.md`: the stack
 - `docs/STANDARDS.md`: how to write code in this repo
 - `docs/STATUS.md`: what's done so far
 - `.claude/agents/`: two subagents. `reviewer` reviews a change against `docs/REVIEW.md`, and `ui-check` checks the running app in the browser against the brand skill and the spec. Neither changes any code.
 
-Update `docs/STATUS.md` when you finish a piece of work. Then check that `docs/spec.md` describes everything the change does, including anything beyond its plan, such as a new theme role or a limit the code enforces, and update it in the same change.
+Update `docs/STATUS.md` when you finish a piece of work. Then check that the spec describes everything the change does, including anything beyond its plan, such as a new theme role or a limit the code enforces. In the same change, update every spec file it affects: the area files in `docs/specs/`, and `docs/spec.md` when the product summary, the list of areas or the index of concerns and rules changes. A new area gets its own file and a line in the index.
 
 At Deploy, after the review fixes and before the merge, follow `docs/IMPROVE.md`.
 
