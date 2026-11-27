@@ -517,6 +517,12 @@ Built by parts E, F and G at the same time, with part I keeping the docs. `npm r
 
 The Render region and the team's time zone are both set. The Supabase project is in us-east-2, so `render.yaml`'s region is `ohio`. `ACCOUNTABLE_TIMEZONE` is `America/Los_Angeles` in `.env`, which the lead confirmed through `npm run dev`'s `/api/me`, and in `render.yaml`.
 
+## Multi-user, review (Nov 26, 2026)
+
+- The reviewer subagent reviewed the branch against `main` and `docs/REVIEW.md`: no Important findings and no other findings. Its five nits weren't fixed.
+- Its report gave the test counts as 473 Vitest, 409 pytest and 135 end-to-end tests, all passing. The reviewer can't run tests, so these came from this file, and 473 is phase 1's Vitest count. It also said the branch adds 7 spec files, where it adds 13: the 11 from the spec split, `sign-in.md` and `search.md`.
+- `npm run check`, run after the review (Nov 26, 2026), passes every step: 536 Vitest tests in 62 files (99.61% statements, 97.54% branches, 99.82% functions, 99.81% lines), 409 pytest tests (96.88% coverage) and 135 end-to-end tests in 4.6 minutes. These are the counts for the whole branch, the same as phase 3's.
+
 ## Success criteria and their tests
 
 The MVP's success criteria, from `docs/changes/mvp/intent.md`.
