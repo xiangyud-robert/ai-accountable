@@ -22,9 +22,12 @@ async function namesIn(page: Page, stage: string) {
   return cardsIn(page, stage).evaluateAll((cards) => cards.map((c) => c.querySelector('p.font-semibold')!.textContent))
 }
 
-test('criterion 4: drag a card to another column; the figures change before the server answers', async ({ page }) => {
+test('criterion 4: drag a card to another column; the figures change before the server answers', async ({
+  page,
+  api,
+}) => {
   const deals: { name: string; stage: string; value: number; probability: number }[] = await (
-    await page.request.get(`${API}/deals`)
+    await api.get(`${API}/deals`)
   ).json()
   const moving = deals.find((d) => d.name === 'Cobalt Bank fraud analytics pilot')!
   const sum = (stage: string) => deals.filter((d) => d.stage === stage).reduce((s, d) => s + d.value, 0)
@@ -121,10 +124,10 @@ test('a second move while the board is refetching keeps the board, and both move
   expect(await namesIn(page, 'Qualified')).toEqual([before[3], before[2], before[0], before[1], before[4]])
 })
 
-test('drop a card below the last one, and into an empty column', async ({ page }) => {
+test('drop a card below the last one, and into an empty column', async ({ page, api }) => {
   // Empty the Lost column first.
-  const deals: { id: number; stage: string }[] = await (await page.request.get(`${API}/deals`)).json()
-  for (const deal of deals.filter((d) => d.stage === 'lost')) await page.request.delete(`${API}/deals/${deal.id}`)
+  const deals: { id: number; stage: string }[] = await (await api.get(`${API}/deals`)).json()
+  for (const deal of deals.filter((d) => d.stage === 'lost')) await api.delete(`${API}/deals/${deal.id}`)
 
   await page.goto('/pipeline')
   await expect(cardsIn(page, 'Lost')).toHaveCount(0)

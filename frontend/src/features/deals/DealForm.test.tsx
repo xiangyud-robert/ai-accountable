@@ -1,7 +1,8 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { addDaysISO, todayISO } from '../../lib/format'
+import { setTeamZone } from '../../lib/teamTime'
 import { contactRow, dealRow, mockFetch, organizationRow, renderWithApp } from '../../test-utils'
 import { DealForm } from './DealForm'
 
@@ -56,6 +57,33 @@ describe('DealForm', () => {
     expect(screen.getByLabelText('Probability (%)')).toHaveValue('100')
     expect(screen.getByLabelText('Probability (%)')).toHaveAttribute('readonly')
     expect(screen.getByLabelText('Close date')).toHaveValue(todayISO())
+  })
+
+  describe('with the team’s zone a day ahead of this browser’s', () => {
+    // 1:30 PM on June 15 in Los Angeles, where this browser is, and June 16 in Tokyo.
+    function teamInTokyo() {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-06-15T20:30:00Z'))
+      setTeamZone('Asia/Tokyo')
+    }
+
+    afterEach(() => {
+      setTeamZone(null)
+      vi.useRealTimers()
+    })
+
+    test('a new deal closes 30 days from the team’s today', () => {
+      teamInTokyo()
+      renderForm()
+      expect(screen.getByLabelText('Close date')).toHaveValue('2026-07-16')
+    })
+
+    test('Won fills in the team’s today', async () => {
+      teamInTokyo()
+      renderForm({ deal: DEAL })
+      await chooseStage('Won')
+      expect(screen.getByLabelText('Close date')).toHaveValue('2026-06-16')
+    })
   })
 
   test('a new deal from a record page starts with its organization and main contact', () => {

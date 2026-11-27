@@ -1,10 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, test, vi } from 'vitest'
-import { currentMode, setMode } from './colorMode'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { type Choice, currentChoice, setChoice } from './colorMode'
 
 const html = document.documentElement
 const saved = () => localStorage.getItem('accountable-mode')
+
+/** The mode the page shows: what theme.css styles, and what it tells Chrome. */
+const shown = () => ({ theme: html.getAttribute('data-theme') ?? 'light', scheme: html.style.colorScheme })
+const LIGHT = { theme: 'light', scheme: '' }
+const DARK = { theme: 'dark', scheme: 'dark' }
 
 /** The classic script in index.html's head, which runs before the app loads. */
 const INLINE_SCRIPT = (() => {
@@ -14,84 +19,176 @@ const INLINE_SCRIPT = (() => {
   return script[1]
 })()
 
-/** A fresh page: <html> with no mode, then index.html's script. */
+/** A fresh page: <html> with no mode or choice, then index.html's script. */
 function loadPage() {
-  html.removeAttribute('data-theme')
-  html.removeAttribute('style')
+  for (const name of ['data-theme', 'data-theme-choice', 'style']) html.removeAttribute(name)
   new Function(INLINE_SCRIPT)()
 }
 
-const colorScheme = () => html.style.colorScheme
+/** The device's light or dark setting, as Chrome's matchMedia reports it, which the test can change
+ *  while the page is open. Like Chrome, a change reaches every list matchMedia has given out. */
+function fakeDevice() {
+  let dark = false
+  const listeners = new Set<() => void>()
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    get matches() {
+      return query === '(prefers-color-scheme: dark)' && dark
+    },
+    addEventListener: (_type: 'change', listener: () => void) => listeners.add(listener),
+    removeEventListener: (_type: 'change', listener: () => void) => listeners.delete(listener),
+  }))
+  return {
+    turn(setting: 'light' | 'dark') {
+      dark = setting === 'dark'
+      listeners.forEach((listener) => listener())
+    },
+  }
+}
 
-describe('currentMode', () => {
-  test('is light when <html> has no mode, and dark when it’s marked dark', () => {
-    expect(currentMode()).toBe('light')
-    setMode('dark')
-    expect(currentMode()).toBe('dark')
+const throwFromStorage = (method: 'getItem' | 'setItem') =>
+  vi.spyOn(Storage.prototype, method).mockImplementation(() => {
+    throw new DOMException('Access is denied.', 'SecurityError')
   })
+
+let device: ReturnType<typeof fakeDevice>
+beforeEach(() => {
+  device = fakeDevice()
 })
 
-describe('setMode', () => {
-  test('dark marks the page dark, tells Chrome, and saves it', () => {
-    setMode('dark')
-    expect(html).toHaveAttribute('data-theme', 'dark')
-    expect(colorScheme()).toBe('dark')
-    expect(saved()).toBe('dark')
+describe('setChoice', () => {
+  test.each([
+    ['light', 'a light', LIGHT],
+    ['light', 'a dark', LIGHT],
+    ['dark', 'a light', DARK],
+    ['dark', 'a dark', DARK],
+    ['system', 'a light', LIGHT],
+    ['system', 'a dark', DARK],
+  ] as const)('%s on %s device applies at once, and is saved', (choice, setting, mode) => {
+    device.turn(setting === 'a dark' ? 'dark' : 'light')
+    setChoice('dark')
+    setChoice(choice)
+    expect(shown()).toEqual(mode)
+    expect(currentChoice()).toBe(choice)
+    expect(saved()).toBe(choice)
   })
 
-  test('light undoes both, and saves it', () => {
-    setMode('dark')
-    setMode('light')
-    expect(html).not.toHaveAttribute('data-theme')
-    expect(colorScheme()).toBe('')
-    expect(saved()).toBe('light')
-  })
-
-  test('still changes the mode when the browser won’t save it', () => {
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
-    })
-    setMode('dark')
-    expect(currentMode()).toBe('dark')
+  test('still works when the browser won’t save it', () => {
+    throwFromStorage('setItem')
+    device.turn('dark')
+    setChoice('system')
+    expect(shown()).toEqual(DARK)
+    expect(currentChoice()).toBe('system')
     expect(saved()).toBeNull()
   })
 })
 
+describe('currentChoice', () => {
+  test('is light when nothing has been chosen, even on a dark device', () => {
+    device.turn('dark')
+    expect(currentChoice()).toBe('light')
+  })
+
+  test('is the choice, not the mode it gives', () => {
+    device.turn('dark')
+    setChoice('system')
+    expect(currentChoice()).toBe('system')
+    expect(shown()).toEqual(DARK)
+  })
+})
+
 describe('index.html’s inline script', () => {
-  test('gives dark mode when dark is saved', () => {
-    localStorage.setItem('accountable-mode', 'dark')
+  test.each([
+    ['light', 'a dark', LIGHT],
+    ['dark', 'a light', DARK],
+    ['system', 'a light', LIGHT],
+    ['system', 'a dark', DARK],
+  ] as const)('with %s saved, on %s device, applies it before the app loads', (choice, setting, mode) => {
+    device.turn(setting === 'a dark' ? 'dark' : 'light')
+    localStorage.setItem('accountable-mode', choice)
     loadPage()
-    expect(currentMode()).toBe('dark')
-    expect(colorScheme()).toBe('dark')
+    expect(shown()).toEqual(mode)
+    expect(currentChoice()).toBe(choice)
   })
 
   test.each([
-    ['light is saved', 'light'],
+    ['nothing is saved', null],
     ['the saved value is anything else', 'purple'],
-  ])('gives light mode when %s', (_case, value) => {
-    localStorage.setItem('accountable-mode', value)
+    ['the saved value is in the wrong case', 'Dark'],
+  ])('gives light, even on a dark device, when %s', (_case, value) => {
+    device.turn('dark')
+    if (value) localStorage.setItem('accountable-mode', value)
     loadPage()
-    expect(currentMode()).toBe('light')
-    expect(colorScheme()).toBe('')
+    expect(shown()).toEqual(LIGHT)
+    expect(currentChoice()).toBe('light')
   })
 
-  test('gives light mode when nothing is saved', () => {
-    loadPage()
-    expect(currentMode()).toBe('light')
-  })
-
-  test('gives light mode when reading storage throws', () => {
+  test('gives light when reading storage throws', () => {
     localStorage.setItem('accountable-mode', 'dark')
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new DOMException('Access is denied.', 'SecurityError')
-    })
+    throwFromStorage('getItem')
     expect(loadPage).not.toThrow()
-    expect(currentMode()).toBe('light')
+    expect(shown()).toEqual(LIGHT)
+    expect(currentChoice()).toBe('light')
   })
 
-  test('reads the choice setMode saves, so the two agree on the key', () => {
-    setMode('dark')
+  test('with System saved, follows the device as it changes while the page is open', () => {
+    localStorage.setItem('accountable-mode', 'system')
     loadPage()
-    expect(currentMode()).toBe('dark')
+    device.turn('dark')
+    expect(shown()).toEqual(DARK)
+    device.turn('light')
+    expect(shown()).toEqual(LIGHT)
   })
+
+  test.each([
+    ['light', LIGHT],
+    ['dark', DARK],
+  ] as const)('with %s saved, ignores the device’s changes', (choice, mode) => {
+    localStorage.setItem('accountable-mode', choice)
+    loadPage()
+    device.turn('dark')
+    device.turn('light')
+    device.turn('dark')
+    expect(shown()).toEqual(mode)
+  })
+
+  test('follows the device after System is chosen in the app, and stops after Light or Dark is', () => {
+    loadPage()
+    setChoice('system')
+    device.turn('dark')
+    expect(shown()).toEqual(DARK)
+    device.turn('light')
+    expect(shown()).toEqual(LIGHT)
+
+    setChoice('dark')
+    device.turn('dark')
+    device.turn('light')
+    expect(shown()).toEqual(DARK)
+  })
+
+  test('when the browser won’t save, System chosen in the app follows the device until a reload', () => {
+    throwFromStorage('getItem')
+    throwFromStorage('setItem')
+    loadPage()
+    setChoice('system')
+    device.turn('dark')
+    expect(shown()).toEqual(DARK)
+    device.turn('light')
+    expect(shown()).toEqual(LIGHT)
+
+    device.turn('dark')
+    loadPage()
+    expect(shown()).toEqual(LIGHT)
+    expect(currentChoice()).toBe('light')
+  })
+
+  test.each(['light', 'dark', 'system'] satisfies Choice[])(
+    'reads back %s as setChoice saves it, so the two agree on the key',
+    (choice) => {
+      device.turn('dark')
+      setChoice(choice)
+      loadPage()
+      expect(currentChoice()).toBe(choice)
+      expect(shown()).toEqual(choice === 'light' ? LIGHT : DARK)
+    },
+  )
 })

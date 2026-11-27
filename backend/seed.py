@@ -6,16 +6,37 @@ load(conn, today) clears every table and inserts the rows, inside the caller's t
 
 Run as `python -m backend.seed` to migrate the database if needed and load the data.
 `--today YYYY-MM-DD` sets the date, and `--large` adds 500 of each kind of record.
+It works only on a SQLite database, so it can't replace the team's data (concern 15).
 """
 
 import argparse
+import dataclasses
 import random
 from datetime import date, datetime, time, timedelta
 
 import sqlalchemy as sa
 
-from backend import clock, db, stages
-from backend.tables import activities, contacts, deals, organizations, stage_changes, status_changes
+from backend import clock, db, settings, stages
+from backend.tables import (
+    activities,
+    contacts,
+    deals,
+    organizations,
+    stage_changes,
+    status_changes,
+    users,
+)
+from backend.teammates import TEAMMATES
+
+# How much of the sample data each teammate added, by id: Dana 40%, Joel 25%, Nora 20% and
+# Wes 15%. Uneven, as in a real team.
+SHARES = dict(zip((t.id for t in TEAMMATES), (40, 25, 20, 15), strict=True))
+# How often a deal's activity is logged by whoever added the deal, and how often a record
+# was last changed by someone other than who added it.
+LOGGED_BY_DEAL_ADDER = 0.75
+CHANGED_BY_SOMEONE_ELSE = 0.2
+# The tables whose rows record who added and last changed them (R17).
+RECORDS = ("organizations", "contacts", "deals", "activities")
 
 # name, industry, website, notes. The last two have no deals yet.
 ORGANIZATIONS = [
@@ -327,9 +348,13 @@ class _Builder:
     def __init__(self, today: date):
         self.today = today
         self.rng = random.Random(2026)
+        # A generator of its own, so choosing who added what leaves the records as they were.
+        self.people_rng = random.Random(2028)
+        self.adders: list[str] = []
         self.rows = {
             name: []
             for name in (
+                "users",
                 "organizations",
                 "contacts",
                 "deals",
@@ -348,6 +373,9 @@ class _Builder:
         row["id"] = len(self.rows[table]) + 1
         self.rows[table].append(row)
         return row["id"]
+
+    def teammates(self) -> None:
+        self.rows["users"] = [dataclasses.asdict(teammate) for teammate in TEAMMATES]
 
     def organizations(self) -> None:
         for i, (name, industry, website, notes) in enumerate(ORGANIZATIONS):
@@ -530,6 +558,57 @@ class _Builder:
             text = template.format(first=self.first_name(contact_id))
             self.activity(kind, text, target, _at(day, self.rng))
 
+    def people(self, start: dict[str, int]) -> None:
+        """Who added and last changed each record from start on, as in sample-data.md."""
+        for table in RECORDS:
+            for row in self.rows[table][start.get(table, 0) :]:
+                row["created_by"] = self.added_by(table, row)
+                row["updated_by"] = self.last_changed_by(row)
+        # A won deal making its contact a customer is a change to the contact by whoever
+        # moved the deal (R17).
+        for change in self.rows["status_changes"][start.get("status_changes", 0) :]:
+            contact = self.rows["contacts"][change["contact_id"] - 1]
+            contact["updated_by"] = self.rows["deals"][change["won_deal_id"] - 1]["updated_by"]
+
+    def next_adder(self) -> str:
+        """Dealt from a shuffled deck of 20, one card for each 5% of a teammate's share, so
+        each kind of record comes close to the shares."""
+        if not self.adders:
+            self.adders = [adder for adder, share in SHARES.items() for _ in range(share // 5)]
+            self.people_rng.shuffle(self.adders)
+        return self.adders.pop()
+
+    def someone_other_than(self, teammate_id: str) -> str:
+        others = {other: share for other, share in SHARES.items() if other != teammate_id}
+        return self.people_rng.choices(list(others), list(others.values()))[0]
+
+    def added_by(self, table: str, row: dict) -> str:
+        on_deal = table == "activities" and row["deal_id"] is not None
+        if on_deal and self.people_rng.random() < LOGGED_BY_DEAL_ADDER:
+            return self.rows["deals"][row["deal_id"] - 1]["created_by"]
+        return self.next_adder()
+
+    def last_changed_by(self, row: dict) -> str:
+        """About one record in five was last changed by someone else. One that hadn't been
+        changed since it was added gets a later change, so it shows as changed."""
+        adder = row["created_by"]
+        if self.people_rng.random() >= CHANGED_BY_SOMEONE_ELSE:
+            return adder
+        if row["updated_at"] == row["created_at"]:
+            changed = self.later_change(row["created_at"])
+            if changed is None:
+                return adder
+            row["updated_at"] = changed
+        return self.someone_other_than(adder)
+
+    def later_change(self, added: datetime) -> datetime | None:
+        """A time on a day after added and before today, or None if there's no such day."""
+        days = (self.today - added.date()).days - 1
+        if days < 1:
+            return None
+        day = added.date() + timedelta(days=self.people_rng.randrange(1, days + 1))
+        return _at(day, self.people_rng)
+
     def large(self) -> None:
         """500 more of each kind of record, for speed checks. A separate random seed keeps
         the usual sample data the same."""
@@ -596,23 +675,43 @@ class _Builder:
                 target,
                 occurred,
             )
+        # Drawn after the usual records' people, so theirs stay the same.
+        self.people(base)
 
 
 def build(today: date, large: bool = False) -> dict[str, list[dict]]:
     """The sample data's rows for each table, the same every time for the same today."""
     builder = _Builder(today)
+    builder.teammates()
     builder.organizations()
     builder.contacts()
     builder.deals()
     builder.customers()
     builder.activities()
+    builder.people({})
     if large:
         builder.large()
     return builder.rows
 
 
-# Children first, so nothing is left pointing at a deleted row.
-TABLES = [organizations, contacts, deals, stage_changes, status_changes, activities]
+# Parents first. They're inserted in this order and deleted in reverse, so nothing is left
+# pointing at a missing row.
+TABLES = [users, organizations, contacts, deals, stage_changes, status_changes, activities]
+
+
+def _next_id_resets() -> list[sa.Select]:
+    """For Postgres. The rows go in with their ids, which leaves each table's id sequence at
+    1, so the first record anyone added would clash with one already there (risk 2). Each of
+    these moves a sequence on to just past its table's highest id."""
+    resets = []
+    for table in TABLES:
+        if isinstance(table.c.id.type, sa.Integer):
+            next_id = sa.select(sa.func.coalesce(sa.func.max(table.c.id), 0) + 1)
+            # The table's name is a quoted_name, which needs its type spelled out.
+            name = sa.literal(table.name, sa.Text)
+            sequence = sa.func.pg_get_serial_sequence(name, sa.literal("id", sa.Text))
+            resets.append(sa.select(sa.func.setval(sequence, next_id.scalar_subquery(), False)))
+    return resets
 
 
 def load(conn: sa.Connection, today: date, large: bool = False) -> dict[str, int]:
@@ -628,6 +727,9 @@ def load(conn: sa.Connection, today: date, large: bool = False) -> dict[str, int
     for table in TABLES:
         if rows[table.name]:
             conn.execute(table.insert(), rows[table.name])
+    if conn.dialect.name == "postgresql":
+        for reset in _next_id_resets():
+            conn.execute(reset)
     return {name: len(table_rows) for name, table_rows in rows.items()}
 
 
@@ -640,6 +742,11 @@ def main() -> None:
     args = parser.parse_args()
     today = args.today or clock.today()
 
+    if not db.is_sqlite(settings.database_url()):
+        raise SystemExit(
+            "npm run seed works only on a SQLite database on this computer, since it replaces "
+            "all the data. DATABASE_URL names another kind of database, so nothing was changed."
+        )
     engine = db.make_engine()
     db.migrate(engine)
     with db.transaction(engine) as conn:

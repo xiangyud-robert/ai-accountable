@@ -6,7 +6,7 @@ import sqlalchemy as sa
 from backend.errors import Invalid
 from backend.services import contacts, deals
 from backend.tables import stage_changes, status_changes
-from backend.tests.conftest import NOW, TODAY
+from backend.tests.conftest import DANA, NOW, TODAY
 
 
 def history(conn, deal_id):
@@ -75,19 +75,21 @@ def test_r2_totals_count_open_deals_only(make, conn):
 
 def test_r3_records_a_stage_change_from_and_to_the_right_stages(make, conn):
     deal = make.deal(stage="proposal")
-    deals.move(conn, deal["id"], "negotiation", 0)
+    deals.move(conn, deal["id"], "negotiation", 0, by=DANA.id)
     assert history(conn, deal["id"]) == [(None, "proposal"), ("proposal", "negotiation")]
 
 
 def test_r3_takes_the_usual_probability(make, conn):
     deal = make.deal(stage="new", probability=40)
-    assert deals.move(conn, deal["id"], "proposal", 0)["probability"] == 50
+    assert deals.move(conn, deal["id"], "proposal", 0, by=DANA.id)["probability"] == 50
 
 
 def test_r3_keeps_a_probability_set_in_the_same_save(make, conn):
     deal = make.deal(stage="new")
     assert (
-        deals.change(conn, deal["id"], {"stage": "proposal", "probability": 65})["probability"]
+        deals.change(conn, deal["id"], {"stage": "proposal", "probability": 65}, by=DANA.id)[
+            "probability"
+        ]
         == 65
     )
 
@@ -95,20 +97,22 @@ def test_r3_keeps_a_probability_set_in_the_same_save(make, conn):
 def test_r3_won_and_lost_set_today_as_the_close_date(make, conn):
     won = make.deal(stage="negotiation", close_date=date(2026, 9, 1))
     lost = make.deal(stage="qualified", close_date=date(2026, 9, 1))
-    assert deals.move(conn, won["id"], "won", 0)["close_date"] == TODAY
-    assert deals.move(conn, lost["id"], "lost", 0)["close_date"] == TODAY
+    assert deals.move(conn, won["id"], "won", 0, by=DANA.id)["close_date"] == TODAY
+    assert deals.move(conn, lost["id"], "lost", 0, by=DANA.id)["close_date"] == TODAY
 
 
 def test_r3_won_keeps_a_close_date_set_in_the_same_save(make, conn):
     deal = make.deal(stage="negotiation")
-    changed = deals.change(conn, deal["id"], {"stage": "won", "close_date": date(2026, 6, 10)})
+    changed = deals.change(
+        conn, deal["id"], {"stage": "won", "close_date": date(2026, 6, 10)}, by=DANA.id
+    )
     assert (changed["close_date"], changed["probability"]) == (date(2026, 6, 10), 100)
 
 
 def test_r3_won_makes_the_main_contact_a_customer_linked_to_the_deal(make, conn):
     contact = make.contact(status="qualified")
     deal = make.deal(contact_id=contact["id"], stage="negotiation")
-    deals.move(conn, deal["id"], "won", 0)
+    deals.move(conn, deal["id"], "won", 0, by=DANA.id)
     assert contacts.get_row(conn, contact["id"])["status"] == "customer"
     assert status_history(conn, contact["id"]) == [("qualified", "customer", deal["id"])]
 
@@ -116,14 +120,14 @@ def test_r3_won_makes_the_main_contact_a_customer_linked_to_the_deal(make, conn)
 def test_r3_won_with_a_contact_already_a_customer_adds_no_status_change(make, conn):
     contact = make.contact(status="customer")
     deal = make.deal(contact_id=contact["id"], stage="negotiation")
-    deals.move(conn, deal["id"], "won", 0)
+    deals.move(conn, deal["id"], "won", 0, by=DANA.id)
     assert status_history(conn, contact["id"]) == []
 
 
 def test_r3_won_with_no_main_contact_changes_no_contact(make, conn):
     contact = make.contact(status="lead")
     deal = make.deal(stage="negotiation")
-    deals.move(conn, deal["id"], "won", 0)
+    deals.move(conn, deal["id"], "won", 0, by=DANA.id)
     assert contacts.get_row(conn, contact["id"])["status"] == "lead"
     assert conn.execute(sa.select(sa.func.count()).select_from(status_changes)).scalar() == 0
 
@@ -133,17 +137,17 @@ def test_r3_moving_out_of_won_keeps_the_close_date_and_the_customer(make, conn):
     contact = make.contact(status="qualified")
     deal = make.deal(contact_id=contact["id"], stage="negotiation", close_date=date(2026, 8, 1))
     # Won on a day other than today, so a close date reset to today would show.
-    deals.change(conn, deal["id"], {"stage": "won", "close_date": date(2026, 5, 2)})
-    back = deals.move(conn, deal["id"], "negotiation", 0)
+    deals.change(conn, deal["id"], {"stage": "won", "close_date": date(2026, 5, 2)}, by=DANA.id)
+    back = deals.move(conn, deal["id"], "negotiation", 0, by=DANA.id)
     assert (back["close_date"], back["probability"]) == (date(2026, 5, 2), 75)
     assert contacts.get_row(conn, contact["id"])["status"] == "customer"
-    again = deals.change(conn, deal["id"], {"stage": "proposal"})
+    again = deals.change(conn, deal["id"], {"stage": "proposal"}, by=DANA.id)
     assert again["close_date"] == date(2026, 5, 2)
 
 
 def test_r3_stage_changes_are_timed_now(make, conn):
     deal = make.deal()
-    deals.move(conn, deal["id"], "qualified", 0)
+    deals.move(conn, deal["id"], "qualified", 0, by=DANA.id)
     times = conn.execute(sa.select(stage_changes.c.changed_at)).scalars().all()
     assert times == [NOW, NOW]
 
@@ -153,9 +157,9 @@ def test_r3_stage_changes_are_timed_now(make, conn):
 
 def test_r4_a_hand_set_probability_survives_an_edit_that_keeps_the_stage(make, conn):
     deal = make.deal(stage="proposal")
-    deals.change(conn, deal["id"], {"probability": 65})
+    deals.change(conn, deal["id"], {"probability": 65}, by=DANA.id)
     changed = deals.change(
-        conn, deal["id"], {"name": "Renamed", "value": 12_000, "stage": "proposal"}
+        conn, deal["id"], {"name": "Renamed", "value": 12_000, "stage": "proposal"}, by=DANA.id
     )
     assert changed["probability"] == 65
 
@@ -163,14 +167,14 @@ def test_r4_a_hand_set_probability_survives_an_edit_that_keeps_the_stage(make, c
 def test_r4_won_must_be_100(make, conn):
     deal = make.deal(stage="won")
     with pytest.raises(Invalid) as error:
-        deals.change(conn, deal["id"], {"probability": 90})
+        deals.change(conn, deal["id"], {"probability": 90}, by=DANA.id)
     assert error.value.errors == {"probability": "Won deals are always 100%."}
 
 
 def test_r4_lost_must_be_0(make, conn):
     deal = make.deal(stage="negotiation")
     with pytest.raises(Invalid) as error:
-        deals.change(conn, deal["id"], {"stage": "lost", "probability": 10})
+        deals.change(conn, deal["id"], {"stage": "lost", "probability": 10}, by=DANA.id)
     assert error.value.errors == {"probability": "Lost deals are always 0%."}
 
 
@@ -195,7 +199,7 @@ def test_r5_moving_within_a_column_changes_only_positions(make, conn):
     make.deal(name="B", stage="proposal")
     make.deal(name="C", stage="proposal")
     # The column is C, B, A. Move A to the top.
-    moved = deals.move(conn, a["id"], "proposal", 0)
+    moved = deals.move(conn, a["id"], "proposal", 0, by=DANA.id)
     assert column(conn, "proposal") == [("A", 0), ("C", 1), ("B", 2)]
     assert history(conn, a["id"]) == [(None, "proposal")]
     assert moved["probability"] == 50
@@ -208,7 +212,7 @@ def test_r5_moving_between_columns_renumbers_both_from_0(make, conn):
         make.deal(name=name, stage="qualified")
     # New is C, B, A and Qualified is Y, X. Move B to the middle of Qualified.
     b = next(d for d in deals.list_all(conn) if d["name"] == "B")
-    deals.move(conn, b["id"], "qualified", 1)
+    deals.move(conn, b["id"], "qualified", 1, by=DANA.id)
     assert column(conn, "new") == [("C", 0), ("A", 1)]
     assert column(conn, "qualified") == [("Y", 0), ("B", 1), ("X", 2)]
 
@@ -216,7 +220,7 @@ def test_r5_moving_between_columns_renumbers_both_from_0(make, conn):
 def test_r5_an_index_past_the_end_is_clamped(make, conn):
     a = make.deal(name="A", stage="new")
     make.deal(name="X", stage="qualified")
-    deals.move(conn, a["id"], "qualified", 99)
+    deals.move(conn, a["id"], "qualified", 99, by=DANA.id)
     assert column(conn, "qualified") == [("X", 0), ("A", 1)]
 
 
@@ -224,7 +228,7 @@ def test_r5_a_stage_changed_through_patch_goes_to_the_top(make, conn):
     make.deal(name="X", stage="qualified")
     make.deal(name="Y", stage="qualified")
     a = make.deal(name="A", stage="new")
-    deals.change(conn, a["id"], {"stage": "qualified"})
+    deals.change(conn, a["id"], {"stage": "qualified"}, by=DANA.id)
     assert column(conn, "qualified") == [("A", 0), ("Y", 1), ("X", 2)]
 
 

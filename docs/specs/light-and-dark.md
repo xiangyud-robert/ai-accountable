@@ -12,7 +12,7 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
     - The logo mark keeps its Midnight circle and Sea Green dot, matching the favicon, which can't change with the mode.
 14. **The theme choice is kept in the browser.** It's a setting for this screen, not a record, so it's saved in the browser's local storage, one of the two things the browser keeps (R14). That way the page is in the right mode before anything draws, and a dark page never flashes light while the app loads, the sign-in screen included.
     - The choice is Light, Dark or System. System follows the device's light or dark setting, and changes with it while the app is open, such as when the device turns dark in the evening.
-    - If nothing is saved, or the saved value isn't light, dark or system, the app is in light mode.
+    - It's saved as `light`, `dark` or `system`, so choosing Light saves `light`. If nothing is saved, or the saved value isn't exactly one of those three, in lower case, the app is in light mode.
     - The choice belongs to the browser: it stays after signing out, and applies to whoever signs in on that browser next.
     - If the browser won't save it, the choice still works until the page is reloaded.
     - Another open tab changes when it's next loaded.
@@ -21,6 +21,7 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 ## How it fits together
 
 - **Light or dark:** the theme file holds a light and a dark value for each color role. A few lines at the top of `index.html` read the saved choice and, for System, the device's setting, and mark the page as dark before anything draws (concern 14). With System, the page also listens for the device's setting to change. The page tells Chrome which mode it's in, so Chrome's own parts, such as scrollbars and the date and time pickers, follow it.
+- **The choice on the page:** the same lines keep the choice on `<html>`, as `data-theme-choice`, and the app changes it there when someone chooses in the menu. Only these lines listen for the device's setting, and they read the choice from `<html>` each time it changes, so System keeps following the device after it's chosen in the menu, even when the browser won't save it.
 
 ## Colors
 
@@ -38,6 +39,7 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 | Alert text | `#F47E9A` | Raspberry lightened, for late dates, overdue labels and error messages (8.3:1, 6.5:1, 4.8:1) |
 | Secondary | `#073B4C`, Midnight | Secondary buttons, with Sea Mist text (8.3:1) |
 | Divider | `#1A3540` | Lines between table rows, chart gridlines |
+| Divider raised | `#04232E`, the page | Lines between groups in a menu on the raised surface (1.35:1 against Midnight). The divider would be 1.07:1 there, and lost. |
 | Overlay | Midnight at 70% | Behind dialogs |
 | Chart wash | Sea Green at 18% | The line chart's area |
 
@@ -52,7 +54,7 @@ Badge backgrounds in dark mode are a 30% shade of each color over black, with Se
 
 ## Components
 
-- **The theme choice:** in the user menu, under a "Theme" label in Slate, three items: Light with a sun icon, Dark with a moon icon and System with a monitor icon. The chosen one has a check mark on its right. Choosing one changes the mode at once and leaves the menu open, so the change can be seen.
+- **The theme choice:** in the user menu, under a "Theme" label in Slate, in the labels' size, three items: Light with a sun icon, Dark with a moon icon and System with a monitor icon. The icons are in Slate, and the chosen one has a check mark on its right. Choosing one changes the mode at once and leaves the menu open, so the change can be seen.
 
 ## Layout
 
@@ -64,5 +66,6 @@ Badge backgrounds in dark mode are a 30% shade of each color over black, with Se
 
 ## Testing hooks
 
+- The choice is saved in local storage under `accountable-mode`. Only the lines in `index.html` and `src/lib/colorMode.ts` know that name.
 - The browser saves the theme choice for each address separately, so the tests' copy of the app on port 5273 keeps its own choice and never changes the app on 5173. Each end-to-end test starts with nothing saved, so in light mode.
-- The tests of System set Chrome's own light or dark setting, through Playwright's color scheme, and change it while the page is open.
+- The tests of System set Chrome's own light or dark setting, through Playwright's color scheme, and change it while the page is open. Chrome reports the change at its next frame, so the tests wait for the page to follow it rather than reading it once.

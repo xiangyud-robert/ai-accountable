@@ -1,9 +1,10 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test as base, type Locator, type Page } from '@playwright/test'
+import { expect, test as base, type APIRequestContext, type Locator, type Page } from '@playwright/test'
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { TODAY, testEnv } from './playwright.config'
+import { DANAS_SESSION, TODAY, testEnv } from './playwright.config'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -31,10 +32,35 @@ export function reseed(extra: string[] = []) {
   if (result.status !== 0) throw new Error(`Reseeding failed:\n${result.stdout}\n${result.stderr}`)
 }
 
+/** Anything not served by this computer, such as Supabase. Addresses with no host, such as
+ *  `data:`, don't count. */
+function isOffThisComputer(url: string) {
+  const { protocol, hostname } = new URL(url)
+  return (protocol === 'http:' || protocol === 'https:') && hostname !== '127.0.0.1'
+}
+
+/** A session's token as the browser keeps it, with its signature as the last part. */
+export const TOKEN = String.raw`(eyJ[\w-]*\.[\w-]+\.)[\w-]+`
+
+/** Dana's token, from the session the setup project saved, which every test starts with. */
+function danasToken() {
+  const session = JSON.parse(readFileSync(DANAS_SESSION, 'utf8')) as {
+    origins: { localStorage: { value: string }[] }[]
+  }
+  const saved = session.origins
+    .flatMap((origin) => origin.localStorage)
+    .find(({ value }) => new RegExp(TOKEN).test(value))
+  if (!saved) throw new Error(`No session token in ${DANAS_SESSION}`)
+  return saved.value
+}
+
 type Fixtures = {
   consoleProblems: string[]
   /** Console lines a test causes on purpose, such as the network error Chrome logs for a 422. */
   expectedConsole: RegExp[]
+  offMachineRequests: string[]
+  /** For asking the backend directly, signed in as Dana (R15). */
+  api: APIRequestContext
 }
 
 export const test = base.extend<Fixtures>({
@@ -58,9 +84,44 @@ export const test = base.extend<Fixtures>({
     },
     { auto: true },
   ],
+  // Fails any test whose page asks for anything off this computer, which proves the app never
+  // reaches Supabase (risk 13). It only listens, so it doesn't slow the requests it watches.
+  offMachineRequests: [
+    async ({ context }, use) => {
+      const requests: string[] = []
+      context.on('request', (request) => {
+        if (isOffThisComputer(request.url())) requests.push(request.url())
+      })
+      await use(requests)
+      expect(requests, 'requests off this computer').toEqual([])
+    },
+    { auto: true },
+  ],
+  api: async ({ playwright }, use) => {
+    const api = await playwright.request.newContext({ extraHTTPHeaders: { Authorization: `Bearer ${danasToken()}` } })
+    await use(api)
+    await api.dispose()
+  },
 })
 
 export { expect }
+
+/** The stand-in's password for every sample teammate (concern 18). */
+export const STAND_IN_PASSWORD = 'accountable'
+
+export const DANA = 'dana.holt@example.com'
+export const JOEL = 'joel.abara@example.com'
+
+/** For `test.use({ storageState: SIGNED_OUT })`, in tests that start with no one signed in. */
+export const SIGNED_OUT = { cookies: [], origins: [] }
+
+/** Signs in as a sample teammate on the sign-in screen the page is showing, and waits for the app. */
+export async function signIn(page: Page, email: string) {
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByLabel('Password', { exact: true }).fill(STAND_IN_PASSWORD)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page.getByRole('navigation', { name: 'Sections' })).toBeVisible()
+}
 
 /** Every section and Page not found: a name for the test, its address and its main heading. */
 export const PAGES = [
@@ -75,12 +136,46 @@ export const PAGES = [
   ['a missing page', '/no-such-page', 'Page not found'],
 ] as const
 
-/** Turns dark mode on with the switch, from the dashboard, so the next page a test opens is dark.
+/** The top bar's search box, which finds any organization, contact or deal (R18). */
+export const searchBox = (page: Page) => page.getByRole('search').getByRole('combobox', { name: 'Search', exact: true })
+
+/** The list of results that opens below the search box. */
+export const searchResults = (page: Page) => page.getByRole('search').getByRole('listbox')
+
+/** The initials button at the right of the top bar, which opens the user menu. Its name ends with
+ *  the initials it shows, since a name has to include the text on screen (WCAG 2.5.3). */
+export const initialsButton = (page: Page, name = 'Dana Holt', initials = 'DH') =>
+  page.getByRole('button', { name: `Account, ${name}, ${initials}`, exact: true })
+
+/** The user menu, once it's open. */
+export const userMenu = (page: Page) => page.getByRole('menu')
+
+/** One of the theme choices in the open user menu. */
+export const themeChoice = (page: Page, choice: 'Light' | 'Dark' | 'System') =>
+  userMenu(page).getByRole('menuitemradio', { name: choice, exact: true })
+
+/** Opens the user menu from the initials button, whoever is signed in. */
+export async function openUserMenu(page: Page) {
+  await page.getByRole('button', { name: /^Account, / }).click()
+  await expect(userMenu(page)).toBeVisible()
+}
+
+/** Signs out with the user menu, which shows the sign-in screen. */
+export async function signOut(page: Page) {
+  await openUserMenu(page)
+  await userMenu(page).getByRole('menuitem', { name: 'Sign out' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
+}
+
+/** Chooses Dark in the user menu, from the dashboard, so the next page a test opens is dark.
  *  Each test starts with nothing saved, so in light mode. */
 export async function turnOnDarkMode(page: Page) {
   await page.goto('/')
-  await page.getByRole('switch', { name: 'Dark mode' }).click()
+  await openUserMenu(page)
+  await themeChoice(page, 'Dark').click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await page.keyboard.press('Escape')
+  await expect(userMenu(page)).toBeHidden()
 }
 
 /** Fails if axe finds any WCAG 2 A or AA problem, such as contrast or a missing label. */

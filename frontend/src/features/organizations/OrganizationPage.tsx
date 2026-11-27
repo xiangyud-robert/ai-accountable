@@ -1,6 +1,7 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { AddedBy } from '../../components/AddedBy'
 import { Button } from '../../components/Button'
 import { ConfirmDelete, organizationQuestion } from '../../components/ConfirmDelete'
 import { Details } from '../../components/Details'
@@ -77,6 +78,7 @@ export function OrganizationPage() {
               ['Notes', org.notes && <span className="whitespace-pre-line">{org.notes}</span>],
             ]}
           />
+          <AddedBy record={org} />
         </Panel>
         <Panel
           title="Contacts"

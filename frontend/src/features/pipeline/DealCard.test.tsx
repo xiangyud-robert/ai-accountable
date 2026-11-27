@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { setTeamZone } from '../../lib/teamTime'
 import { dealRow } from '../../test-utils'
 import { DealCard } from './DealCard'
 
@@ -30,5 +31,21 @@ describe('DealCard', () => {
     expect(screen.getByText(/^Dec 11/)).toBeInTheDocument()
     expect(screen.queryByText('Priya Raman')).not.toBeInTheDocument()
     expect(screen.queryByText('100%')).not.toBeInTheDocument()
+  })
+})
+
+describe('DealCard, once the team has reached the new year and this browser hasn’t', () => {
+  afterEach(() => {
+    setTeamZone(null)
+    vi.useRealTimers()
+  })
+
+  test('a close date in the team’s new year leaves out the year', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // 3:00 PM on Dec 31 in Los Angeles, where this browser is, and Jan 1 in Tokyo.
+    vi.setSystemTime(new Date('2026-12-31T23:00:00Z'))
+    setTeamZone('Asia/Tokyo')
+    render(<DealCard deal={{ ...DEAL, close_date: '2027-01-20' }} compact={false} />)
+    expect(screen.getByText('Jan 20')).toBeInTheDocument()
   })
 })

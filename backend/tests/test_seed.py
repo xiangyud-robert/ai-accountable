@@ -1,19 +1,57 @@
 import itertools
+import sys
+import uuid
 from collections import Counter
 from datetime import date, datetime, timedelta
+from unittest.mock import MagicMock
 
 import pytest
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
-from backend import seed, stages
+from backend import seed, stages, tables
 from backend.services import dashboard
-from backend.tables import activities, organizations
-from backend.tests.conftest import TODAY
+from backend.tables import activities, organizations, users
+from backend.teammates import TEAMMATES
+from backend.tests.conftest import NOW, TODAY
+
+# Who added the sample data, as sample-data.md has it.
+SHARES = {"Dana Holt": 0.40, "Joel Abara": 0.25, "Nora Lindqvist": 0.20, "Wes Moreno": 0.15}
+NAMES = {teammate.id: teammate.display_name for teammate in TEAMMATES}
+KINDS = ("organizations", "contacts", "deals", "activities")
 
 
 @pytest.fixture(scope="module")
 def rows():
     return seed.build(TODAY)
+
+
+@pytest.fixture(scope="module")
+def large_rows():
+    return seed.build(TODAY, large=True)
+
+
+def _records(rows, start=None) -> list[dict]:
+    """Every organization, contact, deal and activity, from start on for each kind."""
+    start = start or {}
+    return [row for kind in KINDS for row in rows[kind][start.get(kind, 0) :]]
+
+
+def _assert_about_the_shares(records: list[dict], within: float) -> None:
+    added = Counter(NAMES[record["created_by"]] for record in records)
+    for name, share in SHARES.items():
+        assert added[name] / len(records) == pytest.approx(share, abs=within), name
+
+
+def _changed_by_someone_else(records: list[dict]) -> float:
+    return sum(r["updated_by"] != r["created_by"] for r in records) / len(records)
+
+
+def _logged_by_whoever_added_the_deal(rows, start=None) -> float:
+    added_by = {deal["id"]: deal["created_by"] for deal in rows["deals"]}
+    start = start or {}
+    on_deals = [a for a in rows["activities"][start.get("activities", 0) :] if a["deal_id"]]
+    return sum(a["created_by"] == added_by[a["deal_id"]] for a in on_deals) / len(on_deals)
 
 
 def test_the_counts_by_kind(rows):
@@ -24,6 +62,7 @@ def test_the_counts_by_kind(rows):
         "activities": 100,
         "stage_changes": sum(1 for _ in rows["stage_changes"]),
         "status_changes": 14,
+        "users": 4,
     }
 
 
@@ -220,3 +259,130 @@ def test_names_are_unique(rows):
     for table in ("organizations", "contacts", "deals"):
         names = [r["name"] for r in rows[table]]
         assert len(names) == len(set(names)), table
+
+
+def test_the_four_teammates_have_example_emails_and_ids_no_real_user_can_have():
+    assert [teammate.display_name for teammate in TEAMMATES] == list(SHARES)
+    for teammate in TEAMMATES:
+        assert teammate.email == teammate.display_name.lower().replace(" ", ".") + "@example.com"
+        # Supabase's ids are random, so one starting with 12 zeros can't be anyone's.
+        assert uuid.UUID(teammate.id).hex.startswith("0" * 12)
+
+
+def test_loading_puts_the_teammates_in_users(conn):
+    conn.execute(users.delete())  # The tests' template database already has them.
+    seed.load(conn, TODAY)
+    loaded = conn.execute(sa.select(users.c.id, users.c.email, users.c.display_name)).all()
+    assert sorted(loaded) == sorted((t.id, t.email, t.display_name) for t in TEAMMATES)
+
+
+def test_no_contact_has_a_teammates_name(large_rows):
+    contact_names = {contact["name"] for contact in large_rows["contacts"]}
+    assert contact_names.isdisjoint(NAMES.values())
+
+
+def test_every_record_was_added_by_a_teammate_in_about_the_specs_shares(rows):
+    records = _records(rows)
+    assert len(records) == 200
+    for record in records:
+        assert record["created_by"] in NAMES and record["updated_by"] in NAMES
+    _assert_about_the_shares(records, within=0.03)
+    # Each kind on its own comes close too, so every screen looks like the same team's.
+    for kind in KINDS:
+        _assert_about_the_shares(rows[kind], within=0.1)
+
+
+def test_a_deals_activities_are_mostly_logged_by_whoever_added_the_deal(rows):
+    assert _logged_by_whoever_added_the_deal(rows) >= 0.7
+
+
+def test_about_one_record_in_five_was_last_changed_by_someone_else(rows):
+    assert _changed_by_someone_else(_records(rows)) == pytest.approx(0.2, abs=0.05)
+
+
+def test_a_record_someone_else_changed_was_changed_after_it_was_added(rows):
+    """So its page shows who last changed it (R17)."""
+    for record in _records(rows):
+        assert record["created_at"] <= record["updated_at"] <= NOW
+        if record["updated_by"] != record["created_by"]:
+            assert record["updated_at"] > record["created_at"]
+
+
+def test_a_customer_was_last_changed_by_whoever_won_their_first_deal(rows):
+    """R17: a won deal making its contact a customer is a change by whoever moved the deal."""
+    contacts = {contact["id"]: contact for contact in rows["contacts"]}
+    deals = {deal["id"]: deal for deal in rows["deals"]}
+    for change in rows["status_changes"]:
+        contact = contacts[change["contact_id"]]
+        assert contact["updated_by"] == deals[change["won_deal_id"]]["updated_by"]
+
+
+def test_who_added_and_changed_each_record_is_the_same_every_time(rows):
+    def people(rows):
+        return [(r["id"], r["created_by"], r["updated_by"]) for r in _records(rows)]
+
+    assert people(seed.build(TODAY)) == people(rows)
+    assert people(seed.build(TODAY + timedelta(days=100))) == people(rows)
+
+
+def test_large_spreads_its_records_across_the_four_the_same_way(rows, large_rows):
+    start = {name: len(table) for name, table in rows.items()}
+    records = _records(large_rows, start)
+    assert len(records) == 2000
+    _assert_about_the_shares(records, within=0.02)
+    assert _changed_by_someone_else(records) == pytest.approx(0.2, abs=0.03)
+    assert _logged_by_whoever_added_the_deal(large_rows, start) >= 0.7
+
+
+def test_large_leaves_the_usual_records_as_they_are(rows, large_rows):
+    for name, table in rows.items():
+        assert large_rows[name][: len(table)] == table, name
+
+
+def _postgres_sql(statement) -> str:
+    return str(
+        statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    )
+
+
+def test_on_postgres_loading_moves_each_id_sequence_past_the_highest_id():
+    """Risk 2: the rows go in with their ids, so each sequence would still be at 1, and the
+    first record anyone added would clash. Checked without connecting to Postgres."""
+    conn = MagicMock()
+    conn.dialect = postgresql.dialect()
+    seed.load(conn, TODAY)
+    statements = [call.args[0] for call in conn.execute.call_args_list]
+    last_insert = max(i for i, s in enumerate(statements) if isinstance(s, sa.Insert))
+    resets = [_postgres_sql(statement) for statement in statements[last_insert + 1 :]]
+    numbered = [
+        table.name
+        for table in tables.metadata.sorted_tables
+        if isinstance(table.c.id.type, sa.Integer)
+    ]
+    assert len(resets) == len(numbered) == 6
+    for name in numbered:
+        next_id = f"setval(pg_get_serial_sequence('{name}', 'id'), (SELECT coalesce(max({name}.id), 0) + 1"
+        assert sum(next_id in sql and sql.endswith("false) AS setval_1") for sql in resets) == 1, (
+            name
+        )
+
+
+def test_npm_run_seed_refuses_a_database_that_isnt_sqlite(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://postgres:hunter2@127.0.0.1:9/postgres")
+    monkeypatch.setattr(sys, "argv", ["seed"])
+    with pytest.raises(SystemExit) as refused:
+        seed.main()
+    message = str(refused.value)
+    assert message.startswith("npm run seed works only on a SQLite database on this computer")
+    assert "nothing was changed" in message
+    assert "hunter2" not in message
+
+
+def test_npm_run_seed_loads_a_sqlite_database(monkeypatch, capsys, engine):
+    monkeypatch.setattr(sys, "argv", ["seed", "--today", TODAY.isoformat()])
+    seed.main()
+    assert "Loaded the sample data, dated from Jun 15, 2026: 15 organizations" in (
+        capsys.readouterr().out
+    )
+    with engine.connect() as conn:
+        assert conn.execute(sa.select(sa.func.count()).select_from(users)).scalar() == 4

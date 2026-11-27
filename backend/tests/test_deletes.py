@@ -3,6 +3,7 @@ import sqlalchemy as sa
 from backend.services import activities, contacts, deals, organizations, timeline
 from backend.tables import activities as activities_table
 from backend.tables import stage_changes, status_changes
+from backend.tests.conftest import DANA
 
 
 def count(conn, table, *where):
@@ -24,7 +25,7 @@ def test_r11_deleting_a_contact(make, conn):
     deal = make.deal(contact_id=contact["id"])
     make.activity(contact_id=contact["id"], description="On the contact")
     make.activity(deal_id=deal["id"], description="On the deal")
-    contacts.change(conn, contact["id"], {"status": "customer"})
+    contacts.change(conn, contact["id"], {"status": "customer"}, by=DANA.id)
     contacts.delete(conn, contact["id"])
     assert deals.get_row(conn, deal["id"])["contact_id"] is None
     assert count(conn, activities_table, activities_table.c.contact_id == contact["id"]) == 0

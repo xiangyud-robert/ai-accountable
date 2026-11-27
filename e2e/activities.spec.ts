@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test'
+import { type APIRequestContext, type Page } from '@playwright/test'
 import { API_PORT } from './playwright.config'
 import { choose, expect, test } from './fixtures'
 
@@ -18,8 +18,8 @@ async function openDeal(page: Page, name: string) {
 }
 
 /** The timeline's texts on screen match the server's, whose times run newest first. */
-async function expectNewestFirst(page: Page, path: string) {
-  const record = await (await page.request.get(`http://127.0.0.1:${API_PORT}/api${path}`)).json()
+async function expectNewestFirst(page: Page, api: APIRequestContext, path: string) {
+  const record = await (await api.get(`http://127.0.0.1:${API_PORT}/api${path}`)).json()
   const times: string[] = record.timeline.map((e: { at: string }) => e.at)
   expect(times).toEqual([...times].sort().reverse())
   const texts = await timeline(page).locator('p').first().allTextContents()
@@ -28,7 +28,7 @@ async function expectNewestFirst(page: Page, path: string) {
   expect(shown).toEqual(record.timeline.map((e: { text: string }) => e.text))
 }
 
-test('criterion 5: log a note on a contact', async ({ page }) => {
+test('criterion 5: log a note on a contact', async ({ page, api }) => {
   await openContact(page, 'Grace Whitfield')
   const form = page.getByRole('form', { name: 'Log activity' })
   await expect(form.getByLabel('When')).toHaveValue('2026-06-15T11:00')
@@ -40,10 +40,10 @@ test('criterion 5: log a note on a contact', async ({ page }) => {
   await expect(timeline(page).first()).toContainText('Today, 11:00 AM')
   await expect(form.getByLabel('Description')).toHaveValue('')
   const id = page.url().split('/').pop()
-  await expectNewestFirst(page, `/contacts/${id}`)
+  await expectNewestFirst(page, api, `/contacts/${id}`)
 })
 
-test('criterion 5: a call with a follow-up on a deal, also on its main contact’s timeline', async ({ page }) => {
+test('criterion 5: a call with a follow-up on a deal, also on its main contact’s timeline', async ({ page, api }) => {
   await openDeal(page, 'Northwind Health analytics rollout')
   const form = page.getByRole('form', { name: 'Log activity' })
   await choose(form, 'Type', 'Call')
@@ -56,7 +56,7 @@ test('criterion 5: a call with a follow-up on a deal, also on its main contact�
   await expect(call).toContainText('Follow up Jun 18')
   await expect(call.getByRole('checkbox', { name: 'Done' })).not.toBeChecked()
   const id = page.url().split('/').pop()
-  await expectNewestFirst(page, `/deals/${id}`)
+  await expectNewestFirst(page, api, `/deals/${id}`)
 
   await page.getByRole('link', { name: 'Elena Petrova' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Elena Petrova' })).toBeVisible()

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status
 
+from backend.auth import CurrentUser
 from backend.db import transaction
 from backend.routers import Engine, RecordId
 from backend.schemas import ContactDetail, ContactIn, ContactPatch, ContactRow
@@ -15,9 +16,9 @@ def list_contacts(engine: Engine) -> list[dict]:
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=ContactRow)
-def add_contact(body: ContactIn, engine: Engine) -> dict:
+def add_contact(body: ContactIn, engine: Engine, person: CurrentUser) -> dict:
     with transaction(engine) as conn:
-        return contacts.add(conn, body.model_dump())
+        return contacts.add(conn, body.model_dump(), by=person.id)
 
 
 @router.get("/{contact_id}", response_model=ContactDetail)
@@ -27,9 +28,11 @@ def get_contact(contact_id: RecordId, engine: Engine) -> dict:
 
 
 @router.patch("/{contact_id}", response_model=ContactRow)
-def change_contact(contact_id: RecordId, body: ContactPatch, engine: Engine) -> dict:
+def change_contact(
+    contact_id: RecordId, body: ContactPatch, engine: Engine, person: CurrentUser
+) -> dict:
     with transaction(engine) as conn:
-        return contacts.change(conn, contact_id, body.model_dump(exclude_unset=True))
+        return contacts.change(conn, contact_id, body.model_dump(exclude_unset=True), by=person.id)
 
 
 @router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)

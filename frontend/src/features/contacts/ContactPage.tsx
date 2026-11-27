@@ -1,6 +1,7 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { AddedBy } from '../../components/AddedBy'
 import { StatusBadge } from '../../components/Badge'
 import { Button } from '../../components/Button'
 import { ConfirmDelete, contactQuestion } from '../../components/ConfirmDelete'
@@ -90,6 +91,7 @@ export function ContactPage() {
                 ['Phone', person.phone && <span className="font-mono text-[13px]">{person.phone}</span>],
               ]}
             />
+            <AddedBy record={person} />
           </Panel>
           <Panel
             title="Deals"

@@ -1,27 +1,45 @@
 import { MutationObserver, QueryObserver } from '@tanstack/react-query'
 import { waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockFetch } from '../test-utils'
-import { FieldErrors, NotFound, UNREACHABLE_MESSAGE, Unreachable, api, queryClient } from './api'
+import {
+  FieldErrors,
+  NotFound,
+  Refused,
+  UNREACHABLE_MESSAGE,
+  Unreachable,
+  api,
+  connectSession,
+  queryClient,
+} from './api'
 
 /** The options the last request was sent with. */
 const lastRequest = () => vi.mocked(fetch).mock.lastCall?.[1]
 
+/** Called when the server refuses the session's token. */
+let refused = vi.fn()
+
+// Signed in as Dana, unless a test connects another session.
+beforeEach(() => {
+  refused = vi.fn()
+  connectSession({ token: async () => 'token-dana', refused })
+})
+
 afterEach(() => queryClient.clear())
 
 describe('api', () => {
-  test('a read sends no body, and gives back the JSON', async () => {
+  test('a read sends no body, only the token, and gives back the JSON', async () => {
     const calls = mockFetch(() => ({ body: [{ id: 7, name: 'Harbor Logistics fleet' }] }))
     await expect(api('/deals')).resolves.toEqual([{ id: 7, name: 'Harbor Logistics fleet' }])
     expect(calls).toEqual([{ method: 'GET', path: '/deals', body: undefined }])
-    expect(lastRequest()).toMatchObject({ headers: undefined, body: undefined })
+    expect(lastRequest()).toMatchObject({ headers: { Authorization: 'Bearer token-dana' }, body: undefined })
   })
 
-  test('a change sends its body as JSON', async () => {
+  test('a change sends its body as JSON, with the token', async () => {
     const calls = mockFetch(() => ({ body: { id: 7 } }))
     await api('/deals/7', { method: 'PATCH', body: { value: 72000 } })
     expect(calls).toEqual([{ method: 'PATCH', path: '/deals/7', body: { value: 72000 } }])
-    expect(lastRequest()?.headers).toEqual({ 'Content-Type': 'application/json' })
+    expect(lastRequest()?.headers).toEqual({ 'Content-Type': 'application/json', Authorization: 'Bearer token-dana' })
   })
 
   test('a delete, answered with no content, gives back nothing', async () => {
@@ -60,6 +78,45 @@ describe('api', () => {
   })
 })
 
+describe('the session', () => {
+  const authorization = () => (lastRequest()?.headers as Record<string, string>).Authorization
+
+  test('every request sends the token the session has at the time, and none without one', async () => {
+    let token: string | null = 'token-before-renewal'
+    connectSession({ token: async () => token, refused })
+    mockFetch(() => ({ status: 204 }))
+
+    await api('/deals')
+    expect(authorization()).toBe('Bearer token-before-renewal')
+    token = 'token-after-renewal'
+    await api('/deals', { method: 'POST', body: { name: 'Cobalt Bank pilot' } })
+    expect(authorization()).toBe('Bearer token-after-renewal')
+    await api('/deals/7', { method: 'DELETE' })
+    expect(authorization()).toBe('Bearer token-after-renewal')
+
+    token = null
+    await api('/deals')
+    expect(lastRequest()?.headers).toEqual({})
+  })
+
+  test('a 401 ends the session', async () => {
+    mockFetch(() => ({ status: 401, body: { detail: 'Sign in to carry on.' } }))
+    await expect(api('/deals')).rejects.toBeInstanceOf(Refused)
+    expect(refused).toHaveBeenCalledOnce()
+  })
+
+  test('the stand-in’s own “Wrong email or password.” doesn’t, and a sign-in sends no token', async () => {
+    const calls = mockFetch(() => ({ status: 401, body: { detail: 'Wrong email or password.' } }))
+    const details = { email: 'dana.holt@example.com', password: 'wrong' }
+    await expect(api('/stand-in/sign-in', { method: 'POST', body: details, signingIn: true })).rejects.toBeInstanceOf(
+      Refused,
+    )
+    expect(refused).not.toHaveBeenCalled()
+    expect(calls).toEqual([{ method: 'POST', path: '/stand-in/sign-in', body: details }])
+    expect(lastRequest()?.headers).toEqual({ 'Content-Type': 'application/json' })
+  })
+})
+
 describe('the query client', () => {
   // The delay between tries is left out, so the tests don't wait for it. Whether to try again
   // is still the app's own rule.
@@ -69,6 +126,12 @@ describe('the query client', () => {
     const calls = mockFetch(() => ({ status: 500 }))
     await expect(fetchDeals()).rejects.toBeInstanceOf(Unreachable)
     expect(calls).toHaveLength(2)
+  })
+
+  test('doesn’t ask again when the token is refused', async () => {
+    const calls = mockFetch(() => ({ status: 401 }))
+    await expect(fetchDeals()).rejects.toBeInstanceOf(Refused)
+    expect(calls).toHaveLength(1)
   })
 
   test('doesn’t ask again for a record that doesn’t exist', async () => {

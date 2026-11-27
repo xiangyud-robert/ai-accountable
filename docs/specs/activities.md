@@ -28,7 +28,7 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 
 Each **timeline** entry shows an icon for its kind, its text and when it happened.
 
-- Activities also show who logged them, after when they happened, such as "Today, 2:30 PM, by Dana Holt" (R17). Stage and status changes don't record who made them, so they show no name.
+- Activities also show who logged them, after when they happened, such as "Today, 2:30 PM, by Dana Holt" (R17), with the time in JetBrains Mono and the name in Instrument Sans. Stage and status changes don't record who made them, so they show no name, and neither does an activity from before sign-in.
 - Activities show their follow-up, such as "Follow up Nov 25", "Overdue since Nov 18" or "Done", with a Done checkbox. A menu on each activity has Edit and Delete.
 - On a contact's timeline, entries from a deal say "On Northwind analytics rollout", with a link to the deal.
 

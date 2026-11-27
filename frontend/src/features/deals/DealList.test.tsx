@@ -1,9 +1,10 @@
 import { screen, within } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { setTeamZone, teamNow } from '../../lib/teamTime'
 import { dealRow, renderWithApp } from '../../test-utils'
 import { DealList } from './DealList'
 
-const thisYear = new Date().getFullYear()
+const thisYear = teamNow().getFullYear()
 
 const DEALS = [
   dealRow({ name: 'Fleet analytics', value: 48_000, close_date: `${thisYear}-12-11` }),
@@ -42,5 +43,21 @@ describe('DealList', () => {
     const [fleet, sensors] = screen.getAllByRole('listitem').map((item) => within(item))
     expect(fleet.queryByText('Late')).not.toBeInTheDocument()
     expect(sensors.getByText('Late')).toBeInTheDocument()
+  })
+})
+
+describe('DealList, once the team has reached the new year and this browser hasn’t', () => {
+  afterEach(() => {
+    setTeamZone(null)
+    vi.useRealTimers()
+  })
+
+  test('a close date in the team’s new year leaves out the year', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // 3:00 PM on Dec 31 in Los Angeles, where this browser is, and Jan 1 in Tokyo.
+    vi.setSystemTime(new Date('2026-12-31T23:00:00Z'))
+    setTeamZone('Asia/Tokyo')
+    renderWithApp(<DealList deals={[dealRow({ close_date: '2027-01-20' })]} empty="No deals yet." />)
+    expect(screen.getByText('Jan 20')).toBeInTheDocument()
   })
 })

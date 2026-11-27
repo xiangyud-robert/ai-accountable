@@ -1,18 +1,29 @@
-"""Activities: logging, changing and deleting them (R8), and marking follow-ups done (R9)."""
+"""Activities: logging, changing and deleting them (R8), and marking follow-ups done (R9).
+
+`by` is the signed-in person's id, kept as who logged and last changed it (R17).
+"""
 
 import sqlalchemy as sa
 
 from backend import clock
 from backend.errors import Invalid, NotFound
 from backend.services import contacts as contacts_service
+from backend.services.users import People
 from backend.tables import activities, deals
+
+PEOPLE = People(activities)
 
 
 def get(conn: sa.Connection, activity_id: int) -> dict:
-    row = conn.execute(sa.select(activities).where(activities.c.id == activity_id)).first()
+    query = (
+        sa.select(activities, *PEOPLE.columns())
+        .select_from(PEOPLE.join(activities))
+        .where(activities.c.id == activity_id)
+    )
+    row = conn.execute(query).first()
     if row is None:
         raise NotFound("activity")
-    return dict(row._mapping)
+    return PEOPLE.take(dict(row._mapping))
 
 
 def _check(activity: dict) -> None:
@@ -22,7 +33,7 @@ def _check(activity: dict) -> None:
         raise Invalid("follow_up_done", "Add a follow-up date first.")
 
 
-def add(conn: sa.Connection, data: dict) -> dict:
+def add(conn: sa.Connection, data: dict, *, by: str) -> dict:
     """R8: logged on exactly one contact or one deal, at a time no later than now (now by default)."""
     activity = dict(data)
     contact_id, deal_id = activity.get("contact_id"), activity.get("deal_id")
@@ -40,11 +51,13 @@ def add(conn: sa.Connection, data: dict) -> dict:
     activity.setdefault("follow_up_date", None)
     activity.setdefault("follow_up_done", False)
     _check(activity)
-    insert = activities.insert().values(**activity, created_at=now, updated_at=now)
+    insert = activities.insert().values(
+        **activity, created_at=now, updated_at=now, created_by=by, updated_by=by
+    )
     return get(conn, conn.execute(insert.returning(activities.c.id)).scalar_one())
 
 
-def change(conn: sa.Connection, activity_id: int, data: dict) -> dict:
+def change(conn: sa.Connection, activity_id: int, data: dict, *, by: str) -> dict:
     """Changes the fields sent, including marking the follow-up done or not done."""
     current = get(conn, activity_id)
     data = dict(data)
@@ -56,7 +69,7 @@ def change(conn: sa.Connection, activity_id: int, data: dict) -> dict:
         conn.execute(
             activities.update()
             .where(activities.c.id == activity_id)
-            .values(**data, updated_at=clock.now())
+            .values(**data, updated_at=clock.now(), updated_by=by)
         )
     return get(conn, activity_id)
 

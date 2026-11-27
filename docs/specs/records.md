@@ -45,7 +45,7 @@ What every kind of record shares. Each record's own screen, form, data and API a
   - Adding a record sets both to the person adding it.
   - A change sets who last changed it to the person making it. A change is any save of the record's own fields, a change of a deal's stage however it's made, marking a follow-up done or not done, and a won deal making its main contact a customer, which counts as a change to the contact by whoever moved the deal.
   - Moving a card within its own column, other cards' places shifting, and links emptied by a delete (R11) don't count as changes.
-  - Records from before sign-in, in a local database made by an earlier version, have no one recorded, and show no "Added by" line.
+  - Records from before sign-in, in a local database made by an earlier version, have no one recorded, and show no "Added by" line. One changed since shows only "Last changed by".
 
 ## Forms
 
@@ -70,6 +70,6 @@ A short message confirms each save, delete and pipeline move, such as "Deal save
 
 - **Record pages:**
   - The details are on the left (4 columns), with the linked contacts and deals beneath them.
-  - The details end with who added the record and when, and who last changed it and when (R17), in small print in Slate: "Added by Dana Holt on Nov 12, 2026" and "Last changed by Joel Abara on Nov 20, 2026". The second line is left out until the record has been changed.
+  - The details end with who added the record and when, and who last changed it and when (R17), in small print in Slate: "Added by Dana Holt on Nov 12, 2026" and "Last changed by Joel Abara on Nov 20, 2026". The second line is left out until the record has been changed, which shows as a change time or a person different from when it was added.
   - The timeline is on the right (8 columns).
   - An organization's page puts the contacts and deals side by side, since it has no timeline.

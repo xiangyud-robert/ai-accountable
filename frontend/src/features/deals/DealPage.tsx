@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { AddedBy } from '../../components/AddedBy'
 import { LateBadge, StageBadge } from '../../components/Badge'
 import { Button } from '../../components/Button'
 import { ConfirmDelete, dealQuestion } from '../../components/ConfirmDelete'
@@ -97,6 +98,7 @@ export function DealPage() {
               ],
             ]}
           />
+          <AddedBy record={deal} />
         </Panel>
         <Panel title="Timeline" subtitle="Its activities and stage changes" className="col-span-8">
           <LogActivityForm on={{ deal_id: deal.id }} />

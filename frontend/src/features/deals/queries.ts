@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notify } from '../../components/Toaster'
 import { api } from '../../lib/api'
-import { todayISO } from '../../lib/format'
+import { teamTodayISO } from '../../lib/teamTime'
 import type { DealDetail, DealRow, Stage, StageKey } from '../../lib/types'
 import { moveDeal, putBack } from '../pipeline/board'
 
@@ -59,7 +59,7 @@ export function useMoveDeal() {
     onSuccess: () => notify.done('Deal moved'),
     onError: (_error, { id, before, stages }) => {
       // Only this card goes back, so a card moved since stays where it was dropped.
-      client.setQueryData<DealRow[]>(DEALS_KEY, (now) => putBack(now ?? before, before, stages, id, todayISO()))
+      client.setQueryData<DealRow[]>(DEALS_KEY, (now) => putBack(now ?? before, before, stages, id, teamTodayISO()))
       notify.failed("Couldn't save the move, so the card is back where it was.")
     },
     onSettled: () => client.invalidateQueries(),
@@ -74,7 +74,7 @@ export function useMoveDeal() {
     // Without revert, the cancelled refetch would count as a failed one, and the board would
     // be replaced by the "Can't reach" message.
     void client.cancelQueries({ queryKey: DEALS_KEY, exact: true })
-    client.setQueryData(DEALS_KEY, moveDeal(before, stages, move.id, move.stage, move.index, todayISO()))
+    client.setQueryData(DEALS_KEY, moveDeal(before, stages, move.id, move.stage, move.index, teamTodayISO()))
     mutation.mutate({ ...move, before, stages })
   }
 }

@@ -7,9 +7,10 @@ afterEach(() => {
   cleanup()
   // Sonner keeps open toasts outside React and shows them to the next test's Toaster.
   toast.dismiss()
-  // Each test starts in light mode with nothing saved, as a first visit does.
+  // Each test starts in light mode with nothing chosen or saved, as a first visit does.
   localStorage.clear()
   document.documentElement.removeAttribute('data-theme')
+  document.documentElement.removeAttribute('data-theme-choice')
   document.documentElement.removeAttribute('style')
 })
 // Radix hands focus back on a timer once a dialog closes, which mustn't fire after jsdom is gone.
@@ -26,3 +27,7 @@ Element.prototype.scrollIntoView ??= function () {}
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.setPointerCapture ??= function () {}
 Element.prototype.releasePointerCapture ??= function () {}
+// jsdom has no matchMedia, which colorMode.ts reads for System. This is a light device that never
+// changes. A test that needs another stubs its own.
+window.matchMedia ??= (query: string) =>
+  ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList

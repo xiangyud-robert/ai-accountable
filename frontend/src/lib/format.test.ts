@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   addDaysISO,
   clockTime,
@@ -19,6 +19,7 @@ import {
   timelineTime,
   todayISO,
 } from './format'
+import { setTeamZone } from './teamTime'
 
 // Vitest runs in America/Los_Angeles (vite.config.ts), where a date read as the start of a UTC day
 // would show as the day before.
@@ -66,6 +67,35 @@ describe('dates', () => {
     expect(timelineTime('2026-11-21T09:05:00', NOW)).toBe('Yesterday, 9:05 AM')
     expect(timelineTime('2026-11-12T14:30:00', NOW)).toBe('Nov 12, 2:30 PM')
     expect(timelineTime('2025-11-12T14:30:00', NOW)).toBe('Nov 12, 2025, 2:30 PM')
+  })
+})
+
+describe('counted from the team’s now, not this browser’s', () => {
+  // 3:00 PM on Nov 22 in Los Angeles, where this browser is, is already 8:00 AM on Nov 23 in Tokyo.
+  const at = (moment: Date) => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(moment)
+    setTeamZone('Asia/Tokyo')
+  }
+
+  afterEach(() => {
+    setTeamZone(null)
+    vi.useRealTimers()
+  })
+
+  test('today, Today and Yesterday', () => {
+    at(NOW)
+    expect(todayISO()).toBe('2026-11-23')
+    expect(timelineTime('2026-11-23T07:30:00')).toBe('Today, 7:30 AM')
+    expect(timelineTime('2026-11-22T14:30:00')).toBe('Yesterday, 2:30 PM')
+    expect(timelineTime('2026-11-21T14:30:00')).toBe('Nov 21, 2:30 PM')
+    expect(daysFromToday('2026-11-23')).toBe(0)
+  })
+
+  test('this year, once the team has reached the new year', () => {
+    at(new Date(2026, 11, 31, 15, 0))
+    expect(shortDate('2027-01-05')).toBe('Jan 5')
+    expect(followUpLabel('2026-12-30', false, true)).toBe('Overdue since Dec 30, 2026')
   })
 })
 

@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest'
 import { Toaster } from '../../components/Toaster'
 import { UNREACHABLE_MESSAGE } from '../../lib/api'
 import type { DealDetail, TimelineEntry } from '../../lib/types'
-import { STAGES, dealRow, details, mockFetch, panel, renderWithApp } from '../../test-utils'
+import { STAGES, dealRow, details, mockFetch, panel, person, renderWithApp } from '../../test-utils'
 import { DealPage } from './DealPage'
 
 const entry = {
@@ -20,6 +20,7 @@ const entry = {
   contact_name: null,
   deal_id: 7,
   deal_name: 'Harbor Logistics fleet analytics',
+  created_by: null,
 } as const
 
 const TIMELINE: TimelineEntry[] = [
@@ -31,6 +32,7 @@ const TIMELINE: TimelineEntry[] = [
     at: '2026-11-20T10:15:00',
     text: 'Sent the revised proposal',
     type: 'email',
+    created_by: person('Joel Abara'),
   },
   {
     ...entry,
@@ -81,6 +83,13 @@ describe('DealPage', () => {
       '/organizations/1',
     )
     expect(within(panel('Details')).getByRole('link', { name: 'Priya Raman' })).toHaveAttribute('href', '/contacts/10')
+  })
+
+  test('the details end with who added the deal and who last changed it', () => {
+    renderPage()
+    expect(panel('Details').textContent).toMatch(
+      /Added by Dana Holt on Oct 5, 2026Last changed by Joel Abara on Nov 20, 2026$/,
+    )
   })
 
   test('a late deal has the Late badge', () => {

@@ -11,10 +11,12 @@ import sqlalchemy as sa
 
 from backend import clock, stages
 from backend.services import timeline
+from backend.services.users import People
 from backend.tables import activities, contacts, deals, stage_changes
 
 FOLLOW_UP_DAYS = 7
 FUNNEL_KEYS = ("new", "qualified", "proposal", "negotiation", "won")
+LOGGED_BY = People(activities, changed=False)
 
 
 # The figures added up deal by deal, in the shapes of their models in schemas.py.
@@ -80,7 +82,7 @@ def _funnel(deal_rows: Sequence[sa.Row], history: Sequence[sa.Row]) -> list[_Fun
 
 def follow_ups(conn: sa.Connection, today: date) -> list[dict]:
     """R9: not done, and due no later than 7 days from today. Sorted by date, so overdue
-    ones come first, oldest first, then the rest, soonest first."""
+    ones come first, oldest first, then the rest, soonest first. Each shows who logged it."""
     query = (
         sa.select(
             activities.c.id,
@@ -89,12 +91,16 @@ def follow_ups(conn: sa.Connection, today: date) -> list[dict]:
             activities.c.follow_up_date,
             activities.c.contact_id,
             activities.c.deal_id,
+            activities.c.created_by,
             contacts.c.name.label("contact_name"),
             deals.c.name.label("deal_name"),
+            *LOGGED_BY.columns(),
         )
         .select_from(
-            activities.outerjoin(contacts, activities.c.contact_id == contacts.c.id).outerjoin(
-                deals, activities.c.deal_id == deals.c.id
+            LOGGED_BY.join(
+                activities.outerjoin(contacts, activities.c.contact_id == contacts.c.id).outerjoin(
+                    deals, activities.c.deal_id == deals.c.id
+                )
             )
         )
         .where(
@@ -107,7 +113,8 @@ def follow_ups(conn: sa.Connection, today: date) -> list[dict]:
     result = []
     for row in conn.execute(query):
         days = (row.follow_up_date - today).days
-        result.append({**row._mapping, "days": days, "overdue": days < 0})
+        follow_up = LOGGED_BY.take(dict(row._mapping))
+        result.append({**follow_up, "days": days, "overdue": days < 0})
     return result
 
 

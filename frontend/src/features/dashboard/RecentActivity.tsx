@@ -3,7 +3,7 @@ import { EmptyState } from '../../components/EmptyState'
 import { Panel } from '../../components/Panel'
 import { clockTime, timelineTime } from '../../lib/format'
 import type { Dashboard, TimelineEntry } from '../../lib/types'
-import { EntryIcon } from '../activities/Timeline'
+import { EntryIcon, WhenAndWho } from '../activities/Timeline'
 import { groupRecent } from './chartData'
 
 /** The record an entry belongs to, and its address. */
@@ -41,10 +41,15 @@ export function RecentActivity({ dashboard }: { dashboard: Dashboard }) {
                         {record.name}
                       </Link>
                     </div>
-                    <span className="whitespace-nowrap font-mono text-xs text-ink-muted">
-                      {group.title === 'Earlier'
-                        ? timelineTime(entry.at, new Date(`${dashboard.today}T12:00:00`))
-                        : clockTime(entry.at)}
+                    <span className="whitespace-nowrap text-xs text-ink-muted">
+                      <WhenAndWho
+                        when={
+                          group.title === 'Earlier'
+                            ? timelineTime(entry.at, new Date(`${dashboard.today}T12:00:00`))
+                            : clockTime(entry.at)
+                        }
+                        by={entry.created_by}
+                      />
                     </span>
                   </li>
                 )

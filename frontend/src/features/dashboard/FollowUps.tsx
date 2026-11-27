@@ -54,12 +54,17 @@ export function FollowUps({ dashboard }: { dashboard: Dashboard }) {
                 <p id={`follow-up-${followUp.id}`} className="truncate font-medium">
                   {followUp.description}
                 </p>
-                <Link
-                  to={followUp.deal_id ? `/deals/${followUp.deal_id}` : `/contacts/${followUp.contact_id}`}
-                  className="block truncate text-xs text-link hover:underline"
-                >
-                  {followUp.deal_name ?? followUp.contact_name}
-                </Link>
+                <p className="flex min-w-0 gap-1 text-xs">
+                  <Link
+                    to={followUp.deal_id ? `/deals/${followUp.deal_id}` : `/contacts/${followUp.contact_id}`}
+                    className="truncate text-link hover:underline"
+                  >
+                    {followUp.deal_name ?? followUp.contact_name}
+                  </Link>
+                  {followUp.created_by && (
+                    <span className="shrink-0 text-ink-muted">· Logged by {followUp.created_by.name}</span>
+                  )}
+                </p>
               </div>
               <DueBadge days={followUp.days} />
             </li>

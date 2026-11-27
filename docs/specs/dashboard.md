@@ -16,8 +16,8 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 - **Deals won by month**: a bar chart of the same 12 months.
 - **Open pipeline by stage**: the visual of the pipeline. Each open stage shows its value and expected revenue, with its count on hover and in the table for screen readers (see Charts).
 - **Sales funnel**: value and count reaching each stage from New to Won, with the share of New's value that reaches each stage, and the total lost underneath.
-- **Follow-ups**: everyone's, overdue first, then due in the next 7 days. Each shows its type, its description, the contact or deal it's on (as a link), who logged it, its due date as "3 days overdue", "Due today", "Due tomorrow" or "Due in 4 days", and a Done checkbox. The heading gives the count. The list scrolls inside its panel when it's long.
-- **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app and by anyone on the team, grouped under Today, Yesterday and Earlier, each linking to its record. Activities show who logged them, as in timelines.
+- **Follow-ups**: everyone's, overdue first, then due in the next 7 days. Each shows its type, its description, the contact or deal it's on (as a link), then who logged it, such as "· Logged by Dana Holt", its due date as "3 days overdue", "Due today", "Due tomorrow" or "Due in 4 days", and a Done checkbox. The heading gives the count. The list scrolls inside its panel when it's long.
+- **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app and by anyone on the team, grouped under Today, Yesterday and Earlier, each linking to its record. Activities show who logged them after the time, as in timelines: "8:05 AM, by Dana Holt" under Today, or "Jun 10, 2:30 PM, by Joel Abara" under Earlier.
 - The tiles and the pipeline visual link to the Pipeline.
 
 ## Dashboard figures

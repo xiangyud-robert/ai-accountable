@@ -1,4 +1,7 @@
-"""Organizations: listing with counts, getting, adding, changing and deleting."""
+"""Organizations: listing with counts, getting, adding, changing and deleting.
+
+`by` is the signed-in person's id, kept as who added and last changed it (R17).
+"""
 
 import sqlalchemy as sa
 
@@ -6,7 +9,10 @@ from backend import clock, stages
 from backend.errors import NotFound
 from backend.services import contacts as contacts_service
 from backend.services import deals as deals_service
+from backend.services.users import People
 from backend.tables import contacts, deals, organizations
+
+PEOPLE = People(organizations)
 
 
 def _query() -> sa.Select:
@@ -30,19 +36,20 @@ def _query() -> sa.Select:
         deal_count.label("deal_count"),
         open_deal_count.label("open_deal_count"),
         open_value.label("open_value"),
-    )
+        *PEOPLE.columns(),
+    ).select_from(PEOPLE.join(organizations))
 
 
 def list_all(conn: sa.Connection) -> list[dict]:
     rows = conn.execute(_query().order_by(sa.func.lower(organizations.c.name), organizations.c.id))
-    return [dict(row._mapping) for row in rows]
+    return [PEOPLE.take(dict(row._mapping)) for row in rows]
 
 
 def get_row(conn: sa.Connection, organization_id: int) -> dict:
     row = conn.execute(_query().where(organizations.c.id == organization_id)).first()
     if row is None:
         raise NotFound("organization")
-    return dict(row._mapping)
+    return PEOPLE.take(dict(row._mapping))
 
 
 def get(conn: sa.Connection, organization_id: int) -> dict:
@@ -58,19 +65,21 @@ def exists(conn: sa.Connection, organization_id: int) -> bool:
     return conn.execute(query).first() is not None
 
 
-def add(conn: sa.Connection, data: dict) -> dict:
+def add(conn: sa.Connection, data: dict, *, by: str) -> dict:
     now = clock.now()
-    insert = organizations.insert().values(**data, created_at=now, updated_at=now)
+    insert = organizations.insert().values(
+        **data, created_at=now, updated_at=now, created_by=by, updated_by=by
+    )
     return get_row(conn, conn.execute(insert.returning(organizations.c.id)).scalar_one())
 
 
-def change(conn: sa.Connection, organization_id: int, data: dict) -> dict:
+def change(conn: sa.Connection, organization_id: int, data: dict, *, by: str) -> dict:
     get_row(conn, organization_id)
     if data:
         conn.execute(
             organizations.update()
             .where(organizations.c.id == organization_id)
-            .values(**data, updated_at=clock.now())
+            .values(**data, updated_at=clock.now(), updated_by=by)
         )
     return get_row(conn, organization_id)
 

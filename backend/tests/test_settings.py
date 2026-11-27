@@ -1,6 +1,8 @@
-from datetime import date, datetime
+from datetime import date
 
-from backend import clock, settings
+import pytest
+
+from backend import settings
 
 
 def test_database_url_is_read_when_asked(monkeypatch):
@@ -22,16 +24,35 @@ def test_accountable_today_is_read_when_asked(monkeypatch):
     assert settings.fixed_today() is None
 
 
-def test_accountable_today_fixes_today_and_now_at_noon(monkeypatch):
-    monkeypatch.setenv("ACCOUNTABLE_TODAY", "2026-03-02")
-    assert clock.today() == date(2026, 3, 2)
-    assert clock.now() == datetime(2026, 3, 2, 12, 0)
+@pytest.mark.parametrize(
+    ("variable", "read", "first", "second"),
+    [
+        ("SUPABASE_URL", settings.supabase_url, "https://a.supabase.co", "https://b.supabase.co"),
+        ("SUPABASE_PUBLISHABLE_KEY", settings.supabase_publishable_key, "sb_one", "sb_two"),
+        ("ACCOUNTABLE_TIMEZONE", settings.timezone_name, "Europe/London", "Asia/Tokyo"),
+        ("RENDER_EXTERNAL_HOSTNAME", settings.render_hostname, "a.onrender.com", "b.onrender.com"),
+    ],
+)
+def test_each_new_setting_is_read_when_asked(monkeypatch, variable, read, first, second):
+    monkeypatch.setenv(variable, first)
+    assert read() == first
+    monkeypatch.setenv(variable, second)
+    assert read() == second
+    monkeypatch.setenv(variable, "  ")
+    assert read() is None
+    monkeypatch.delenv(variable)
+    assert read() is None
 
 
-def test_without_it_both_use_the_local_clock(monkeypatch):
-    monkeypatch.delenv("ACCOUNTABLE_TODAY")
-    before = datetime.now().replace(microsecond=0)
-    now = clock.now()
-    after = datetime.now()
-    assert before <= now <= after
-    assert clock.today() == date.today()
+def test_the_stand_in_is_on_only_while_its_setting_is_set(monkeypatch):
+    monkeypatch.setenv("ACCOUNTABLE_STAND_IN", "1")
+    assert settings.stand_in() is True
+    monkeypatch.setenv("ACCOUNTABLE_STAND_IN", "")
+    assert settings.stand_in() is False
+    monkeypatch.delenv("ACCOUNTABLE_STAND_IN")
+    assert settings.stand_in() is False
+
+
+def test_the_supabase_url_loses_its_last_slash(monkeypatch):
+    monkeypatch.setenv("SUPABASE_URL", "https://a.supabase.co/")
+    assert settings.supabase_url() == "https://a.supabase.co"

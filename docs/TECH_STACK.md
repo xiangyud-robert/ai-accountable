@@ -3,15 +3,19 @@ This project will use the following high level technical stack:
 1. Node.js 26, the current LTS (24 or later works) / TypeScript for the frontend, using React and Vite, in `frontend/`
 2. Python 3.12 for the backend using uv, with FastAPI, in `backend/`, with `pyproject.toml` and `uv.lock` at the repo root
 
-The frontend gets its data from the backend's JSON API. The backend keeps the data in a local SQLite database file, using SQLAlchemy Core with no raw SQL, and fills it with the sample data when the database is new.
+The frontend gets its data from the backend's JSON API. The backend keeps the data with SQLAlchemy Core, with no raw SQL except where SQLAlchemy has no construct, such as SQLite's PRAGMAs and turning on Postgres's row-level security, and fills it with the sample data when the database is new.
 
 Prefer popular, well-supported libraries to custom code, such as for the data tables, the charts and the drag-and-drop pipeline. Don't hand-roll what a mature library does well.
 
-For now it runs locally. Later, Supabase will provide sign-in and the database, and the app will be deployed to Render.
+It runs in two places:
+
+1. For the team, on Render's free plan, as one web service described by `render.yaml`: FastAPI serves the built frontend and the API, against Postgres on Supabase, through Supabase's session pooler with psycopg. Supabase Auth signs people in with an email and password, and the backend checks each token against the project's public keys with PyJWT. `npm start` runs it the same way on this computer.
+2. On this computer, with `npm run dev`, on a local SQLite database file, with a stand-in sign-in for the sample teammates. It never reaches Supabase, and nor do the tests, which use SQLite databases of their own.
 
 Commands are npm scripts in a `package.json` at the repo root, with `frontend/` as an npm workspace, so they work the same on Mac, Linux and Windows:
 
 - `npm run dev` starts the backend and the frontend together
+- `npm start` builds the frontend and runs the app the way Render does, against Supabase
 - `npm test` runs all the tests and fails if any test fails
 - `npm run seed` resets the database to the sample data
 - `npm run check` runs every check below and all the tests, and fails if any of them fails; `npm run check:quick` is the same without the end-to-end tests
@@ -38,7 +42,7 @@ The hooks:
 The Claude Code subagents, in `.claude/agents/`, both on Sonnet:
 
 1. `reviewer` reviews a branch's changes, or a commit, against `docs/REVIEW.md` and reports its findings by severity. It reads files and runs shell commands that only read, and changes nothing.
-2. `ui-check` opens the running app with the Playwright MCP server (`.mcp.json`), takes a screenshot of each page in light and dark mode, checks it against the brand skill and the spec, and reports anything off-brand or broken. It has no tools that write files, and its screenshots go in the git-ignored `.playwright-mcp/`.
+2. `ui-check` opens the running app with the Playwright MCP server (`.mcp.json`), signs in through the stand-in, takes a screenshot of each page in Light, Dark and System, checks it against the brand skill and the spec, and reports anything off-brand or broken. It has no tools that write files, and its screenshots go in the git-ignored `.playwright-mcp/`.
 
 `docs/STATUS.md` says how to run the app. `README.md` is the course's own guide, so leave it as it is.
 

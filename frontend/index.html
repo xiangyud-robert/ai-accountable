@@ -3,13 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Dark mode before anything draws (concern 14), under the key src/lib/colorMode.ts saves.
-      try {
-        if (localStorage.getItem('accountable-mode') === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark')
-          document.documentElement.style.colorScheme = 'dark'
+      // The theme before anything draws (concern 14): the choice saved under the key src/lib/colorMode.ts
+      // uses, kept on <html>, where the app changes it. Light is the default. While the choice is
+      // System, the page follows the device's setting and its changes, which works when the browser
+      // won't save the choice, and on the sign-in screen too.
+      {
+        const html = document.documentElement
+        const darkDevice = matchMedia('(prefers-color-scheme: dark)')
+        const showChoice = () => {
+          const choice = html.getAttribute('data-theme-choice')
+          if (choice === 'dark' || (choice === 'system' && darkDevice.matches)) {
+            html.setAttribute('data-theme', 'dark')
+            html.style.colorScheme = 'dark'
+          } else {
+            html.removeAttribute('data-theme')
+            html.style.removeProperty('color-scheme')
+          }
         }
-      } catch {}
+        let saved = null
+        try {
+          saved = localStorage.getItem('accountable-mode')
+        } catch {}
+        html.setAttribute('data-theme-choice', saved === 'dark' || saved === 'system' ? saved : 'light')
+        showChoice()
+        darkDevice.addEventListener('change', showChoice)
+      }
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

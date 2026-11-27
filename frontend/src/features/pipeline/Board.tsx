@@ -16,7 +16,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { memo, useCallback, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { todayISO } from '../../lib/format'
+import { teamTodayISO } from '../../lib/teamTime'
 import type { DealRow, Stage, StageKey } from '../../lib/types'
 import { useMoveDeal } from '../deals/queries'
 import { boardColumns, columnOf, moveDeal } from './board'
@@ -84,7 +84,7 @@ type BoardProps = {
 export function Board({ deals, stages, onAdd, announcement }: BoardProps) {
   const navigate = useNavigate()
   const move = useMoveDeal()
-  const today = todayISO()
+  const today = teamTodayISO()
   const open = useCallback((deal: DealRow) => navigate(`/deals/${deal.id}`), [navigate])
   const keyboard = useKeyboardMove({
     deals,

@@ -1,5 +1,5 @@
 import { type Locator, type Page } from '@playwright/test'
-import { expect, test } from './fixtures'
+import { expect, initialsButton, searchBox, test } from './fixtures'
 
 /** Presses Tab until the target has focus, as someone using only the keyboard would. */
 async function tabTo(page: Page, target: Locator, { max = 120, back = false } = {}) {
@@ -22,6 +22,7 @@ test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an 
   page,
 }) => {
   await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible()
   await page.keyboard.press('Tab')
   const skip = page.getByRole('link', { name: 'Skip to content' })
   await expect(skip).toBeFocused()
@@ -90,6 +91,26 @@ test('criterion 8: the skip link, the sidebar, a dialog, sorting and logging an 
   await expect(page.getByRole('list', { name: 'Timeline' }).getByRole('listitem').first()).toContainText(
     'Called about the autumn term.',
   )
+})
+
+test('Tab goes through the skip link, the sections, the search box, the initials button, then the page', async ({
+  page,
+}) => {
+  await page.goto('/deals')
+  await expect(page.getByRole('heading', { level: 1, name: 'Deals' })).toBeVisible()
+  const sections = page.getByRole('navigation', { name: 'Sections' })
+  for (const stop of [
+    page.getByRole('link', { name: 'Skip to content' }),
+    ...['Dashboard', 'Organizations', 'Contacts', 'Deals', 'Pipeline'].map((name) =>
+      sections.getByRole('link', { name: new RegExp(`^${name}`) }),
+    ),
+    searchBox(page),
+    initialsButton(page),
+    page.getByRole('button', { name: 'Add deal' }),
+  ]) {
+    await page.keyboard.press('Tab')
+    await expect(stop).toBeFocused()
+  }
 })
 
 test('a delete question by keyboard: Cancel has focus, and focus goes back after', async ({ page }) => {

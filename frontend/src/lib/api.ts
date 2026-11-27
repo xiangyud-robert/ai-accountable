@@ -15,20 +15,55 @@ export class NotFound extends Error {}
 /** The server didn't answer, or answered with an error of its own. */
 export class Unreachable extends Error {}
 
+/** The server refused the request's token (a 401), or, for a sign-in, the email and password. */
+export class Refused extends Error {}
+
 export const UNREACHABLE_MESSAGE = "Can't reach Accountable's server. Check that it's running, then refresh."
 
-type Options = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown }
+/** What a request needs from the session. src/auth/session.ts sets it, so the two files don't
+ *  import each other. */
+type SessionHooks = {
+  /** The token to send, or null when there's no session. */
+  token: () => Promise<string | null>
+  /** The server refused the token, which ends the session. */
+  refused: () => void
+}
 
-export async function api<T>(path: string, { method = 'GET', body }: Options = {}): Promise<T> {
-  let response: Response
+let session: SessionHooks = { token: async () => null, refused: () => {} }
+
+export function connectSession(hooks: SessionHooks) {
+  session = hooks
+}
+
+type Options = {
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  body?: unknown
+  /** A sign-in, which sends no token, and whose 401 means the email or password was wrong. */
+  signingIn?: boolean
+}
+
+/** Sends the request with the session's token, unless it's a sign-in. */
+async function send(path: string, { method = 'GET', body, signingIn = false }: Options) {
   try {
-    response = await fetch(`/api${path}`, {
+    const token = signingIn ? null : await session.token()
+    return await fetch(`/api${path}`, {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: {
+        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(token !== null && { Authorization: `Bearer ${token}` }),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
     throw new Unreachable(UNREACHABLE_MESSAGE)
+  }
+}
+
+export async function api<T>(path: string, options: Options = {}): Promise<T> {
+  const response = await send(path, options)
+  if (response.status === 401) {
+    if (!options.signingIn) session.refused()
+    throw new Refused('Refused')
   }
   if (response.status === 422) {
     const json = await response.json()

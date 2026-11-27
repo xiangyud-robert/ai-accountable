@@ -126,6 +126,7 @@ describe('colors are used by role', () => {
       'on-primary',
       'logo',
       'divider',
+      'divider-raised',
       'field',
       'focus',
       'link',
@@ -188,6 +189,11 @@ describe.each(['light', 'dark'] as const)('contrast in %s mode', (mode) => {
   test('on-primary is at least 4.5:1 on primary, and on-fill on alert fill', () => {
     expect(contrast(color('on-primary'), color('primary'))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(color('on-fill'), color('alert-fill'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test('a menu’s divider shows on the raised surface at least as well as light mode’s divider on the panel', () => {
+    const lightDivider = contrast(MODES.light.get('divider')!, MODES.light.get('panel')!)
+    expect(contrast(color('divider-raised'), color('raised'))).toBeGreaterThanOrEqual(lightDivider)
   })
 
   test('the field outline and the focus ring are at least 3:1 on the panel, the page and the raised surface', () => {

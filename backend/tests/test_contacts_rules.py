@@ -2,7 +2,7 @@ import sqlalchemy as sa
 
 from backend.services import contacts
 from backend.tables import status_changes
-from backend.tests.conftest import NOW
+from backend.tests.conftest import DANA, NOW
 
 
 def changes(conn, contact_id):
@@ -24,9 +24,9 @@ def test_r7_status_starts_as_lead(client):
 
 def test_r7_every_change_by_hand_in_any_direction_is_recorded(make, conn):
     contact = make.contact()
-    contacts.change(conn, contact["id"], {"status": "qualified"})
-    contacts.change(conn, contact["id"], {"status": "customer"})
-    contacts.change(conn, contact["id"], {"status": "lead"})
+    contacts.change(conn, contact["id"], {"status": "qualified"}, by=DANA.id)
+    contacts.change(conn, contact["id"], {"status": "customer"}, by=DANA.id)
+    contacts.change(conn, contact["id"], {"status": "lead"}, by=DANA.id)
     assert changes(conn, contact["id"]) == [
         ("lead", "qualified", NOW),
         ("qualified", "customer", NOW),
@@ -38,7 +38,7 @@ def test_r7_every_change_by_hand_in_any_direction_is_recorded(make, conn):
 
 def test_r7_saving_the_same_status_records_nothing(make, conn):
     contact = make.contact(status="qualified")
-    contacts.change(conn, contact["id"], {"status": "qualified", "phone": "555 0100"})
+    contacts.change(conn, contact["id"], {"status": "qualified", "phone": "555 0100"}, by=DANA.id)
     assert changes(conn, contact["id"]) == []
 
 

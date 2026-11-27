@@ -66,6 +66,7 @@ Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for
 | Field outline | `#7A9097` | The outline of inputs and selects (3.4:1) |
 | Sea Mist | `#CDD8DB` | Not used in light mode. Main text and Negotiation in dark mode |
 | Divider | `#E3EAEC` | Lines between table rows, chart gridlines |
+| Divider raised | `#E3EAEC` | Lines between groups in a menu on the raised surface, such as the user menu |
 | Page | `#F0F4F5` | Page background |
 | Panel | `#FFFFFF` | Panels, cards and dialogs, and the raised surface for menus, lists, tooltips and messages |
 
@@ -75,7 +76,7 @@ Statuses use colors too: lead Cerulean, qualified Marigold and customer Sea Gree
 
 Components use colors by role, never by the brand's names or by value. The roles are:
 
-- page, panel, raised, ink, ink muted, divider, field outline, focus and link
+- page, panel, raised, ink, ink muted, divider, divider raised, field outline, focus and link
 - primary, the text on primary, alert and their tints
 - each stage and status, with its tint
 
@@ -129,7 +130,7 @@ Plain business English, short labels, no jargon and no exclamation marks.
   - The current section is a Sea Green tint pill with Midnight text.
 
 - **Main area:** on the page background, with 24 to 28px of padding and content up to 1440px wide.
-- **Top bar:** at the top of the main area, across its full width, on the page background with no panel and no line under it. The search box (`docs/specs/search.md`) is on the left and the initials button (`docs/specs/sign-in.md`) on the right. It's on every page once signed in, including Page not found, and scrolls with the page.
+- **Top bar:** at the top of the main area, across its full width, on the page background with no panel and no line under it. It's the page's banner landmark. The search box (`docs/specs/search.md`) is on the left and the initials button (`docs/specs/sign-in.md`) on the right. It's on every page once signed in, including Page not found, and scrolls with the page. It lines up with the page, in the same column up to 1440px wide, but sits outside the page's main area for screen readers, so "Skip to content" goes past it.
 - **Page header:** 24px below the top bar, with the title on the left and the main action on the right, such as "Add deal".
 
 ## Keyboard and accessibility
@@ -137,7 +138,7 @@ Plain business English, short labels, no jargon and no exclamation marks.
 Everything can be done with the keyboard as well as the mouse, including moving a card on the pipeline. Text meets WCAG AA contrast in both modes, and every form field has a label.
 
 - **Tab order:** everything can be reached with Tab, in reading order: the skip link, the sidebar's sections, the search box, the initials button, then the page. Everything that can be focused shows a 2px Cerulean focus ring, 2px outside its edge.
-- **Structure:** a "Skip to content" link comes first. Each page has one main heading, which is the message when the page can't load, and labelled navigation, search and main areas.
+- **Structure:** a "Skip to content" link comes first. Each page has one main heading, which is the message when the page can't load, and a banner (the top bar) and labelled navigation, search and main areas.
 - **Tables:** these are real HTML tables. Each sortable heading is a button and announces its sort order. On each row, the name link and the Edit and Delete buttons can be reached with Tab.
 - **Forms:** every field has a visible label. Errors are linked to their field, and saving with errors moves focus to the first one.
 - **Dialogs** keep focus inside them, close with Escape, and return focus to the button that opened them, or to the menu's button for an item in a menu.

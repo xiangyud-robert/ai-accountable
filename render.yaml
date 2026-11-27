@@ -1,0 +1,36 @@
+# The team's Accountable on Render: one web service on the free plan, where FastAPI serves the
+# built frontend and the API (docs/specs/platform.md, On Render). The three secret settings are
+# entered in Render when the service is first set up, and are never written here.
+services:
+  - type: web
+    name: accountable
+    runtime: python
+    plan: free
+    # The region nearest the Supabase project, us-east-2, since every query crosses between the
+    # two. It can't be changed once the service exists.
+    region: ohio
+    # npm's packages include Vite, which builds the frontend into frontend/dist with the Supabase
+    # settings. The dev group is only for tests and checks.
+    buildCommand: npm ci --no-audit --no-fund && uv sync --locked --no-dev && npm run build --workspace frontend
+    # Render's proxy handles HTTPS and passes each request on, so uvicorn trusts its forwarded
+    # headers. --no-sync, since the build has already installed the packages.
+    startCommand: uv run --no-sync uvicorn backend.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'
+    # No healthCheckPath, so Render's own check can't trip the backend's host check, which allows
+    # only this service's onrender.com address (RENDER_EXTERNAL_HOSTNAME, which Render sets).
+    # Deploys the branch chosen when the service is set up, each time CI passes on it.
+    autoDeployTrigger: checksPass
+    envVars:
+      # Render's default Python is newer. uv uses this one, since it doesn't set the version itself.
+      - key: PYTHON_VERSION
+        value: 3.12.13
+      - key: NODE_VERSION
+        value: '24'
+      # The team's time zone (concern 16). Set it once, since times are stored on its clock.
+      - key: ACCOUNTABLE_TIMEZONE
+        value: America/Los_Angeles
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false

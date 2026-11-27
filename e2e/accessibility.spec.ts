@@ -1,5 +1,14 @@
 import { type Page } from '@playwright/test'
-import { expect, expectNoAxeProblems, PAGES, test, turnOnDarkMode } from './fixtures'
+import {
+  expect,
+  expectNoAxeProblems,
+  openUserMenu,
+  PAGES,
+  searchBox,
+  searchResults,
+  test,
+  turnOnDarkMode,
+} from './fixtures'
 
 async function openAndCheck(page: Page, path: string, button: string, dialog: 'dialog' | 'alertdialog' = 'dialog') {
   await page.goto(path)
@@ -21,6 +30,22 @@ for (const mode of ['light', 'dark'] as const) {
         await expectNoAxeProblems(page)
       })
     }
+
+    test('axe finds no problems in the top bar’s search results, and with none found', async ({ page }) => {
+      await page.goto('/')
+      await searchBox(page).fill('ri')
+      await expect(searchResults(page).getByRole('option').first()).toBeVisible()
+      await expectNoAxeProblems(page)
+      await searchBox(page).fill('zzz')
+      await expect(page.getByRole('search')).toContainText('No organizations, contacts or deals match')
+      await expectNoAxeProblems(page)
+    })
+
+    test('axe finds no problems in the open user menu', async ({ page }) => {
+      await page.goto('/')
+      await openUserMenu(page)
+      await expectNoAxeProblems(page)
+    })
 
     test('axe finds no problems in the organization form', async ({ page }) => {
       await openAndCheck(page, '/organizations', 'Add organization')

@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from backend.services import dashboard, deals
-from backend.tests.conftest import NOW, TODAY
+from backend.tests.conftest import DANA, NOW, TODAY
 
 
 def won(make, value, close_date, **fields):
@@ -74,10 +74,10 @@ def test_the_open_pipeline_and_each_open_stage(make, conn):
 def test_the_funnel(make, conn):
     """Concern 7."""
     skipped = make.deal(name="Skipped Qualified", stage="new", value=1_000)
-    deals.move(conn, skipped["id"], "proposal", 0)
+    deals.move(conn, skipped["id"], "proposal", 0, by=DANA.id)
     lost = make.deal(name="Lost from Qualified", stage="new", value=2_000)
-    deals.move(conn, lost["id"], "qualified", 0)
-    deals.move(conn, lost["id"], "lost", 0)
+    deals.move(conn, lost["id"], "qualified", 0, by=DANA.id)
+    deals.move(conn, lost["id"], "lost", 0, by=DANA.id)
     won(make, 4_000, TODAY)
     make.deal(name="Added at Lost", stage="lost", value=8_000, close_date=None)
     figures = dashboard.figures(conn)
@@ -100,7 +100,7 @@ def test_recent_activity_is_the_10_newest_of_all_three_kinds(make, conn):
             occurred_at=NOW - timedelta(days=n + 1),
         )
     deal = make.deal(contact_id=contact["id"], stage="negotiation")
-    deals.move(conn, deal["id"], "won", 0)
+    deals.move(conn, deal["id"], "won", 0, by=DANA.id)
     recent = dashboard.figures(conn)["recent"]
     assert [e["text"] for e in recent] == [
         "Became a customer when Harbor Logistics fleet analytics was won",

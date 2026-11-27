@@ -2,18 +2,21 @@
 
 A timeline mixes three kinds of entry: activities, stage changes and status changes. Each
 is newest first. Entries at the same moment put a status change above the stage change
-that caused it, then break ties by id.
+that caused it, then break ties by id. Activities show who logged them (R17). Stage and
+status changes don't record who made them.
 """
 
 import sqlalchemy as sa
 
 from backend import clock, stages
+from backend.services.users import People, as_shown
 from backend.tables import activities, contacts, deals, stage_changes, status_changes
 
 KIND_RANK = {"status_change": 2, "stage_change": 1, "activity": 0}
 STATUS_NAMES = {"lead": "Lead", "qualified": "Qualified", "customer": "Customer"}
 
 deal_contacts = contacts.alias("deal_contacts")
+LOGGED_BY = People(activities, changed=False)
 
 
 def _activities() -> sa.Select:
@@ -22,10 +25,13 @@ def _activities() -> sa.Select:
         sa.func.coalesce(contacts.c.name, deal_contacts.c.name).label("contact_name"),
         sa.func.coalesce(activities.c.contact_id, deals.c.contact_id).label("linked_contact_id"),
         deals.c.name.label("deal_name"),
+        *LOGGED_BY.columns(),
     ).select_from(
-        activities.outerjoin(contacts, activities.c.contact_id == contacts.c.id)
-        .outerjoin(deals, activities.c.deal_id == deals.c.id)
-        .outerjoin(deal_contacts, deals.c.contact_id == deal_contacts.c.id)
+        LOGGED_BY.join(
+            activities.outerjoin(contacts, activities.c.contact_id == contacts.c.id)
+            .outerjoin(deals, activities.c.deal_id == deals.c.id)
+            .outerjoin(deal_contacts, deals.c.contact_id == deal_contacts.c.id)
+        )
     )
 
 
@@ -73,6 +79,7 @@ def _activity_entry(row: sa.Row) -> dict:
         "contact_name": row.contact_name,
         "deal_id": row.deal_id,
         "deal_name": row.deal_name,
+        "created_by": as_shown(row.created_by, row.created_by_email, row.created_by_display_name),
     }
 
 
@@ -96,6 +103,7 @@ def _stage_entry(row: sa.Row) -> dict:
         "contact_name": row.contact_name,
         "deal_id": row.deal_id,
         "deal_name": row.deal_name,
+        "created_by": None,
     }
 
 
@@ -119,6 +127,7 @@ def _status_entry(row: sa.Row) -> dict:
         "contact_name": row.contact_name,
         "deal_id": row.won_deal_id,
         "deal_name": row.deal_name,
+        "created_by": None,
     }
 
 

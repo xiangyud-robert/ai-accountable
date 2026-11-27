@@ -13,6 +13,7 @@ import {
   mockFetch,
   organizationRow,
   panel,
+  person,
   renderWithApp,
 } from '../../test-utils'
 import { ContactPage } from './ContactPage'
@@ -39,6 +40,7 @@ const CALL: TimelineEntry = {
   contact_name: 'Priya Raman',
   deal_id: null,
   deal_name: null,
+  created_by: person('Dana Holt'),
 }
 
 const PRIYA: ContactDetail = {
@@ -100,6 +102,13 @@ describe('ContactPage', () => {
     expect(within(detailsPanel).getByRole('link', { name: 'priya@harborlogistics.com' })).toHaveAttribute(
       'href',
       'mailto:priya@harborlogistics.com',
+    )
+  })
+
+  test('the details end with who added the contact and who last changed them', () => {
+    renderPage()
+    expect(panel('Details').textContent).toMatch(
+      /Added by Nora Lindqvist on Sep 14, 2026Last changed by Nora Lindqvist on Nov 21, 2026$/,
     )
   })
 

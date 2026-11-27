@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from backend.services import deals, timeline
-from backend.tests.conftest import NOW, TODAY
+from backend.tests.conftest import DANA, NOW, TODAY
 
 
 def texts(entries):
@@ -15,7 +15,7 @@ def test_r10_a_deal_timeline_has_its_activities_and_stage_changes(make, conn):
         deal_id=deal["id"], description="Sent the proposal", occurred_at=NOW - timedelta(hours=1)
     )
     make.activity(deal_id=other["id"], description="Not this one")
-    deals.move(conn, deal["id"], "negotiation", 0)
+    deals.move(conn, deal["id"], "negotiation", 0, by=DANA.id)
     assert texts(timeline.for_deal(conn, deal["id"])) == [
         "Moved from Proposal to Negotiation",
         "Added at Proposal",
@@ -37,7 +37,7 @@ def test_r10_a_contact_timeline_adds_their_deals_and_status_changes(make, conn):
         type="call",
         occurred_at=NOW - timedelta(hours=2),
     )
-    deals.move(conn, deal["id"], "won", 0)
+    deals.move(conn, deal["id"], "won", 0, by=DANA.id)
     entries = timeline.for_contact(conn, contact["id"])
     assert [(e["text"], e["record"], e["deal_name"]) for e in entries] == [
         (
@@ -81,7 +81,7 @@ def test_concern_10_changing_the_main_contact_moves_the_entries(make, conn):
     second = make.contact(name="Second")
     deal = make.deal(contact_id=first["id"])
     make.activity(deal_id=deal["id"], description="Deal note")
-    deals.change(conn, deal["id"], {"contact_id": second["id"]})
+    deals.change(conn, deal["id"], {"contact_id": second["id"]}, by=DANA.id)
     assert texts(timeline.for_contact(conn, first["id"])) == []
     assert texts(timeline.for_contact(conn, second["id"])) == ["Added at New", "Deal note"]
 

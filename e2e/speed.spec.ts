@@ -1,5 +1,5 @@
 import { type Page } from '@playwright/test'
-import { expect, reseed, test } from './fixtures'
+import { expect, reseed, searchBox, searchResults, test } from './fixtures'
 
 // Recording a trace stores every file the page loads, which nearly doubles a reload's
 // time. These tests time the app, so they don't record one.
@@ -11,6 +11,8 @@ test.use({ trace: 'off' })
 // times, to compare with the promise.
 const SCREEN_LIMIT_MS = 3000
 const SEARCH_LIMIT_MS = 2000
+// The top bar's search promises its results within half a second of the last key.
+const TOP_BAR_SEARCH_LIMIT_MS = 1500
 
 // The intent's speed constraint, with 500 more of each kind of record.
 test.describe(() => {
@@ -105,5 +107,31 @@ test.describe(() => {
     console.log(`The search: ${elapsed} ms from the first key to the filtered table`)
     expect(elapsed).toBeLessThan(SEARCH_LIMIT_MS)
     await expect(page.getByRole('table', { name: 'Deals' }).locator('tbody tr')).toHaveCount(5)
+  })
+
+  test(`the top bar's search shows its results within ${TOP_BAR_SEARCH_LIMIT_MS / 1000} seconds of the last key`, async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible()
+    await searchBox(page).click()
+    await page.keyboard.type('cobalt bank ', { delay: 30 })
+    // Cobalt Bank and its 4 deals. The last key leaves only one of the deals, so a list with that
+    // one result is the answer to the whole search.
+    await expect(searchResults(page).getByRole('option')).toHaveCount(5)
+    // Checked on every frame, since expect's retries are too far apart to time half a second.
+    const start = Date.now()
+    await page.keyboard.press('f')
+    await page.waitForFunction(
+      () => {
+        const options = [...document.querySelectorAll('[role="search"] [role="option"]')]
+        return options.length === 1 && options[0]!.textContent!.startsWith('Cobalt Bank fraud analytics pilot')
+      },
+      null,
+      { polling: 'raf' },
+    )
+    const elapsed = Date.now() - start
+    console.log(`The top bar's search: ${elapsed} ms from the last key to its results`)
+    expect(elapsed).toBeLessThan(TOP_BAR_SEARCH_LIMIT_MS)
   })
 })

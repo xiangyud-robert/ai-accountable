@@ -1,4 +1,5 @@
-// The API's JSON. Dates are YYYY-MM-DD and times are local ISO 8601 with no zone.
+// The API's JSON. Dates are YYYY-MM-DD, and times are ISO 8601 with no zone, on the team's clock
+// (concern 16). The browser reads and shows them as they are (see teamTime.ts).
 
 export type StageKey = 'new' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
 export type Status = 'lead' | 'qualified' | 'customer'
@@ -14,6 +15,9 @@ export type Stage = {
 
 export type Ref = { id: number; name: string }
 
+/** Someone on the team, by their name and initials (R16). */
+export type Person = { id: string; name: string; initials: string }
+
 export type OrganizationRow = {
   id: number
   name: string
@@ -26,6 +30,9 @@ export type OrganizationRow = {
   open_value: number
   created_at: string
   updated_at: string
+  /** Who added it and who last changed it (R17), or null for a record from before sign-in. */
+  created_by: Person | null
+  updated_by: Person | null
 }
 
 export type ContactRow = {
@@ -41,6 +48,9 @@ export type ContactRow = {
   activity_count: number
   created_at: string
   updated_at: string
+  /** Who added it and who last changed it (R17), or null for a record from before sign-in. */
+  created_by: Person | null
+  updated_by: Person | null
 }
 
 export type DealRow = {
@@ -60,6 +70,9 @@ export type DealRow = {
   activity_count: number
   created_at: string
   updated_at: string
+  /** Who added it and who last changed it (R17), or null for a record from before sign-in. */
+  created_by: Person | null
+  updated_by: Person | null
 }
 
 export type TimelineEntry = {
@@ -80,6 +93,8 @@ export type TimelineEntry = {
   contact_name: string | null
   deal_id: number | null
   deal_name: string | null
+  /** Who logged an activity, or null for stage and status changes and from before sign-in. */
+  created_by: Person | null
 }
 
 export type OrganizationDetail = OrganizationRow & {
@@ -105,6 +120,10 @@ export type Activity = {
   occurred_at: string
   follow_up_date: string | null
   follow_up_done: boolean
+  created_at: string
+  updated_at: string
+  created_by: Person | null
+  updated_by: Person | null
 }
 
 export type MonthFigures = { month: string; revenue: number; count: number }
@@ -122,6 +141,8 @@ export type FollowUp = {
   contact_name: string | null
   deal_id: number | null
   deal_name: string | null
+  /** Who logged it, or null from before sign-in. */
+  created_by: Person | null
 }
 
 export type Dashboard = {

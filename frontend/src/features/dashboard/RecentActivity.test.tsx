@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import type { Dashboard, TimelineEntry } from '../../lib/types'
-import { panel, renderWithApp } from '../../test-utils'
+import { panel, person, renderWithApp } from '../../test-utils'
 import { RecentActivity } from './RecentActivity'
 
 const base = {
@@ -15,6 +15,7 @@ const base = {
   contact_name: null,
   deal_id: null,
   deal_name: null,
+  created_by: null,
 }
 const onDeal = { record: 'deal', deal_id: 9, deal_name: 'Northwind analytics rollout' } as const
 const onContact = { record: 'contact', contact_id: 3, contact_name: 'Priya Raman' } as const
@@ -40,6 +41,7 @@ const RECENT: TimelineEntry[] = [
     at: '2026-06-15T08:05:00',
     text: 'Called about the renewal',
     type: 'call',
+    created_by: person('Dana Holt'),
   },
   {
     ...base,
@@ -61,6 +63,7 @@ const RECENT: TimelineEntry[] = [
     at: '2026-06-10T14:30:00',
     text: 'Sent the pricing',
     type: 'email',
+    created_by: person('Joel Abara'),
   },
   {
     ...base,
@@ -117,6 +120,16 @@ describe('RecentActivity', () => {
     ).toBeInTheDocument()
     expect(within(item('Sent the pricing')).getByText('Jun 10, 2:30 PM')).toBeInTheDocument()
     expect(within(item('Met at the conference')).getByText('Dec 1, 2025, 10:00 AM')).toBeInTheDocument()
+  })
+
+  test('activities say who logged them after the time, and stage and status changes name no one', () => {
+    renderRecent(RECENT)
+    expect(item('Called about the renewal')).toHaveTextContent('8:05 AM, by Dana Holt')
+    expect(item('Sent the pricing')).toHaveTextContent('Jun 10, 2:30 PM, by Joel Abara')
+    // Logged before sign-in, so no one is recorded.
+    expect(item('Met at the conference')).not.toHaveTextContent(/, by /)
+    expect(item('Moved from Proposal to Negotiation')).not.toHaveTextContent(/, by /)
+    expect(item('Became a customer when Northwind analytics rollout was won')).not.toHaveTextContent(/, by /)
   })
 
   test('with nothing yet, it says so', () => {

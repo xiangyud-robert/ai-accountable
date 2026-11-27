@@ -12,6 +12,8 @@ ORGANIZATION_ROW = {
     "open_value",
     "created_at",
     "updated_at",
+    "created_by",
+    "updated_by",
 }
 CONTACT_ROW = {
     "id",
@@ -26,6 +28,8 @@ CONTACT_ROW = {
     "activity_count",
     "created_at",
     "updated_at",
+    "created_by",
+    "updated_by",
 }
 DEAL_ROW = {
     "id",
@@ -44,6 +48,8 @@ DEAL_ROW = {
     "activity_count",
     "created_at",
     "updated_at",
+    "created_by",
+    "updated_by",
 }
 ACTIVITY = {
     "id",
@@ -56,6 +62,8 @@ ACTIVITY = {
     "follow_up_done",
     "created_at",
     "updated_at",
+    "created_by",
+    "updated_by",
 }
 TIMELINE_ENTRY = {
     "key",
@@ -74,6 +82,7 @@ TIMELINE_ENTRY = {
     "contact_name",
     "deal_id",
     "deal_name",
+    "created_by",
 }
 DASHBOARD = {
     "today",
@@ -456,3 +465,17 @@ def test_patch_can_clear_an_optional_field(client, records):
         f"/api/contacts/{contact_id}", json={"phone": None, "organization_id": None}
     ).json()
     assert (cleared["phone"], cleared["organization_id"]) == (None, None)
+
+
+def test_a_time_sent_with_a_zone_is_kept_on_the_team_s_clock(client, records, monkeypatch):
+    # Concern 16: whatever this computer's zone, 01:30 UTC is 10:30 in Tokyo.
+    monkeypatch.setenv("ACCOUNTABLE_TIMEZONE", "Asia/Tokyo")
+    body = {
+        "type": "note",
+        "deal_id": records["deal"]["id"],
+        "description": "Sent from a laptop in another zone",
+        "occurred_at": "2026-06-15T01:30:00Z",
+    }
+    response = client.post("/api/activities", json=body)
+    assert response.status_code == 201
+    assert response.json()["occurred_at"] == "2026-06-15T10:30:00"

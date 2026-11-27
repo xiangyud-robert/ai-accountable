@@ -8,12 +8,9 @@ import { expect, PAGES, test, turnOnDarkMode } from './fixtures'
 const here = dirname(fileURLToPath(import.meta.url))
 const DOCS = join(here, '..', 'docs', 'changes', 'dark-mode')
 
-// Pixel for pixel, with the Dark mode switch hidden, since it's the one thing allowed to differ.
-const EXACTLY: PageAssertionsToHaveScreenshotOptions = {
-  threshold: 0,
-  maxDiffPixels: 0,
-  stylePath: join(here, 'hide-dark-mode-switch.css'),
-}
+// Pixel for pixel, against the pictures in tmp/light-baseline, taken with --update-snapshots
+// before a change that shouldn't alter light mode.
+const EXACTLY: PageAssertionsToHaveScreenshotOptions = { threshold: 0, maxDiffPixels: 0 }
 // Each section is pictured whole. Things that open over the page are pictured in the window, since
 // a full-page picture resizes the window, and that closes a select.
 const WHOLE_PAGE: PageAssertionsToHaveScreenshotOptions = { ...EXACTLY, fullPage: true }
@@ -103,7 +100,7 @@ test.describe('light mode is unchanged', () => {
   })
 })
 
-// Success criterion 3 in docs/changes/dark-mode/intent.md, with the switch showing.
+// Success criterion 3 in docs/changes/dark-mode/intent.md.
 test.describe('screenshots for the docs', () => {
   for (const [name, path, heading] of [
     ['dashboard', '/', 'Dashboard'],

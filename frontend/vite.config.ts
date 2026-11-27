@@ -5,8 +5,18 @@ import { defineConfig } from 'vitest/config'
 const webPort = Number(process.env.ACCOUNTABLE_WEB_PORT ?? 5173)
 const apiPort = Number(process.env.ACCOUNTABLE_API_PORT ?? 8000)
 
-export default defineConfig({
+/** A Supabase setting from the shell, for `vite build` only. The dev server and Vitest always get it
+ *  empty, so they use the stand-in and never reach Supabase, whatever the shell has (risk 13). */
+const supabaseSetting = (command: string, name: string) =>
+  JSON.stringify(command === 'build' ? (process.env[name] ?? '') : '')
+
+export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
+  // Read by src/auth/config.ts.
+  define: {
+    __SUPABASE_URL__: supabaseSetting(command, 'SUPABASE_URL'),
+    __SUPABASE_PUBLISHABLE_KEY__: supabaseSetting(command, 'SUPABASE_PUBLISHABLE_KEY'),
+  },
   server: {
     host: '127.0.0.1',
     port: webPort,
@@ -51,4 +61,4 @@ export default defineConfig({
       thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
     },
   },
-})
+}))

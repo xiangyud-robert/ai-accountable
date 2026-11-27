@@ -3,8 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Toaster } from '../../components/Toaster'
 import { UNREACHABLE_MESSAGE } from '../../lib/api'
+import { setTeamZone } from '../../lib/teamTime'
 import type { TimelineEntry } from '../../lib/types'
-import { mockFetch, renderWithApp } from '../../test-utils'
+import { mockFetch, person, renderWithApp } from '../../test-utils'
 import { Timeline } from './Timeline'
 
 const base = {
@@ -18,6 +19,7 @@ const base = {
   contact_name: 'Priya Raman',
   deal_id: null,
   deal_name: null,
+  created_by: null,
 }
 
 const ENTRIES: TimelineEntry[] = [
@@ -56,6 +58,7 @@ const ENTRIES: TimelineEntry[] = [
     text: 'Called about the renewal',
     record: 'deal',
     type: 'call',
+    created_by: person('Dana Holt'),
     follow_up_date: '2026-11-25',
     follow_up_done: false,
     follow_up_overdue: false,
@@ -71,6 +74,7 @@ const ENTRIES: TimelineEntry[] = [
     text: 'Sent the pricing',
     record: 'contact',
     type: 'email',
+    created_by: person('Joel Abara'),
     follow_up_date: '2026-11-18',
     follow_up_done: false,
     follow_up_overdue: true,
@@ -121,7 +125,10 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date(2026, 10, 22, 15, 0))
 })
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+  setTeamZone(null)
+  vi.useRealTimers()
+})
 
 describe('Timeline', () => {
   test('each kind of entry shows its text and when it happened', () => {
@@ -136,6 +143,38 @@ describe('Timeline', () => {
     expect(screen.getAllByRole('listitem').map((li) => li.querySelector('p')!.textContent)).toEqual(
       ENTRIES.map((e) => e.text),
     )
+  })
+
+  test('activities say who logged them after when they happened, and stage and status changes name no one', () => {
+    renderWithApp(
+      <Timeline
+        entries={[
+          { ...ENTRIES[2], key: 'activity-9', id: 9, at: '2026-11-22T14:30:00', text: 'Sent the contract' },
+          ...ENTRIES,
+        ]}
+        on="contact"
+      />,
+    )
+    expect(item('Sent the contract')).toHaveTextContent('Today, 2:30 PM, by Dana Holt')
+    expect(item('Called about the renewal')).toHaveTextContent('Yesterday, 9:05 AM, by Dana Holt')
+    expect(item('Sent the pricing')).toHaveTextContent('Nov 12, 2:30 PM, by Joel Abara')
+    // Logged before sign-in, so no one is recorded.
+    expect(item('Met at the conference')).not.toHaveTextContent(/, by /)
+    for (const text of [
+      'Became a customer when Northwind analytics rollout was won',
+      'Moved from Negotiation to Won',
+      'Added at Proposal',
+    ]) {
+      expect(item(text)).not.toHaveTextContent(/, by /)
+    }
+  })
+
+  test('Today and Yesterday follow the team’s clock, not this browser’s', () => {
+    // 3:00 PM on Nov 22 here in Los Angeles is already 8:00 AM on Nov 23 in Tokyo.
+    setTeamZone('Asia/Tokyo')
+    renderWithApp(<Timeline entries={ENTRIES} on="contact" />)
+    expect(within(item('Moved from Negotiation to Won')).getByText('Yesterday, 2:30 PM')).toBeInTheDocument()
+    expect(within(item('Called about the renewal')).getByText('Nov 21, 9:05 AM')).toBeInTheDocument()
   })
 
   test('on a contact’s timeline, entries from a deal say which deal, with a link', () => {

@@ -6,7 +6,8 @@ import type { ReactElement } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { vi } from 'vitest'
 import { createQueryClient } from './lib/api'
-import type { ContactRow, DealRow, OrganizationRow, Stage } from './lib/types'
+import { initials } from './lib/format'
+import type { ContactRow, DealRow, OrganizationRow, Person, Stage } from './lib/types'
 
 export const STAGES: Stage[] = [
   { key: 'new', name: 'New', order: 1, probability: 10, open: true },
@@ -92,6 +93,11 @@ export function holdFetch(reply: Reply = {}) {
   return { calls, release }
 }
 
+/** Someone on the team, as the API gives them in created_by and updated_by: Dana Holt unless named. */
+export function person(name = 'Dana Holt'): Person {
+  return { id: `user-${name.toLowerCase().replace(/\s+/g, '-')}`, name, initials: initials(name) }
+}
+
 /** A deal as the API lists it, at its stage's usual probability unless `overrides` sets one. */
 export function dealRow(overrides: Partial<DealRow> = {}): DealRow {
   const { stage = 'proposal', value = 72_000 } = overrides
@@ -113,6 +119,8 @@ export function dealRow(overrides: Partial<DealRow> = {}): DealRow {
     activity_count: 4,
     created_at: '2026-10-05T09:30:00',
     updated_at: '2026-11-20T10:15:00',
+    created_by: person('Dana Holt'),
+    updated_by: person('Joel Abara'),
     ...overrides,
   }
 }
@@ -132,6 +140,8 @@ export function contactRow(overrides: Partial<ContactRow> = {}): ContactRow {
     activity_count: 5,
     created_at: '2026-09-14T11:00:00',
     updated_at: '2026-11-21T09:05:00',
+    created_by: person('Nora Lindqvist'),
+    updated_by: person('Nora Lindqvist'),
     ...overrides,
   }
 }
@@ -150,6 +160,8 @@ export function organizationRow(overrides: Partial<OrganizationRow> = {}): Organ
     open_value: 72_000,
     created_at: '2026-09-14T10:30:00',
     updated_at: '2026-11-02T16:40:00',
+    created_by: person('Dana Holt'),
+    updated_by: person('Wes Moreno'),
     ...overrides,
   }
 }

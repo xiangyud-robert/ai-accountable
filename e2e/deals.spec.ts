@@ -85,5 +85,5 @@ test('a closed deal’s page says Closed', async ({ page }) => {
   await page.goto('/deals')
   await page.getByRole('link', { name: 'Ridgeway Manufacturing quality analytics' }).click()
   await expect(page.getByText('Closed', { exact: true })).toBeVisible()
-  await expect(page.getByText('Jun 13, 2026')).toBeVisible()
+  await expect(page.getByText('Jun 13, 2026', { exact: true })).toBeVisible()
 })

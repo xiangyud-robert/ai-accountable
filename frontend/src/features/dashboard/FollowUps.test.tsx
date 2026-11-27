@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest'
 import { Toaster } from '../../components/Toaster'
 import { UNREACHABLE_MESSAGE } from '../../lib/api'
 import type { Dashboard, FollowUp } from '../../lib/types'
-import { holdFetch, mockFetch, panel, renderWithApp } from '../../test-utils'
+import { holdFetch, mockFetch, panel, person, renderWithApp } from '../../test-utils'
 import { FollowUps } from './FollowUps'
 
 const onDeal = { contact_id: null, contact_name: null }
@@ -21,6 +21,7 @@ const FOLLOW_UPS: FollowUp[] = [
     overdue: true,
     deal_id: 3,
     deal_name: 'Harbor Logistics fleet analytics',
+    created_by: person('Dana Holt'),
   },
   {
     ...onContact,
@@ -32,6 +33,7 @@ const FOLLOW_UPS: FollowUp[] = [
     overdue: false,
     contact_id: 4,
     contact_name: 'Priya Raman',
+    created_by: person('Wes Moreno'),
   },
   {
     ...onContact,
@@ -43,6 +45,8 @@ const FOLLOW_UPS: FollowUp[] = [
     overdue: false,
     contact_id: 5,
     contact_name: 'Daniel Okafor',
+    // Logged before sign-in, so no one is recorded.
+    created_by: null,
   },
 ]
 
@@ -76,6 +80,13 @@ describe('FollowUps', () => {
     expect(within(quote).getByText('Due today')).toBeInTheDocument()
     expect(within(quote).getByRole('link', { name: 'Priya Raman' })).toHaveAttribute('href', '/contacts/4')
     expect(within(item('Book the training day')).getByText('Due in 4 days')).toBeInTheDocument()
+  })
+
+  test('each one says who logged it, unless no one is recorded', () => {
+    renderFollowUps()
+    expect(within(item('Chase the signed order form')).getByText('· Logged by Dana Holt')).toBeInTheDocument()
+    expect(within(item('Send the renewal quote')).getByText('· Logged by Wes Moreno')).toBeInTheDocument()
+    expect(within(item('Book the training day')).queryByText(/Logged by/)).not.toBeInTheDocument()
   })
 
   test('ticking Done marks that follow-up done and confirms it', async () => {

@@ -1,7 +1,10 @@
 // Money, dates and labels, in the spec's formats. Dates are only ever parsed with
 // parseISO, which reads a plain YYYY-MM-DD as the start of a local day, never as UTC.
+// Today and now are the team's (concern 16): every `now` defaults to teamNow(), never to
+// this browser's clock, and the API's times are already on the team's clock.
 
 import { addDays, differenceInCalendarDays, format, isSameYear, parseISO } from 'date-fns'
+import { teamNow } from './teamTime'
 
 const dollars = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -34,8 +37,8 @@ export function percent(n: number): string {
   return `${Math.round(n)}%`
 }
 
-/** Today's date on this computer, as YYYY-MM-DD. */
-export function todayISO(now: Date = new Date()): string {
+/** Today's date for the team, or the day of `now`, as YYYY-MM-DD. */
+export function todayISO(now: Date = teamNow()): string {
   return format(now, 'yyyy-MM-dd')
 }
 
@@ -49,13 +52,13 @@ export function longDate(iso: string): string {
 }
 
 /** Nov 22 this year, and Feb 12, 2027 otherwise. */
-export function shortDate(iso: string, now: Date = new Date()): string {
+export function shortDate(iso: string, now: Date = teamNow()): string {
   const date = parseISO(iso)
   return format(date, isSameYear(date, now) ? 'MMM d' : 'MMM d, yyyy')
 }
 
 /** "Today, 2:30 PM", "Yesterday, 9:05 AM", "Nov 12, 2:30 PM", or "Nov 12, 2025, 2:30 PM". */
-export function timelineTime(iso: string, now: Date = new Date()): string {
+export function timelineTime(iso: string, now: Date = teamNow()): string {
   const at = parseISO(iso)
   const time = format(at, 'h:mm a')
   const days = differenceInCalendarDays(now, at)
@@ -79,14 +82,14 @@ export function dueLabel(days: number): string {
 
 /** "Follow up Nov 25", "Overdue since Nov 18" or "Done", for an activity in a timeline.
  *  Whether it's overdue is the backend's call, as the server sends it. */
-export function followUpLabel(iso: string, done: boolean, overdue: boolean, now: Date = new Date()): string {
+export function followUpLabel(iso: string, done: boolean, overdue: boolean, now: Date = teamNow()): string {
   if (done) return 'Done'
   if (overdue) return `Overdue since ${shortDate(iso, now)}`
   return `Follow up ${shortDate(iso, now)}`
 }
 
 /** Days from today until a date, so negative when it's past. */
-export function daysFromToday(iso: string, now: Date = new Date()): number {
+export function daysFromToday(iso: string, now: Date = teamNow()): number {
   return differenceInCalendarDays(parseISO(iso), now)
 }
 

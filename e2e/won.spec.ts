@@ -9,9 +9,9 @@ const cardsIn = (page: Page, stage: string) =>
   page.getByRole('region', { name: stage, exact: true }).locator('[data-deal-id]')
 const DEAL = 'Ridgeway Manufacturing support plan renewal'
 
-test('criteria 4, 5 and 6: drag a deal to Won', async ({ page }) => {
-  const before = await (await page.request.get(`${API}/dashboard`)).json()
-  const deals = await (await page.request.get(`${API}/deals`)).json()
+test('criteria 4, 5 and 6: drag a deal to Won', async ({ page, api }) => {
+  const before = await (await api.get(`${API}/dashboard`)).json()
+  const deals = await (await api.get(`${API}/deals`)).json()
   const deal = deals.find((d: { name: string; stage: string }) => d.name === DEAL && d.stage === 'negotiation')
   expect(deal.contact_name).toBe('Arjun Mehta')
 

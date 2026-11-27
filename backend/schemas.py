@@ -20,6 +20,8 @@ from pydantic import (
 )
 from pydantic_core import PydanticCustomError
 
+from backend import clock
+
 Status = Literal["lead", "qualified", "customer"]
 StageKey = Literal["new", "qualified", "proposal", "negotiation", "won", "lost"]
 ActivityType = Literal["note", "call", "email"]
@@ -86,11 +88,10 @@ def _check_website(value: str | None) -> str | None:
     return value
 
 
-def _local_time(value: datetime) -> datetime:
-    # Times are kept as local time with no zone. A time sent with a zone is converted.
-    if value.tzinfo is not None:
-        value = value.astimezone().replace(tzinfo=None)
-    return value.replace(microsecond=0)
+def _team_time(value: datetime) -> datetime:
+    # Times are kept on the team's clock, with no zone (concern 16). One sent with a zone
+    # is converted to it.
+    return clock.to_team_clock(value).replace(microsecond=0)
 
 
 def _required(max_length: int) -> StringConstraints:
@@ -119,7 +120,7 @@ Money = Annotated[int, Field(ge=0, le=100_000_000)]
 Percent = Annotated[int, Field(ge=0, le=100)]
 OptionalId = Annotated[Annotated[int, Field(le=MAX_ID)] | None, BlankToNone]
 OptionalDate = Annotated[date | None, BlankToNone]
-LocalTime = Annotated[datetime, AfterValidator(_local_time)]
+TeamTime = Annotated[datetime, AfterValidator(_team_time)]
 
 
 class Request(BaseModel):
@@ -191,7 +192,7 @@ class ActivityIn(Request):
     contact_id: OptionalId = None
     deal_id: OptionalId = None
     description: Description
-    occurred_at: LocalTime | None = None
+    occurred_at: TeamTime | None = None
     follow_up_date: OptionalDate = None
     follow_up_done: bool = False
 
@@ -199,12 +200,38 @@ class ActivityIn(Request):
 class ActivityPatch(Request):
     type: ActivityType | MISSING = MISSING
     description: Description | MISSING = MISSING
-    occurred_at: LocalTime | MISSING = MISSING
+    occurred_at: TeamTime | MISSING = MISSING
     follow_up_date: OptionalDate = None
     follow_up_done: bool | MISSING = MISSING
 
 
+class StandInSignIn(Request):
+    email: Annotated[str, StringConstraints(max_length=254)]
+    password: Annotated[str, StringConstraints(max_length=200)]
+
+
 # Responses
+
+
+class Person(BaseModel):
+    """Who added or last changed a record (R17), as they show (R16)."""
+
+    id: str
+    name: str
+    initials: str
+
+
+class Me(BaseModel):
+    id: str
+    name: str
+    email: str
+    initials: str
+    timezone: str | None  # None without ACCOUNTABLE_TIMEZONE: the browser uses its own
+
+
+class StandInToken(BaseModel):
+    access_token: str
+    expires_at: int  # seconds since 1970, as Supabase gives it
 
 
 class StageOut(BaseModel):
@@ -232,6 +259,8 @@ class OrganizationRow(BaseModel):
     open_value: int
     created_at: datetime
     updated_at: datetime
+    created_by: Person | None  # None for a record from before sign-in (R17)
+    updated_by: Person | None
 
 
 class ContactRow(BaseModel):
@@ -247,6 +276,8 @@ class ContactRow(BaseModel):
     activity_count: int
     created_at: datetime
     updated_at: datetime
+    created_by: Person | None  # None for a record from before sign-in (R17)
+    updated_by: Person | None
 
 
 class DealRow(BaseModel):
@@ -266,6 +297,8 @@ class DealRow(BaseModel):
     activity_count: int
     created_at: datetime
     updated_at: datetime
+    created_by: Person | None  # None for a record from before sign-in (R17)
+    updated_by: Person | None
 
 
 class TimelineEntry(BaseModel):
@@ -287,6 +320,7 @@ class TimelineEntry(BaseModel):
     contact_name: str | None = None
     deal_id: int | None = None
     deal_name: str | None = None
+    created_by: Person | None = None  # who logged an activity; stage and status changes have none
 
 
 class OrganizationDetail(OrganizationRow):
@@ -316,6 +350,8 @@ class ActivityOut(BaseModel):
     follow_up_done: bool
     created_at: datetime
     updated_at: datetime
+    created_by: Person | None  # None for a record from before sign-in (R17)
+    updated_by: Person | None
 
 
 class MonthFigures(BaseModel):
@@ -359,6 +395,7 @@ class FollowUp(BaseModel):
     contact_name: str | None
     deal_id: int | None
     deal_name: str | None
+    created_by: Person | None
 
 
 class Dashboard(BaseModel):
@@ -373,3 +410,38 @@ class Dashboard(BaseModel):
     lost: Totals
     follow_ups: list[FollowUp]
     recent: list[TimelineEntry]
+
+
+# Search (R18): each result has what its second line shows.
+
+
+class OrganizationFound(BaseModel):
+    id: int
+    name: str
+    industry: str | None
+
+
+class ContactFound(BaseModel):
+    id: int
+    name: str
+    job_title: str | None
+    organization_name: str | None
+
+
+class DealFound(BaseModel):
+    id: int
+    name: str
+    organization_name: str | None
+    stage: StageKey
+    value: int
+
+
+class Found[T](BaseModel):
+    total: int  # every match, though only the first 5 are in results
+    results: list[T]
+
+
+class SearchResults(BaseModel):
+    organizations: Found[OrganizationFound]
+    contacts: Found[ContactFound]
+    deals: Found[DealFound]

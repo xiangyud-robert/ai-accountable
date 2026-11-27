@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Toaster } from '../../components/Toaster'
+import { setTeamZone } from '../../lib/teamTime'
 import type { DealRow, StageKey } from '../../lib/types'
 import { STAGES, dealRow, mockFetch, renderWithApp } from '../../test-utils'
 import { PipelinePage } from './PipelinePage'
@@ -351,5 +352,61 @@ describe('clicking a card', () => {
     tick(100)
     fireEvent.click(card(2))
     expect(router.state.location.pathname).toBe('/deals/2')
+  })
+})
+
+describe('with the team’s zone a day ahead of this browser’s', () => {
+  // 1:30 PM on June 15 in Los Angeles, where this browser is, and already June 16 in Tokyo.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-06-15T20:30:00Z'))
+    setTeamZone('Asia/Tokyo')
+  })
+
+  afterEach(() => {
+    setTeamZone(null)
+    vi.useRealTimers()
+  })
+
+  const press = (key: string) => fireEvent.keyDown(document.activeElement!, { key })
+
+  /** Picks the card up from the keyboard and moves it this many columns right, still holding it. */
+  async function carryRight(id: number, columns: number) {
+    card(id).focus()
+    press(' ')
+    for (let i = 0; i < columns; i++) press('ArrowRight')
+    await waitFor(() => expect(screen.getByTestId('pipeline-announcements')).toHaveTextContent(/^Moved to/))
+  }
+
+  const drop = () => press(' ')
+
+  function renderDue(closeDate: string) {
+    // The server never answers, so what the board shows is its own working out.
+    mockFetch(() => new Promise(() => {}))
+    const deals = [
+      dealRow({ id: 1, name: 'Alpha pilot', stage: 'new', close_date: closeDate }),
+      dealRow({ id: 2, name: 'Bravo rollout', stage: 'new', position: 1, close_date: closeDate }),
+    ]
+    renderWithApp(<PipelinePage />, { data: [[['deals'], deals]] })
+  }
+
+  test('a card moved with yesterday’s close date for the team is late, though it’s today for this browser', async () => {
+    renderDue('2026-06-15')
+    await carryRight(1, 1)
+    expect(column('Qualified')).toEqual([1])
+    expect(within(card(1)).getByText('Late')).toBeInTheDocument()
+    drop()
+    await waitFor(() => expect(screen.getByTestId('pipeline-announcements')).toHaveTextContent(/^Dropped/))
+    expect(within(card(1)).getByText('Late')).toBeInTheDocument()
+  })
+
+  test('a card moved to Won closes on the team’s today', async () => {
+    renderDue('2026-07-01')
+    await carryRight(2, 4)
+    expect(within(card(2)).getByText(/^Jun 16/)).toBeInTheDocument()
+    drop()
+    await waitFor(() => expect(screen.getByTestId('pipeline-announcements')).toHaveTextContent(/^Dropped/))
+    expect(column('Won')).toEqual([2])
+    expect(within(card(2)).getByText(/^Jun 16/)).toBeInTheDocument()
   })
 })

@@ -1,4 +1,4 @@
-"""The six tables, in SQLAlchemy Core. Alembic's migrations are checked against these."""
+"""The seven tables, in SQLAlchemy Core. Alembic's migrations are checked against these."""
 
 from sqlalchemy import (
     Boolean,
@@ -28,10 +28,25 @@ metadata = MetaData(
 )
 
 
-def _timestamps() -> list[Column]:
+# Everyone who has used the app, and the sample data's made-up teammates. The id is the
+# person's Supabase user id, and people are never deleted by the app (concern 19).
+users = Table(
+    "users",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("email", String(254), nullable=False),
+    Column("display_name", String(120)),
+)
+
+
+def _added_and_changed() -> list[Column]:
+    """When the record was added and last changed, and by whom (R17). The people are empty
+    for a record from before sign-in."""
     return [
         Column("created_at", DateTime, nullable=False),
         Column("updated_at", DateTime, nullable=False),
+        Column("created_by", Text, ForeignKey("users.id"), index=True),
+        Column("updated_by", Text, ForeignKey("users.id"), index=True),
     ]
 
 
@@ -43,7 +58,7 @@ organizations = Table(
     Column("website", String(300)),
     Column("industry", String(80)),
     Column("notes", Text),
-    *_timestamps(),
+    *_added_and_changed(),
 )
 
 contacts = Table(
@@ -61,7 +76,7 @@ contacts = Table(
         index=True,
     ),
     Column("status", String(20), nullable=False, server_default="lead"),
-    *_timestamps(),
+    *_added_and_changed(),
 )
 
 deals = Table(
@@ -81,7 +96,7 @@ deals = Table(
     Column("probability", Integer, nullable=False),
     Column("close_date", Date, nullable=False),
     Column("position", Integer, nullable=False, server_default="0"),
-    *_timestamps(),
+    *_added_and_changed(),
     Index("ix_deals_stage_position", "stage", "position"),
 )
 
@@ -96,7 +111,7 @@ activities = Table(
     Column("occurred_at", DateTime, nullable=False),
     Column("follow_up_date", Date, index=True),
     Column("follow_up_done", Boolean, nullable=False, server_default=false()),
-    *_timestamps(),
+    *_added_and_changed(),
     # An activity belongs to exactly one contact or one deal (R8).
     CheckConstraint("(contact_id IS NULL) <> (deal_id IS NULL)", name="one_record"),
 )

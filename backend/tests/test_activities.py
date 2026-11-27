@@ -4,7 +4,7 @@ import pytest
 
 from backend.errors import Invalid
 from backend.services import activities
-from backend.tests.conftest import NOW
+from backend.tests.conftest import DANA, NOW
 
 
 def test_r8_exactly_one_of_contact_or_deal(client, saved):
@@ -55,7 +55,9 @@ def test_r8_editing_to_a_later_time_than_now_is_refused(make, conn):
     contact = make.contact()
     activity = make.activity(contact_id=contact["id"])
     with pytest.raises(Invalid):
-        activities.change(conn, activity["id"], {"occurred_at": NOW + timedelta(hours=1)})
+        activities.change(
+            conn, activity["id"], {"occurred_at": NOW + timedelta(hours=1)}, by=DANA.id
+        )
 
 
 @pytest.mark.parametrize(
@@ -80,10 +82,15 @@ def test_marking_a_follow_up_done_and_not_done(make, conn):
     activity = make.activity(contact_id=contact["id"], follow_up_date=date(2026, 6, 20))
     assert activity["follow_up_done"] is False
     assert (
-        activities.change(conn, activity["id"], {"follow_up_done": True})["follow_up_done"] is True
+        activities.change(conn, activity["id"], {"follow_up_done": True}, by=DANA.id)[
+            "follow_up_done"
+        ]
+        is True
     )
     assert (
-        activities.change(conn, activity["id"], {"follow_up_done": False})["follow_up_done"]
+        activities.change(conn, activity["id"], {"follow_up_done": False}, by=DANA.id)[
+            "follow_up_done"
+        ]
         is False
     )
 
@@ -92,7 +99,7 @@ def test_done_needs_a_follow_up_date(make, conn):
     contact = make.contact()
     activity = make.activity(contact_id=contact["id"])
     with pytest.raises(Invalid) as error:
-        activities.change(conn, activity["id"], {"follow_up_done": True})
+        activities.change(conn, activity["id"], {"follow_up_done": True}, by=DANA.id)
     assert error.value.errors == {"follow_up_done": "Add a follow-up date first."}
 
 
@@ -101,7 +108,7 @@ def test_taking_away_the_follow_up_date_takes_away_done(make, conn):
     activity = make.activity(
         contact_id=contact["id"], follow_up_date=date(2026, 6, 20), follow_up_done=True
     )
-    changed = activities.change(conn, activity["id"], {"follow_up_date": None})
+    changed = activities.change(conn, activity["id"], {"follow_up_date": None}, by=DANA.id)
     assert (changed["follow_up_date"], changed["follow_up_done"]) == (None, False)
 
 

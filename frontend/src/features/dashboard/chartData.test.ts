@@ -42,6 +42,7 @@ const DASHBOARD: Dashboard = {
       contact_name: null,
       deal_id: 3,
       deal_name: 'Sable',
+      created_by: null,
     },
     {
       id: 2,
@@ -54,6 +55,7 @@ const DASHBOARD: Dashboard = {
       contact_name: 'Grace',
       deal_id: null,
       deal_name: null,
+      created_by: null,
     },
   ],
   recent: [],

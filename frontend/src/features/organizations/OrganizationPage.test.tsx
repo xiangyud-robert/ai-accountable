@@ -79,6 +79,13 @@ describe('OrganizationPage', () => {
     expect(website).toHaveAttribute('target', '_blank')
   })
 
+  test('the details end with who added the organization and who last changed it', () => {
+    renderPage()
+    expect(panel('Details').textContent).toMatch(
+      /Added by Dana Holt on Sep 14, 2026Last changed by Wes Moreno on Nov 2, 2026$/,
+    )
+  })
+
   test('lists its contacts and deals, with what its deals are worth', () => {
     renderPage()
     const contacts = panel('Contacts')

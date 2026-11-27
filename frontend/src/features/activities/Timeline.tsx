@@ -8,7 +8,7 @@ import { notify } from '../../components/Toaster'
 import { UNREACHABLE_MESSAGE } from '../../lib/api'
 import { followUpLabel, timelineTime } from '../../lib/format'
 import { stageTint } from '../../lib/stages'
-import type { ActivityType, StageKey, TimelineEntry } from '../../lib/types'
+import type { ActivityType, Person, StageKey, TimelineEntry } from '../../lib/types'
 import { ActivityDialog, DoneCheckbox, type EditableActivity } from './ActivityDialog'
 import { useChangeActivity, useDeleteActivity } from './queries'
 
@@ -42,6 +42,16 @@ export function KindIcon({ icon: Icon, tint }: { icon: LucideIcon; tint: string 
 export function EntryIcon({ entry }: { entry: TimelineEntry }) {
   const { Icon, tint } = entryIcon(entry)
   return <KindIcon icon={Icon} tint={tint} />
+}
+
+/** When an entry happened, then who logged it if it's an activity (R17): "Today, 2:30 PM, by Dana Holt". */
+export function WhenAndWho({ when, by }: { when: string; by: Person | null }) {
+  return (
+    <>
+      <span className="font-mono">{when}</span>
+      {by && `, by ${by.name}`}
+    </>
+  )
 }
 
 const toActivity = (entry: TimelineEntry): EditableActivity => ({
@@ -93,8 +103,8 @@ function Entry({ entry, on }: { entry: TimelineEntry; on: 'contact' | 'deal' }) 
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-3">
           <p className="min-w-0 flex-1 whitespace-pre-line font-medium">{entry.text}</p>
-          <span className="shrink-0 whitespace-nowrap pt-0.5 font-mono text-xs text-ink-muted">
-            {timelineTime(entry.at)}
+          <span className="shrink-0 whitespace-nowrap pt-0.5 text-xs text-ink-muted">
+            <WhenAndWho when={timelineTime(entry.at)} by={entry.created_by} />
           </span>
           {isActivity && (
             <DropdownMenu.Root>

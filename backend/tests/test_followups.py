@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from backend.services import activities, dashboard
-from backend.tests.conftest import TODAY
+from backend.tests.conftest import DANA, TODAY
 
 
 def due(make, contact, days, **fields):
@@ -35,7 +35,7 @@ def test_r9_done_follow_ups_are_left_out(make, conn):
     contact = make.contact()
     done = due(make, contact, -3)
     due(make, contact, 2)
-    activities.change(conn, done["id"], {"follow_up_done": True})
+    activities.change(conn, done["id"], {"follow_up_done": True}, by=DANA.id)
     assert listed(conn) == [("Due +2", 2, False)]
 
 

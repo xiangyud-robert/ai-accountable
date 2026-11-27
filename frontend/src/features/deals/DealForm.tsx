@@ -5,9 +5,10 @@ import { z } from 'zod'
 import { FormDialog } from '../../components/FormDialog'
 import { Field, Picker, SelectField, TextInput, described } from '../../components/fields'
 import { notify } from '../../components/Toaster'
-import { addDaysISO, todayISO } from '../../lib/format'
+import { addDaysISO } from '../../lib/format'
 import { changedOnly, showSaveError } from '../../lib/forms'
 import { useStages } from '../../lib/stages'
+import { teamTodayISO } from '../../lib/teamTime'
 import type { DealRow, Stage, StageKey } from '../../lib/types'
 import { useContacts } from '../contacts/queries'
 import { useOrganizations } from '../organizations/queries'
@@ -45,7 +46,7 @@ export function DealForm(props: DealFormProps) {
 
 /** A new deal closes 30 days from today, or today for Won and Lost. */
 function newDealCloseDate(stage: Stage) {
-  return stage.open ? addDaysISO(todayISO(), 30) : todayISO()
+  return stage.open ? addDaysISO(teamTodayISO(), 30) : teamTodayISO()
 }
 
 function toBody(values: Values): DealValues {
@@ -101,7 +102,7 @@ function DealDialog({ open, onOpenChange, deal, defaults, onSaved, stages }: Dea
     const next = stageOf(key)
     setValue('stage', key, { shouldDirty: true })
     setValue('probability', String(next.probability), { shouldDirty: true, shouldValidate: true })
-    if (!next.open) setValue('close_date', todayISO(), { shouldDirty: true })
+    if (!next.open) setValue('close_date', teamTodayISO(), { shouldDirty: true })
   }
 
   // Choosing a main contact fills in the organization if it's empty.

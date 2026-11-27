@@ -18,6 +18,7 @@
   --color-on-fill: #ffffff; /* text on Raspberry fill */
   --color-logo: #073b4c; /* the logo mark's circle, matching the favicon */
   --color-divider: #e3eaec;
+  --color-divider-raised: #e3eaec; /* lines between groups in a menu, on the raised surface */
   --color-field: #7a9097; /* the outline of inputs */
   --color-focus: #118ab2; /* Cerulean */
   --color-link: #0e7191; /* Cerulean text */
@@ -109,6 +110,7 @@
     --color-on-fill: #ffffff;
     --color-logo: #073b4c;
     --color-divider: #1a3540;
+    --color-divider-raised: #04232e; /* the page, since the divider is lost on Midnight (1.07:1) */
     --color-field: #7a9097;
     --color-focus: #118ab2;
     --color-link: #4fb6d9; /* Cerulean lightened */

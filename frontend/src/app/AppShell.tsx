@@ -3,11 +3,12 @@ import { NavLink, Outlet } from 'react-router'
 import { useContacts } from '../features/contacts/queries'
 import { useDeals } from '../features/deals/queries'
 import { useOrganizations } from '../features/organizations/queries'
-import { DarkModeSwitch } from './DarkModeSwitch'
+import { TopBar } from './TopBar'
 
 type Section = { to: string; label: string; icon: LucideIcon; count?: number }
 
-/** The floating sidebar with the five sections and the Dark mode switch, and the main area beside it. */
+/** The floating sidebar with the wordmark and the five sections, and beside it the top bar above
+ *  the main area. The skip link goes past both to the page. */
 export function AppShell() {
   const organizations = useOrganizations()
   const contacts = useContacts()
@@ -64,13 +65,15 @@ export function AppShell() {
             ))}
           </ul>
         </nav>
-        <DarkModeSwitch className="mt-auto" />
       </aside>
-      <main id="content" tabIndex={-1} className="pb-4 pl-[264px] pr-7 pt-7 outline-none">
+      <div className="pb-4 pl-[264px] pr-7 pt-7">
         <div className="mx-auto max-w-[1440px]">
-          <Outlet />
+          <TopBar />
+          <main id="content" tabIndex={-1} className="outline-none">
+            <Outlet />
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

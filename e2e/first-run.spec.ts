@@ -89,6 +89,7 @@ test('the fonts are the brand’s, loaded from the app with no request to Google
 
 test('a skip link comes first, and the page has its landmarks', async ({ page }) => {
   await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible()
   await page.keyboard.press('Tab')
   const skip = page.getByRole('link', { name: 'Skip to content' })
   await expect(skip).toBeFocused()

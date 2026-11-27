@@ -62,8 +62,8 @@ async function workedOut(request: APIRequestContext) {
 
 const panel = (page: Page, name: string) => page.getByRole('region', { name, exact: true })
 
-test('criterion 6: the tiles, each chart’s summary and the funnel match the sample data', async ({ page }) => {
-  const figures = await workedOut(page.request)
+test('criterion 6: the tiles, each chart’s summary and the funnel match the sample data', async ({ page, api }) => {
+  const figures = await workedOut(api)
   await page.goto('/')
   await expect(page.getByText('Monday, June 15')).toBeVisible()
 
