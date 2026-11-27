@@ -10,15 +10,17 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
     - Dialogs sit over Midnight at 70%, which dims what's behind them toward Midnight, so the black dialog stands out from the black panels under it.
     - Primary buttons and ticked checkboxes keep Midnight text on Sea Green, since Sea Mist on Sea Green would be about 1.3:1.
     - The logo mark keeps its Midnight circle and Sea Green dot, matching the favicon, which can't change with the mode.
-14. **The light or dark choice is kept in the browser.** It's a setting for this screen, not a record, so it's saved in the browser's local storage, the one exception to R14. That way the page is in the right mode before anything draws, and a dark page never flashes light while the app loads.
-    - If nothing is saved, or the saved value isn't light or dark, the app is in light mode.
-    - If the browser won't save it, the switch still works until the page is reloaded.
+14. **The theme choice is kept in the browser.** It's a setting for this screen, not a record, so it's saved in the browser's local storage, one of the two things the browser keeps (R14). That way the page is in the right mode before anything draws, and a dark page never flashes light while the app loads, the sign-in screen included.
+    - The choice is Light, Dark or System. System follows the device's light or dark setting, and changes with it while the app is open, such as when the device turns dark in the evening.
+    - If nothing is saved, or the saved value isn't light, dark or system, the app is in light mode.
+    - The choice belongs to the browser: it stays after signing out, and applies to whoever signs in on that browser next.
+    - If the browser won't save it, the choice still works until the page is reloaded.
     - Another open tab changes when it's next loaded.
     - Switching happens at once, with no message. The few things that already animate on hover, such as the dashboard's tiles and the buttons, take their usual 150ms to change.
 
 ## How it fits together
 
-- **Light or dark:** the theme file holds a light and a dark value for each color role. A few lines at the top of `index.html` read the saved choice and mark the page as dark before anything draws (concern 14). The page also tells Chrome which mode it's in, so Chrome's own parts, such as scrollbars and the date and time pickers, follow it.
+- **Light or dark:** the theme file holds a light and a dark value for each color role. A few lines at the top of `index.html` read the saved choice and, for System, the device's setting, and mark the page as dark before anything draws (concern 14). With System, the page also listens for the device's setting to change. The page tells Chrome which mode it's in, so Chrome's own parts, such as scrollbars and the date and time pickers, follow it.
 
 ## Colors
 
@@ -50,16 +52,17 @@ Badge backgrounds in dark mode are a 30% shade of each color over black, with Se
 
 ## Components
 
-- **The Dark mode switch:** a 36 by 20px pill with a 16px round knob. Off, in light mode, it's the field outline color with a white knob on the left. On, in dark mode, it's Sea Green with a black knob on the right.
+- **The theme choice:** in the user menu, under a "Theme" label in Slate, three items: Light with a sun icon, Dark with a moon icon and System with a monitor icon. The chosen one has a check mark on its right. Choosing one changes the mode at once and leaves the menu open, so the change can be seen.
 
 ## Layout
 
-- The **Dark mode** switch sits at the bottom of the sidebar, below the five sections, with a moon icon and the label "Dark mode". The sidebar is on every page, including Page not found, so the switch is too.
+- The **theme choice** is in the user menu, under the initials at the right of the top bar (`docs/specs/sign-in.md`). The top bar is on every page once signed in, including Page not found, so the choice is too. The sidebar holds only the wordmark and the five sections.
 
 ## Keyboard and accessibility
 
-- **Dark mode switch:** a real switch, reached with Tab after the five sections. Space or Enter flips it, and a screen reader announces it as the "Dark mode" switch, on or off.
+- **Theme choice:** reached with Up and Down in the user menu. Enter or Space chooses one, and a screen reader announces the three as a group of choices, such as "System, checked".
 
 ## Testing hooks
 
-- The browser saves the light or dark choice for each address separately, so the tests' copy of the app on port 5273 keeps its own choice and never changes the app on 5173. Each end-to-end test starts with nothing saved, so in light mode.
+- The browser saves the theme choice for each address separately, so the tests' copy of the app on port 5273 keeps its own choice and never changes the app on 5173. Each end-to-end test starts with nothing saved, so in light mode.
+- The tests of System set Chrome's own light or dark setting, through Playwright's color scheme, and change it while the page is open.

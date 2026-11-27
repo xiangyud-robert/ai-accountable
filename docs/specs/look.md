@@ -2,7 +2,7 @@
 
 Part of the spec. `docs/spec.md` has the summary of the whole product and the index of every area file, concern and rule.
 
-The dashboard's charts and layout, the pipeline's components, layout and keyboard moves, the dark mode colors and switch, and the layout of record pages are in their own area files.
+The dashboard's charts and layout, the pipeline's components, layout and keyboard moves, the dark mode colors and the theme choice, the sign-in screen and the user menu, the search box, and the layout of record pages are in their own area files.
 
 The look follows Accountable's brand guidelines, which take priority over any general design guidance. It has a light mode, the default, and a dark mode, both designed for a laptop or desktop screen. Colors below are named by their light-mode value, and dark mode uses the dark value of the same role: "white" means the panel color, which is black in dark mode, "Midnight text" means ink, which is Sea Mist, and "Slate" means ink muted. Where a color stays the same in both modes, it says so.
 
@@ -26,7 +26,7 @@ The rest of this file follows it, and so do the dashboard's and the pipeline's o
 
 ## Fonts
 
-Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for money, counts, percentages and dates in tables, cards, tiles and charts. Instrument Serif is used only as an accent: for the tagline under the logo ("Every deal, accounted for") and the date above the dashboard's title.
+Instrument Sans for headings and body. JetBrains Mono, with tabular figures, for money, counts, percentages and dates in tables, cards, tiles and charts. Instrument Serif is used only as an accent: for the tagline under the logo ("Every deal, accounted for"), in the sidebar and on the sign-in screen, and the date above the dashboard's title.
 
 | Use | Font | Size and weight |
 |---|---|---|
@@ -118,6 +118,7 @@ Plain business English, short labels, no jargon and no exclamation marks.
 - **Money:** `$12,500`, with USD in headings (concern 11). `$1.2M` and `$48K` only in tight spaces, with the full amount on hover.
 - **Dates:** `Nov 22, 2026`. In timelines, "Today, 2:30 PM", "Yesterday, 9:05 AM" or "Nov 12, 2:30 PM", with the year added when it isn't this year.
 - **Percentages:** `50%`.
+- **People:** by their name (R16), such as "Added by Dana Holt on Nov 12, 2026".
 - **Empty states:** one plain line and an Add button, such as "No organizations yet." Searches with no results say "No deals match "acme"."
 
 ## Layout
@@ -128,14 +129,15 @@ Plain business English, short labels, no jargon and no exclamation marks.
   - The current section is a Sea Green tint pill with Midnight text.
 
 - **Main area:** on the page background, with 24 to 28px of padding and content up to 1440px wide.
-- **Page header:** the title on the left, with the main action on the right, such as "Add deal".
+- **Top bar:** at the top of the main area, across its full width, on the page background with no panel and no line under it. The search box (`docs/specs/search.md`) is on the left and the initials button (`docs/specs/sign-in.md`) on the right. It's on every page once signed in, including Page not found, and scrolls with the page.
+- **Page header:** 24px below the top bar, with the title on the left and the main action on the right, such as "Add deal".
 
 ## Keyboard and accessibility
 
 Everything can be done with the keyboard as well as the mouse, including moving a card on the pipeline. Text meets WCAG AA contrast in both modes, and every form field has a label.
 
-- **Tab order:** everything can be reached with Tab, in reading order. Everything that can be focused shows a 2px Cerulean focus ring, 2px outside its edge.
-- **Structure:** a "Skip to content" link comes first. Each page has one main heading, which is the message when the page can't load, and labelled navigation and main areas.
+- **Tab order:** everything can be reached with Tab, in reading order: the skip link, the sidebar's sections, the search box, the initials button, then the page. Everything that can be focused shows a 2px Cerulean focus ring, 2px outside its edge.
+- **Structure:** a "Skip to content" link comes first. Each page has one main heading, which is the message when the page can't load, and labelled navigation, search and main areas.
 - **Tables:** these are real HTML tables. Each sortable heading is a button and announces its sort order. On each row, the name link and the Edit and Delete buttons can be reached with Tab.
 - **Forms:** every field has a visible label. Errors are linked to their field, and saving with errors moves focus to the first one.
 - **Dialogs** keep focus inside them, close with Escape, and return focus to the button that opened them, or to the menu's button for an item in a menu.

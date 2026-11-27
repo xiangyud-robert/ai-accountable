@@ -162,6 +162,14 @@ On the `multi-user` branch, before its plan. It moves the spec's text, not the p
 - Checked with a scratch script outside the repo: every non-blank line of the old spec is in the new files, except the 38 headings, labels and references above, and none is there twice except table headings and three table rows the old spec already had twice.
 - `AGENTS.md` says to read `docs/spec.md` first, then only the area files a change touches, and to update every spec file a change affects. `docs/REVIEW.md`'s two spec passes cover the area files, and flag a spec file a change should have updated. `.claude/agents/reviewer.md` already reads the spec files `docs/spec.md` points to, and `ui-check.md` already reads the summary and the files for what it checks, so neither changed.
 
+## Multi-user design (Nov 26, 2026)
+
+On the `multi-user` branch: the spec now describes sign-in, search, the user menu, the team's time zone and the deploy to Render from `docs/changes/multi-user/intent.md`, as they will be once merged. Docs only, so no code or tests changed yet.
+
+- New area files: `docs/specs/sign-in.md` (R15, R16, concerns 18 to 20, the users table, `GET /api/me` and the stand-in sign-in) and `docs/specs/search.md` (R18, concern 21, `GET /api/search`).
+- Updated: `platform.md` (concerns 15 to 17, `npm start`, Render, the new libraries), `records.md` (R14's two exceptions, R17 for who added and changed a record), `light-and-dark.md` (Light, Dark and System in the user menu, in place of the switch), `look.md` (the top bar), `sample-data.md` (four made-up teammates), and the record pages, timelines and dashboard to show who added each record and activity. `docs/spec.md`'s summary and index list the new areas, concerns and rules.
+- Still to change in the build: `docs/TECH_STACK.md` still says the app runs locally on SQLite, and `.claude/agents/ui-check.md` needs to sign in through the stand-in.
+
 ## Success criteria and their tests
 
 The MVP's success criteria, from `docs/changes/mvp/intent.md`.

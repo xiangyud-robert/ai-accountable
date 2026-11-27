@@ -48,7 +48,7 @@ The six stages are fixed.
 - Table columns: Name, Organization, Main contact, Stage, Value (USD), Probability, Expected (USD), Close date.
 - Sorted by stage to begin with, in pipeline order, then by close date. Sorting by stage always uses pipeline order, never alphabetical order.
 - A late deal shows a "Late" badge beside its close date.
-- A deal's page (`/deals/:id`) shows its name, stage, the Late badge if it's late, its value, probability, expected revenue and close date, and its organization and main contact as links, with Edit and Delete.
+- A deal's page (`/deals/:id`) shows its name, stage, the Late badge if it's late, its value, probability, expected revenue and close date, and its organization and main contact as links, with Edit and Delete, and who added it and last changed it (R17).
 - The close date is labelled "Expected close" while the deal is open and "Closed" once it's won or lost.
 - Its **timeline** (R10) has the Log activity form at the top.
 

@@ -7,7 +7,7 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 **Organizations** (`/organizations`)
 
 - Table columns: Name, Industry, Website, Contacts, Open deals, Open value (USD). Sorted by name to begin with.
-- An organization's page (`/organizations/:id`) shows its name, industry, website (opening in a new tab) and notes, with Edit and Delete.
+- An organization's page (`/organizations/:id`) shows its name, industry, website (opening in a new tab) and notes, with Edit and Delete, and who added it and last changed it (R17).
 - A **Contacts** panel lists its contacts, with an Add contact button that fills in the organization.
 - A **Deals** panel lists its deals, with their total open value and total won value, and an Add deal button that fills in the organization.
 

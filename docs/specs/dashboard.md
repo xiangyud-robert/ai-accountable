@@ -16,13 +16,13 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 - **Deals won by month**: a bar chart of the same 12 months.
 - **Open pipeline by stage**: the visual of the pipeline. Each open stage shows its value and expected revenue, with its count on hover and in the table for screen readers (see Charts).
 - **Sales funnel**: value and count reaching each stage from New to Won, with the share of New's value that reaches each stage, and the total lost underneath.
-- **Follow-ups**: overdue first, then due in the next 7 days. Each shows its type, its description, the contact or deal it's on (as a link), its due date as "3 days overdue", "Due today", "Due tomorrow" or "Due in 4 days", and a Done checkbox. The heading gives the count. The list scrolls inside its panel when it's long.
-- **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app, grouped under Today, Yesterday and Earlier, each linking to its record.
+- **Follow-ups**: everyone's, overdue first, then due in the next 7 days. Each shows its type, its description, the contact or deal it's on (as a link), who logged it, its due date as "3 days overdue", "Due today", "Due tomorrow" or "Due in 4 days", and a Done checkbox. The heading gives the count. The list scrolls inside its panel when it's long.
+- **Recent activity**: the 10 newest timeline entries of any kind, from anywhere in the app and by anyone on the team, grouped under Today, Yesterday and Earlier, each linking to its record. Activities show who logged them, as in timelines.
 - The tiles and the pipeline visual link to the Pipeline.
 
 ## Dashboard figures
 
-Months are calendar months on the computer's own clock. "Won in a month" means a Won deal whose close date falls in that month.
+Months are calendar months in the team's time zone (concern 16), whatever the server's clock is set to. "Won in a month" means a Won deal whose close date falls in that month.
 
 | Figure | How it's worked out |
 |---|---|
@@ -56,7 +56,7 @@ With Recharts:
 ## Layout
 
 - **Dashboard,** on a 12-column grid:
-  1. Today's date as the accent, above the title "Dashboard".
+  1. Today's date in the team's time zone as the accent, above the title "Dashboard".
   2. A large panel (8 columns) with revenue won this month and, beneath it, revenue won by month, beside the three other tiles stacked (4 columns).
   3. Deals won by month, Sales funnel and Open pipeline by stage, 4 columns each.
   4. Follow-ups and Recent activity, 6 columns each.

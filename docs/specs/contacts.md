@@ -13,7 +13,7 @@ Part of the spec. `docs/spec.md` has the summary of the whole product and the in
 - Table columns: Name, Organization, Job title, Email, Phone, Status. Sorted by name to begin with.
 - A lead is a contact with the lead status, so there's no separate list of leads.
 - A status filter shows All, Leads, Qualified and Customers, each with its count. It works together with the search, and is kept in the address (`/contacts?status=lead`) so it survives a refresh.
-- A contact's page (`/contacts/:id`) shows their name, status, job title, organization (as a link), email (as a mail link) and phone, with Edit and Delete.
+- A contact's page (`/contacts/:id`) shows their name, status, job title, organization (as a link), email (as a mail link) and phone, with Edit and Delete, and who added them and last changed them (R17).
 - A **Deals** panel lists the deals where they're the main contact, with an Add deal button that fills in the contact and organization.
 - Their **timeline** (R10) has the Log activity form at the top.
 
